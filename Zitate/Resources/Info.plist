@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Zitate needs your location to associate quotes with the places where you heard them.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Zitate needs access to your camera to capture photos for your quotes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Zitate needs access to your photo library to attach images to your quotes.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Zitate needs access to your microphone to record audio for your quotes.</string>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIImageName</key>
+		<string>AppIcon</string>
+	</dict>
+</dict>
+</plist>

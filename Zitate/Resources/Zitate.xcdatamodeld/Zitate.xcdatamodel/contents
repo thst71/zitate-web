@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23C71" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Entry" representedClassName="Entry" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="text" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="audio" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="AudioAttachment" inverseName="entry" inverseEntity="AudioAttachment"/>
+        <relationship name="author" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Author" inverseName="entries" inverseEntity="Author"/>
+        <relationship name="images" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ImageAttachment" inverseName="entry" inverseEntity="ImageAttachment"/>
+        <relationship name="labels" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Label" inverseName="entries" inverseEntity="Label"/>
+    </entity>
+    <entity name="Author" representedClassName="Author" syncable="YES">
+        <attribute name="dateOfBirth" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateOfDeath" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="locationOfBirth" optional="YES" attributeType="String"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="wikipediaURL" optional="YES" attributeType="String"/>
+        <relationship name="entries" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Entry" inverseName="author" inverseEntity="Entry"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="name"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="Label" representedClassName="Label" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="entries" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Entry" inverseName="labels" inverseEntity="Entry"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="name"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="ImageAttachment" representedClassName="ImageAttachment" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="filePath" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="order" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="entry" maxCount="1" deletionRule="Nullify" destinationEntity="Entry" inverseName="images" inverseEntity="Entry"/>
+    </entity>
+    <entity name="AudioAttachment" representedClassName="AudioAttachment" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="duration" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="filePath" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="entry" maxCount="1" deletionRule="Nullify" destinationEntity="Entry" inverseName="audio" inverseEntity="Entry"/>
+    </entity>
+    <entity name="SmartFolder" representedClassName="SmartFolder" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="criteriaJSON" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="order" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+</model>
