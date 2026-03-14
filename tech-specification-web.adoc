@@ -1,0 +1,645 @@
+= Technical Specification: Zitate Web v1.0
+:toc:
+:toclevels: 3
+
+== Overview
+This document defines the technical architecture, tools, frameworks, and dependencies for the Zitate web-based single-page application (SPA).
+
+== Technology Stack
+
+=== Primary Technologies
+- *Platform:* Web (Desktop and Mobile Browsers)
+- *Language:* JavaScript/TypeScript ES6+
+- *UI Framework:* React 18+ or Vue 3+ or Vanilla JS
+- *Build Tool:* Vite or Webpack 5
+- *Package Manager:* npm or pnpm
+
+=== Core Browser APIs
+- *IndexedDB:* Local database and persistence
+- *Service Worker:* Offline capability and PWA
+- *Geolocation API:* GPS coordinates
+- *MediaRecorder API:* Audio recording
+- *MediaDevices API:* Camera access
+- *File API:* Image upload
+- *Notification API:* Optional notifications (future)
+
+== Project Structure
+
+=== Directory Layout (React/TypeScript Example)
+```
+zitate-web/
+├── public/
+│   ├── index.html
+│   ├── manifest.json              # PWA manifest
+│   └── service-worker.js          # Service worker
+├── src/
+│   ├── main.tsx                   # App entry point
+│   ├── App.tsx                    # Root component
+│   ├── db/                        # IndexedDB layer
+│   │   ├── schema.ts              # DB schema definition
+│   │   ├── migrations.ts          # Schema migrations
+│   │   └── queries.ts             # DB query functions
+│   ├── models/                    # TypeScript interfaces
+│   │   ├── Entry.ts
+│   │   ├── Author.ts
+│   │   ├── Label.ts
+│   │   └── SmartFolder.ts
+│   ├── hooks/                     # React hooks (or composables for Vue)
+│   │   ├── useEntries.ts
+│   │   ├── useAuthors.ts
+│   │   ├── useLocation.ts
+│   │   ├── useMediaRecorder.ts
+│   │   └── useIndexedDB.ts
+│   ├── components/                # UI components
+│   │   ├── common/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   └── Input.tsx
+│   │   ├── entry/
+│   │   │   ├── EntryCard.tsx
+│   │   │   ├── EntryForm.tsx
+│   │   │   ├── EntryDetail.tsx
+│   │   │   └── EntryList.tsx
+│   │   ├── author/
+│   │   │   ├── AuthorList.tsx
+│   │   │   └── AuthorForm.tsx
+│   │   ├── folder/
+│   │   │   ├── FolderList.tsx
+│   │   │   ├── FolderForm.tsx
+│   │   │   └── CriteriaBuilder.tsx
+│   │   ├── search/
+│   │   │   └── SearchResults.tsx
+│   │   └── layout/
+│   │       ├── Header.tsx
+│   │       ├── Footer.tsx
+│   │       └── HomeScreen.tsx
+│   ├── services/                  # Business logic
+│   │   ├── db.service.ts          # IndexedDB wrapper
+│   │   ├── location.service.ts    # Geolocation
+│   │   ├── media.service.ts       # Camera/Audio
+│   │   ├── search.service.ts      # Search/filter logic
+│   │   ├── export.service.ts      # Data export/import
+│   │   └── storage.service.ts     # Storage quota management
+│   ├── utils/                     # Utility functions
+│   │   ├── validators.ts
+│   │   ├── formatters.ts
+│   │   ├── constants.ts
+│   │   └── compression.ts
+│   ├── styles/                    # CSS/SCSS
+│   │   ├── global.css
+│   │   ├── variables.css          # CSS custom properties
+│   │   └── themes.css             # Light/dark themes
+│   └── types/                     # TypeScript type definitions
+│       └── index.d.ts
+├── package.json
+├── tsconfig.json                  # TypeScript config
+├── vite.config.ts                 # Vite config
+└── README.md
+```
+
+== Architecture Pattern
+
+=== Component-Based Architecture
+- *Components:* Reusable UI components (React/Vue/Web Components)
+- *Hooks/Composables:* Shared logic and state management
+- *Services:* Singleton business logic services
+- *Models:* TypeScript interfaces for type safety
+
+=== State Management
+- *Local State:* Component state (useState/ref)
+- *Global State:* Context API / Pinia / Zustand (lightweight)
+- *Persistent State:* IndexedDB via custom hooks
+- *Derived State:* Computed values from IndexedDB queries
+
+=== Data Flow
+```
+User Interaction → Component → Hook → Service → IndexedDB
+                    ↑                              ↓
+                    └────── State Update ←─────────┘
+```
+
+== IndexedDB Schema
+
+=== Database Configuration
+- *Database Name:* `zitate-db`
+- *Current Version:* 1
+- *Migration Strategy:* Version-based upgrades
+
+=== Object Stores
+
+==== entries
+```typescript
+interface Entry {
+  id: string;                    // UUID v4
+  text: string;                  // 1-10,000 chars
+  latitude?: number;             // WGS84
+  longitude?: number;            // WGS84
+  authorId?: string;             // FK to authors
+  labelIds: string[];            // FK array to labels
+  imageIds: string[];            // FK array to images
+  audioId?: string;              // FK to audio
+  createdAt: number;             // Unix timestamp
+  updatedAt: number;             // Unix timestamp
+}
+
+// Indexes: createdAt, latitude, longitude, text (fulltext)
+```
+
+==== authors
+```typescript
+interface Author {
+  id: string;                    // UUID v4
+  name: string;                  // Required, unique, max 200 chars
+  dateOfBirth?: number;          // Unix timestamp
+  locationOfBirth?: string;      // Max 200 chars
+  dateOfDeath?: number;          // Unix timestamp
+  wikipediaURL?: string;         // URL string
+}
+
+// Indexes: name (unique)
+```
+
+==== labels
+```typescript
+interface Label {
+  id: string;                    // UUID v4
+  name: string;                  // Required, unique, lowercase, max 50 chars
+}
+
+// Indexes: name (unique)
+```
+
+==== images
+```typescript
+interface ImageAttachment {
+  id: string;                    // UUID v4
+  entryId: string;               // FK to entries
+  blob: Blob;                    // Image data
+  mimeType: string;              // image/jpeg, image/png, etc.
+  size: number;                  // Bytes (max 2MB)
+  order: number;                 // Display order
+  createdAt: number;             // Unix timestamp
+}
+
+// Indexes: entryId
+```
+
+==== audio
+```typescript
+interface AudioAttachment {
+  id: string;                    // UUID v4
+  entryId: string;               // FK to entries
+  blob: Blob;                    // Audio data
+  mimeType: string;              // audio/webm, audio/ogg, etc.
+  duration: number;              // Seconds (max 300)
+  createdAt: number;             // Unix timestamp
+}
+
+// Indexes: entryId
+```
+
+==== folders
+```typescript
+interface SmartFolder {
+  id: string;                    // UUID v4
+  name: string;                  // Max 100 chars
+  criteria: FolderCriteria;      // Nested object
+  order: number;                 // User-defined order
+  createdAt: number;             // Unix timestamp
+}
+
+interface FolderCriteria {
+  labels?: {
+    values: string[];            // Label IDs
+    operator: 'AND' | 'OR';
+  };
+  authorId?: string;
+  dateRange?: {
+    start?: number;              // Unix timestamp
+    end?: number;                // Unix timestamp
+  };
+  location?: {
+    latitude: number;
+    longitude: number;
+    radiusKm: number;
+  };
+  textMatch?: string;
+}
+
+// Indexes: order
+```
+
+== Browser APIs Integration
+
+=== IndexedDB Wrapper
+```typescript
+class DBService {
+  private db: IDBDatabase;
+
+  async init(): Promise<void>;
+  async get<T>(store: string, id: string): Promise<T>;
+  async getAll<T>(store: string): Promise<T[]>;
+  async add<T>(store: string, data: T): Promise<string>;
+  async update<T>(store: string, data: T): Promise<void>;
+  async delete(store: string, id: string): Promise<void>;
+  async query<T>(store: string, index: string, value: any): Promise<T[]>;
+}
+```
+
+=== Geolocation Service
+```typescript
+class LocationService {
+  async getCurrentPosition(): Promise<GeolocationPosition>;
+  async reverseGeocode(lat: number, lon: number): Promise<string>;
+  calculateDistance(from: Coords, to: Coords): number;
+}
+```
+
+=== Media Service
+```typescript
+class MediaService {
+  // Camera
+  async captureImage(): Promise<Blob>;
+  async selectImages(): Promise<Blob[]>;
+  async compressImage(blob: Blob, maxSizeMB: number): Promise<Blob>;
+
+  // Audio
+  async startRecording(): Promise<MediaRecorder>;
+  async stopRecording(recorder: MediaRecorder): Promise<Blob>;
+}
+```
+
+=== Export/Import Service
+```typescript
+interface ExportData {
+  version: number;
+  exportedAt: number;
+  entries: Entry[];
+  authors: Author[];
+  labels: Label[];
+  folders: SmartFolder[];
+  media: {
+    images: { id: string; data: string }[];  // Base64
+    audio: { id: string; data: string }[];   // Base64
+  };
+}
+
+class ExportService {
+  async exportData(): Promise<Blob>;        // JSON blob
+  async importData(file: File): Promise<void>;
+  async validateImport(data: any): boolean;
+}
+```
+
+== Performance Optimization
+
+=== IndexedDB
+- Indexes on frequently queried fields (createdAt, name, etc.)
+- Cursor-based pagination for large result sets
+- Batch operations for multiple inserts/updates
+- Transaction management (readwrite vs readonly)
+
+=== UI
+- Virtual scrolling for lists >100 items (react-window, vue-virtual-scroller)
+- Lazy loading images (IntersectionObserver)
+- Debounced search (300ms)
+- Code splitting by route (React.lazy, dynamic imports)
+- Memoization for expensive computations (useMemo, computed)
+
+=== Bundle Size
+- Tree shaking (Vite/Webpack)
+- Dynamic imports for heavy features (maps, image compression)
+- Minification and compression (gzip/brotli)
+- Target: <500KB initial bundle (gzipped)
+
+=== Caching Strategy (Service Worker)
+```javascript
+// Cache-first for static assets
+self.addEventListener('fetch', (event) => {
+  if (isStaticAsset(event.request.url)) {
+    event.respondWith(cacheFirst(event.request));
+  } else {
+    event.respondWith(networkFirst(event.request));
+  }
+});
+```
+
+== Security and Privacy
+
+=== Data Protection
+- All data stored locally in browser (IndexedDB)
+- No server communication (no API calls)
+- No cookies or tracking
+- Content Security Policy (CSP) headers
+
+=== Input Validation
+- Client-side validation for all user inputs
+- XSS prevention (sanitize HTML, use framework escaping)
+- SQL injection N/A (no SQL database)
+
+=== Permissions
+- Geolocation: Requested with user-friendly prompt
+- Camera: Requested on first image capture
+- Microphone: Requested on first audio recording
+- Storage: Automatic with quota management
+
+== Offline Capability (PWA)
+
+=== Service Worker Strategy
+```javascript
+// Cache static assets on install
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open('v1').then((cache) => {
+      return cache.addAll([
+        '/',
+        '/index.html',
+        '/main.js',
+        '/styles.css',
+        '/manifest.json'
+      ]);
+    })
+  );
+});
+
+// Network first, cache fallback for data
+// Cache first for static assets
+```
+
+=== PWA Manifest
+```json
+{
+  "name": "Zitate - Quote Collection",
+  "short_name": "Zitate",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+== Responsive Design
+
+=== Breakpoints
+- Mobile: 320px - 767px
+- Tablet: 768px - 1023px
+- Desktop: 1024px+
+
+=== Layout Strategy
+- CSS Grid for main layouts
+- Flexbox for component layouts
+- Mobile-first approach
+- Touch targets min 44px on mobile
+
+=== CSS Architecture
+```css
+/* CSS Custom Properties for theming */
+:root {
+  --color-primary: #3b82f6;
+  --color-bg: #ffffff;
+  --color-text: #1f2937;
+  --spacing-unit: 8px;
+  --border-radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1f2937;
+    --color-text: #f9fafb;
+  }
+}
+```
+
+== Accessibility (WCAG 2.1 AA)
+
+=== Requirements
+- Semantic HTML5 elements (header, nav, main, article, etc.)
+- ARIA labels and roles where needed
+- Keyboard navigation (Tab, Enter, Escape)
+- Focus management (visible focus indicators)
+- Color contrast ratio ≥4.5:1 (text), ≥3:1 (UI components)
+- Alt text for images
+- Screen reader announcements for dynamic content
+
+=== Testing Tools
+- axe DevTools
+- Lighthouse accessibility audit
+- NVDA / JAWS / VoiceOver testing
+
+== Browser Compatibility
+
+=== Target Browsers
+- Chrome 90+ (2021-04)
+- Firefox 88+ (2021-04)
+- Safari 14+ (2020-09)
+- Edge 90+ (2021-04)
+
+=== Required Features
+- ES6+ (classes, async/await, modules)
+- IndexedDB
+- Service Worker
+- CSS Grid / Flexbox
+- CSS Custom Properties
+- Geolocation API (optional)
+- MediaRecorder API (optional)
+- MediaDevices API (optional)
+
+=== Polyfills
+- None required for target browsers
+- Graceful degradation for optional features
+
+== Build and Deployment
+
+=== Build Configuration (Vite)
+```typescript
+// vite.config.ts
+export default defineConfig({
+  build: {
+    target: 'es2020',
+    outDir: 'dist',
+    minify: 'terser',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom'],
+          'maps': ['leaflet'],  // Dynamic import only when needed
+        }
+      }
+    }
+  },
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: {
+        // ... manifest config
+      }
+    })
+  ]
+});
+```
+
+=== Deployment Options
+- Static hosting (Netlify, Vercel, GitHub Pages)
+- No server required
+- CDN recommended for global distribution
+- HTTPS required for Service Worker and Geolocation
+
+=== CI/CD
+- Automated builds on git push
+- Lighthouse CI for performance monitoring
+- Automated accessibility tests
+- Bundle size monitoring
+
+== Development Environment
+
+=== Requirements
+- Node.js 18+
+- npm 9+ or pnpm 8+
+- Modern code editor (VS Code recommended)
+
+=== Recommended VS Code Extensions
+- ESLint
+- Prettier
+- TypeScript
+- ES7+ React/Redux/React-Native snippets
+
+=== Scripts
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write src",
+    "test": "vitest",
+    "test:e2e": "playwright test"
+  }
+}
+```
+
+== Testing Strategy
+
+=== Unit Tests (Vitest)
+- Service functions
+- Utility functions
+- IndexedDB operations (with fake-indexeddb)
+- Validation logic
+
+=== Component Tests (React Testing Library)
+- Component rendering
+- User interactions
+- Accessibility
+
+=== E2E Tests (Playwright)
+- Critical user flows
+- Cross-browser testing
+- Mobile viewport testing
+
+=== Performance Tests
+- Lighthouse CI (target score >90)
+- Bundle size limits
+- IndexedDB query performance
+
+## Dependencies
+
+=== Production Dependencies
+```json
+{
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "idb": "^7.1.1",              // IndexedDB wrapper
+    "uuid": "^9.0.0",              // UUID generation
+    "date-fns": "^2.30.0",         // Date utilities
+    "browser-image-compression": "^2.0.2"  // Image compression
+  }
+}
+```
+
+=== Development Dependencies
+```json
+{
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^4.3.0",
+    "vite-plugin-pwa": "^0.16.0",
+    "vitest": "^0.32.0",
+    "@testing-library/react": "^14.0.0",
+    "playwright": "^1.35.0",
+    "eslint": "^8.42.0",
+    "prettier": "^2.8.8"
+  }
+}
+```
+
+== Performance Targets
+
+=== Load Times
+- Initial load: <2s (desktop), <4s (mobile)
+- Time to Interactive: <3s (desktop), <5s (mobile)
+- First Contentful Paint: <1.5s
+
+=== Runtime Performance
+- Search response: <300ms
+- IndexedDB query: <100ms
+- UI interactions: 60fps
+- Virtual scroll: Smooth at 60fps
+
+=== Resource Usage
+- Memory: <100MB typical usage
+- Storage: ~10MB per 100 entries (excluding media)
+- IndexedDB: Monitor quota, warn at 80%
+
+## Localization (Future)
+
+*Not in v1.0 scope*, but architecture should support:
+- i18n library (react-i18n, vue-i18n)
+- Language files (JSON)
+- Date/number formatters respecting locale
+- RTL support in CSS
+
+== Technical Risks and Mitigations
+
+=== Risk: IndexedDB Quota Limits
+- *Mitigation:* Monitor storage usage, provide export before limits reached, warn user
+
+=== Risk: Browser Compatibility Issues
+- *Mitigation:* Feature detection, graceful degradation, clear browser requirements
+
+=== Risk: Data Loss
+- *Mitigation:* Automatic export prompts, periodic backup reminders, import/export functionality
+
+=== Risk: Performance with Large Datasets
+- *Mitigation:* Virtual scrolling, pagination, IndexedDB cursors, lazy loading
+
+=== Risk: Media Storage Limits
+- *Mitigation:* Image compression, size limits, warn before adding large files
+
+== Version History
+
+|===
+| Version | Date | Changes
+
+| 1.0.0
+| TBD
+| Initial web release - all Phase 1-6 features
+|===

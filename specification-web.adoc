@@ -1,0 +1,393 @@
+= Requirements Specification: Zitate Web v1.0
+:toc:
+:toclevels: 3
+
+== Overview
+Single-page web application (SPA) for collecting and managing sayings, citations, and "bon mots" with rich metadata including location, media, and intelligent organization capabilities. Data stored locally in browser using IndexedDB.
+
+== Functional Requirements
+
+=== FR-1: Data Collection and Storage
+
+==== FR-1.1: Text Entry
+*Requirement:* The system shall allow users to create entries containing text content with a minimum length of 1 character and maximum of 10,000 characters.
+
+.*Acceptance Criteria:*
+
+- User can input text via keyboard
+- Text field validates input length
+- Entry saves to IndexedDB
+
+==== FR-1.2: Location Association and Modification
+*Requirement:* The system shall attempt to capture and store browser geolocation coordinates (latitude/longitude) for each entry at the time of creation, and allow users to modify the location during entry creation or later during editing.
+
+.*Acceptance Criteria:*
+
+- Geolocation coordinates requested via browser Geolocation API
+- Browser permission prompt appears on first location request
+- Coordinates stored with each entry (accuracy varies by browser/device)
+- Location displayed as coordinates or address (if geocoding service available)
+- Location field is clickable to open interactive map interface
+- User can click new location on map or search for address
+- Map shows both original and new location before confirmation
+- User can cancel location change without saving
+- Location modification available during initial creation and subsequent editing
+- App functions fully if geolocation permission denied (location optional)
+
+==== FR-1.3: Image Attachment
+*Requirement:* The system shall allow users to attach up to 10 images per entry from device camera (if available) or file system, and remove individual images.
+
+.*Acceptance Criteria:*
+
+- User can capture photo using device camera (via file input or MediaDevices API)
+- User can select images from file system via file input
+- Images converted to Base64 or stored as Blobs in IndexedDB
+- Images compressed to max 2MB each (client-side compression)
+- Images stored in browser IndexedDB
+- User can remove individual images via delete button on image thumbnail
+- Fallback to file selection if camera not available
+
+==== FR-1.4: Audio Recording
+*Requirement:* The system shall allow users to record and attach audio clips up to 5 minutes duration per entry using browser MediaRecorder API, and remove audio recordings.
+
+.*Acceptance Criteria:*
+
+- Browser microphone permission requested on first recording attempt
+- Audio recorded using MediaRecorder API in WebM/Opus format (browser-dependent)
+- Maximum duration 5 minutes per clip
+- Audio playback available in entry detail view using HTML5 audio element
+- User can remove audio via delete button in audio player control
+- Audio stored as Blob in IndexedDB
+- Fallback message if browser doesn't support MediaRecorder API
+
+==== FR-1.5: Entry Creation Workflow
+*Requirement:* The system shall provide a "plus" button on the home screen that initiates the creation of a new entry with all data fields (text, location, images, audio, author, labels).
+
+.*Acceptance Criteria:*
+
+- Plus button visible and accessible on home screen
+- Clicking plus button opens entry creation form (modal or route)
+- Form includes all entry fields: text, location, images, audio, author, labels
+- Text field is required; all other fields optional
+- Location auto-requested on form open (if permission previously granted)
+- User can save entry or cancel without saving
+- Saved entry immediately appears in IndexedDB and search results
+
+==== FR-1.6: Entry Deletion
+*Requirement:* The system shall allow users to delete entries via delete button or context menu, with confirmation prompt before permanent deletion.
+
+.*Acceptance Criteria:*
+
+- Delete button/icon visible on entry card (on hover for desktop, always visible on mobile)
+- Clicking delete shows confirmation dialog
+- Confirmation dialog shows entry preview (first 50 characters)
+- User can confirm or cancel deletion
+- Confirmed deletion removes entry permanently from IndexedDB
+- Deletion removes associated images and audio blobs
+- No undo after confirmation
+- Optional: Swipe gesture on touch devices reveals delete action
+
+=== FR-2: Author Management
+
+==== FR-2.1: Author Assignment
+*Requirement:* The system shall allow optional assignment of an author to each entry, with author selection from existing authors or creation of new author records.
+
+.*Acceptance Criteria:*
+
+- Author field is optional on entry creation
+- Dropdown/select shows existing authors (alphabetically sorted)
+- "Create New Author" option available
+- No duplicate author names allowed (case-insensitive comparison)
+
+==== FR-2.2: Author Information Storage
+*Requirement:* The system shall store author metadata including name (required), date of birth (optional), location of birth (optional), date of death (optional), and Wikipedia URL (optional).
+
+.*Acceptance Criteria:*
+
+- Name field required, max 200 characters
+- Date fields use HTML5 date input
+- Location stored as text, max 200 characters
+- Wikipedia URL validated as proper URL format
+- All optional fields can be left blank
+
+==== FR-2.3: Author Editing and Deletion
+*Requirement:* The system shall allow users to edit existing author information and delete authors that are not associated with any entries.
+
+.*Acceptance Criteria:*
+
+- User can access author list from home screen icon/button
+- Clicking author in list opens edit form with all author fields
+- Changes to author information update all associated entries
+- Delete button/icon visible on author item (on hover for desktop)
+- Delete option available for authors with zero entries
+- Authors with existing entries cannot be deleted (error message shown)
+- Confirmation prompt before author deletion
+- Deleted authors removed permanently from IndexedDB
+- Optional: Swipe gesture on touch devices reveals delete action
+
+=== FR-3: Labeling and Categorization
+
+==== FR-3.1: Label Assignment
+*Requirement:* The system shall allow users to assign multiple labels (tags) to each entry, with case-insensitive storage and display.
+
+.*Acceptance Criteria:*
+
+- User can assign 0 to 50 labels per entry
+- Labels stored in lowercase internally
+- Labels displayed with first letter capitalized
+- No duplicate labels on single entry
+
+==== FR-3.2: Label Autocomplete
+*Requirement:* The system shall suggest existing labels as user types, showing top 10 matches alphabetically.
+
+.*Acceptance Criteria:*
+
+- Suggestions appear after 1 character typed
+- Matches based on prefix (case-insensitive)
+- Maximum 10 suggestions shown
+- User can select from suggestions or create new label
+- Suggestions displayed in dropdown/datalist
+
+==== FR-3.3: New Label Creation
+*Requirement:* The system shall allow users to create new labels on-the-fly during entry editing, with automatic addition to label database.
+
+.*Acceptance Criteria:*
+
+- User can type new label not in suggestions
+- New label added to system on entry save
+- Label name max 50 characters
+- Special characters allowed except comma and semicolon
+
+=== FR-4: Search and Organization
+
+==== FR-4.1: Text Search
+*Requirement:* The system shall provide a search text field on home screen that filters entries by text content matching (case-insensitive, partial match).
+
+.*Acceptance Criteria:*
+
+- Search text field visible on home screen
+- Entering text filters/navigates to search results view
+- Results update as user types (debounced 300ms)
+- Matches entry text, author name, and labels
+- Search highlights matching terms in results
+
+==== FR-4.2: Smart Folders
+*Requirement:* The system shall allow users to create custom folders based on combinations of entry attributes (labels, author, date range, location radius, text-match).
+
+.*Acceptance Criteria:*
+
+- User can create unlimited folders
+- Folder criteria include: labels (AND/OR), author, date range, location+radius, text-match
+- Folders update dynamically as entries change
+- Folders persist in IndexedDB across browser sessions
+
+==== FR-4.3: Smart Folder Management
+*Requirement:* The system shall provide UI for creating, editing, and deleting smart folders with structured criteria builder.
+
+.*Acceptance Criteria:*
+
+- First card in smart folders list displays plus icon for creating new folder
+- Clicking plus card opens folder creation form
+- Folder creation form includes name field (required, max 100 characters)
+- Criteria builder allows selecting: labels (AND/OR logic), author, date range, location+radius, text-match
+- Edit button on folder card opens folder form with current criteria
+- Delete button on folder card shows confirmation prompt with folder name
+- Deleting folder removes folder but not the entries within it
+- Folders can be reordered by drag-and-drop (desktop) or long-press drag (mobile)
+- Optional: Swipe gestures on touch devices for quick actions
+
+=== FR-5: User Interface
+
+==== FR-5.1: Web Design Standards Compliance
+*Requirement:* The system shall implement UI following modern web design standards with responsive layout and accessibility.
+
+.*Acceptance Criteria:*
+
+- Uses semantic HTML5 elements
+- Responsive design adapts to mobile (320px+), tablet (768px+), desktop (1024px+)
+- Supports light/dark mode via CSS custom properties and prefers-color-scheme
+- Implements standard web interactions (click, hover, keyboard navigation)
+- Passes WCAG 2.1 AA accessibility standards
+- Keyboard navigable (tab order, enter/space activation, escape to close modals)
+- Screen reader compatible (ARIA labels and roles)
+- Touch-friendly on mobile (minimum 44px touch targets)
+
+==== FR-5.2: Home Screen Layout
+*Requirement:* The system shall display a home screen showing the nearest quote based on current location (or latest quote if no location available), a search text field, intelligent folders as a list of cards, and access to author list editor.
+
+.*Acceptance Criteria:*
+
+- Plus button for entry creation visible in header or as floating action button
+- Featured quote card displays nearest entry within 10km radius (if geolocation available)
+- If no location or entries within 10km, displays most recently created entry
+- Search text field prominently positioned below featured quote
+- Intelligent folders displayed as scrollable list of cards below search field
+- Each folder card shows folder name and entry count
+- Author list editor accessible via button/icon in header
+- Featured quote shows: full text, author, distance/recency indicator, thumbnail
+- Clicking featured quote opens detail view
+- Clicking folder card opens folder contents view
+- Location refreshed on page load (not continuous tracking)
+
+==== FR-5.3: Card-Based Search Results
+*Requirement:* The system shall display search results as scrollable cards showing entry preview (first 160 characters), author name, and primary image thumbnail.
+
+.*Acceptance Criteria:*
+
+- Cards display in vertical scroll list
+- Each card shows: text preview, author, thumbnail, distance/date
+- Card click navigates to detail view
+- Smooth scrolling (CSS scroll-behavior, virtual scrolling for >100 items)
+- Delete button visible on card (on hover for desktop, always visible on mobile)
+
+==== FR-5.4: Folder Contents View
+*Requirement:* The system shall display entries matching folder criteria in a dedicated view with the same card-based layout as search results.
+
+.*Acceptance Criteria:*
+
+- Folder name displayed at top of view
+- Folder criteria summary shown below name
+- Entry count displayed
+- Entries shown as scrollable cards (same format as FR-5.3)
+- Each card shows: text preview, author, thumbnail, distance/date
+- Clicking entry card opens detail view
+- Delete button visible on entry card
+- Empty folder shows "No matching entries" message
+
+==== FR-5.5: Empty State Handling
+*Requirement:* The system shall provide helpful empty state messages and calls-to-action when no data exists.
+
+.*Acceptance Criteria:*
+
+- Home screen with 0 entries shows welcome message and prominent "+" button
+- Featured quote section hidden when no entries exist
+- Smart folders section shows "No folders yet" with hint to create first folder
+- Empty folder displays "No matching entries" message
+- Empty search results show "No matches found" with search term
+- Empty author list shows "No authors yet" message
+
+== Non-Functional Requirements
+
+=== NFR-1: Performance
+*Requirement:* The system shall load home screen with up to 1,000 entries within 2 seconds on modern desktop browsers and within 4 seconds on mobile browsers.
+
+.*Acceptance Criteria:*
+
+- Measured load time <2s (desktop), <4s (mobile) with 1,000 entries
+- IndexedDB queries optimized with indexes
+- Images lazy-loaded as user scrolls (IntersectionObserver)
+- Virtual scrolling for lists with >100 items
+- Bundle size <500KB (gzipped) for initial load
+- Lighthouse performance score >90
+
+=== NFR-2: Data Persistence
+*Requirement:* The system shall store all data locally using browser IndexedDB with data export/import functionality.
+
+.*Acceptance Criteria:*
+
+- Data persists across browser sessions using IndexedDB
+- Export functionality to download all data as JSON file
+- Import functionality to restore data from JSON file
+- No data loss on page refresh or browser crash
+- Schema versioning for IndexedDB migrations
+- Periodic automatic export to Downloads (optional, user configurable)
+- Clear data option in settings with confirmation
+- Storage quota management (warn user if approaching browser limits)
+
+=== NFR-3: Browser Support
+*Requirement:* The system shall support modern evergreen browsers on desktop and mobile platforms.
+
+.*Acceptance Criteria:*
+
+- Chrome 90+ (desktop and mobile)
+- Firefox 88+ (desktop and mobile)
+- Safari 14+ (desktop and mobile)
+- Edge 90+ (desktop)
+- Responsive design works on mobile (320px+), tablet (768px+), desktop (1024px+)
+- Progressive Web App (PWA) installable on supported browsers
+- Graceful feature degradation if APIs unavailable (camera, geolocation, MediaRecorder)
+
+=== NFR-4: Privacy
+*Requirement:* The system shall request explicit user permission for browser APIs and handle denials gracefully.
+
+.*Acceptance Criteria:*
+
+- Geolocation permission requested with clear context
+- Camera/microphone permissions requested on first use with explanation
+- App functions with all permissions denied (features disabled gracefully)
+- Privacy policy accessible from settings/footer
+- All data stored locally (no server communication)
+- No cookies, tracking, or analytics
+- Data export allows user to control their data
+
+=== NFR-5: Data Portability
+*Requirement:* The system shall allow users to export and import their complete data set.
+
+.*Acceptance Criteria:*
+
+- Export button generates JSON file with all entries, authors, labels, folders
+- Media files included as Base64 in export or separate files in ZIP
+- Import validates JSON structure before restoring data
+- Import offers merge or replace options
+- Export includes schema version for compatibility
+- Export/import handles large datasets (>1000 entries) without freezing UI (use Web Workers)
+
+=== NFR-6: Offline Capability
+*Requirement:* The system shall function fully offline after initial load as a Progressive Web App.
+
+.*Acceptance Criteria:*
+
+- Service Worker caches app shell and assets
+- All features work without network connection
+- App installable to home screen (PWA manifest)
+- Offline indicator shown when network unavailable
+- Data operations work offline via IndexedDB
+- Updates check for new version when online
+
+== Future Enhancements (Post v1.0)
+
+=== FE-1: Natural Language Query Processing
+*Description:* Integration with LLM API to convert natural language folder criteria (e.g., "quotes about love from 2024 near Paris") into logical search expressions.
+
+*Deferred Reason:* Requires external API integration and network connectivity; complexity not justified for v1.0 local-only approach.
+
+=== FE-2: LLM Label Suggestions
+*Description:* Integration with LLM API to automatically suggest relevant labels based on entry text content and existing label database.
+
+*Deferred Reason:* Requires external API integration; v1.0 focuses on local-only functionality.
+
+=== FE-3: Label Management
+*Description:* Dedicated label management interface to view all labels, edit label names, delete unused labels, and merge duplicate labels.
+
+*Deferred Reason:* Label management through usage is sufficient for v1.0; advanced management features can be added based on user feedback.
+
+=== FE-4: Cloud Sync
+*Description:* Optional cloud synchronization across devices using user's cloud storage (Google Drive, Dropbox, etc.)
+
+*Deferred Reason:* Local-only approach for v1.0; sync can be added if users request multi-device support.
+
+=== FE-5: Collaborative Features
+*Description:* Share quotes with other users, public/private collections, social features.
+
+*Deferred Reason:* Requires server backend; out of scope for local-only v1.0.
+
+== Constraints
+
+- Web platform only (desktop and mobile browsers)
+- Local-only architecture (no server backend required)
+- Browser storage limits apply (typically 50MB-1GB depending on browser)
+- Requires modern browser with IndexedDB, ES6+, CSS Grid support
+- Media features require browser API support (MediaRecorder, Geolocation, MediaDevices)
+- LLM features excluded from v1.0 (deferred to future enhancements)
+- Geocoding requires external service (optional feature)
+
+== Assumptions
+
+- Users grant necessary browser permissions (geolocation, camera, microphone)
+- Geolocation accuracy varies by device and browser (typically 10m-100m)
+- Users manage browser storage quota
+- IndexedDB available and not disabled
+- Modern JavaScript features supported (ES6+, Modules, async/await)
+- No requirement for cross-device sync in v1.0
+- Users understand data is stored locally (browser-specific, not cloud)
+- Users responsible for data backup via export functionality

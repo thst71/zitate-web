@@ -1,0 +1,1138 @@
+= Implementation Backlog: Zitate v1.0
+:toc:
+:toclevels: 3
+
+== Overview
+This backlog contains user stories and implementation tasks derived from the requirements specification. Stories are organized by epic and prioritized for iterative development.
+
+== Epic 1: Core Data Model and Persistence
+
+=== Story 1.1: Entry Data Model
+*As a* developer +
+*I want to* create the core Entry data model with all required fields +
+*So that* entries can be stored and retrieved from the database
+
+*Acceptance Criteria:*
+
+- Entry entity with fields: id, text, latitude, longitude, createdAt, updatedAt
+- Text field with 1-10,000 character validation
+- Location fields support nullable values
+- Core Data schema created
+- Database migration support implemented
+
+*Reference:* FR-1.1, FR-1.2
+
+---
+
+=== Story 1.2: Author Data Model
+*As a* developer +
+*I want to* create the Author data model with metadata fields +
+*So that* author information can be stored and linked to entries
+
+*Acceptance Criteria:*
+
+- Author entity with fields: id, name, dateOfBirth, locationOfBirth, dateOfDeath, wikipediaURL
+- Name required, max 200 characters
+- Optional fields properly nullable
+- One-to-many relationship with Entry
+- Unique constraint on name (case-insensitive)
+
+*Reference:* FR-2.1, FR-2.2
+
+---
+
+=== Story 1.3: Label Data Model
+*As a* developer +
+*I want to* create the Label data model with many-to-many relationship to entries +
+*So that* entries can be tagged with multiple labels
+
+*Acceptance Criteria:*
+
+- Label entity with fields: id, name
+- Name stored in lowercase, max 50 characters
+- Many-to-many relationship with Entry
+- Unique constraint on name
+
+*Reference:* FR-3.1
+
+---
+
+=== Story 1.4: Media Storage Model
+*As a* developer +
+*I want to* create models for storing image and audio file references +
+*So that* media can be associated with entries
+
+*Acceptance Criteria:*
+
+- Image entity with fields: id, filePath, order, entryId
+- Audio entity with fields: id, filePath, duration, entryId
+- One-to-many relationship from Entry to Image (max 10)
+- One-to-one relationship from Entry to Audio
+- File path validation
+
+*Reference:* FR-1.3, FR-1.4
+
+---
+
+=== Story 1.5: Smart Folder Data Model
+*As a* developer +
+*I want to* create the SmartFolder data model with criteria storage +
+*So that* folder configurations can be persisted
+
+*Acceptance Criteria:*
+
+- SmartFolder entity with fields: id, name, criteriaJSON, order, createdAt
+- Name required, max 100 characters
+- Criteria stored as JSON string
+- Order field for user-defined sorting
+
+*Reference:* FR-4.2, FR-4.4
+
+---
+
+=== Story 1.6: iCloud Sync Configuration
+*As a* developer +
+*I want to* configure Core Data for optional iCloud sync +
+*So that* users can backup their data to iCloud
+
+*Acceptance Criteria:*
+
+- Core Data stack configured for CloudKit
+- iCloud capability added to project
+- Sync option in app settings
+- Conflict resolution strategy implemented
+
+*Reference:* NFR-2
+
+---
+
+== Epic 2: Entry Management
+
+=== Story 2.1: Create Entry Screen
+*As a* user +
+*I want to* tap a plus button to create a new entry +
+*So that* I can add a new quote to my collection
+
+*Acceptance Criteria:*
+
+- Plus button visible on home screen (navigation bar or FAB)
+- Tapping opens entry creation form
+- Form includes: text field, location display, image section, audio section, author picker, label input
+- Text field is required
+- Cancel and Save buttons
+
+*Reference:* FR-1.5, FR-5.2
+
+---
+
+=== Story 2.2: Text Entry Input
+*As a* user +
+*I want to* enter text for my quote +
+*So that* I can record the saying or citation
+
+*Acceptance Criteria:*
+
+- Multi-line text field with keyboard input
+- Character counter showing 0/10,000
+- Validation error if empty or >10,000 characters
+- Auto-save draft locally
+
+*Reference:* FR-1.1
+
+---
+
+=== Story 2.3: Automatic Location Capture
+*As a* user +
+*I want to* have my current location automatically captured +
+*So that* I don't have to manually enter it
+
+*Acceptance Criteria:*
+
+- Location permission requested on first entry creation
+- GPS coordinates captured when form opens
+- Accuracy ±10 meters
+- Location displayed as address (reverse geocoding)
+- Fallback to coordinates if geocoding fails
+
+*Reference:* FR-1.2
+
+---
+
+=== Story 2.4: Location Modification
+*As a* user +
+*I want to* tap the location field to change it on a map +
+*So that* I can correct or customize the location
+
+*Acceptance Criteria:*
+
+- Location field is tappable
+- Opens full-screen map interface
+- Current location marked on map
+- User can tap new location or use search bar
+- Map shows both original and new location
+- Confirm/Cancel buttons
+- Selected location updates entry
+
+*Reference:* FR-1.2
+
+---
+
+=== Story 2.5: Image Attachment
+*As a* user +
+*I want to* attach images to my entry +
+*So that* I can add visual context to my quotes
+
+*Acceptance Criteria:*
+
+- "Add Image" button visible
+- User can take photo with camera
+- User can select from photo library
+- Camera and photo library permissions requested
+- Up to 10 images per entry
+- Images compressed to max 2MB each
+- Thumbnail preview displayed
+- Images stored in app sandbox
+
+*Reference:* FR-1.3
+
+---
+
+=== Story 2.6: Image Deletion
+*As a* user +
+*I want to* remove individual images from an entry +
+*So that* I can manage my image attachments
+
+*Acceptance Criteria:*
+
+- Delete button (X) on each image thumbnail
+- Tapping delete removes image
+- Confirmation prompt before deletion
+- Image file deleted from storage
+- UI updates to reflect removal
+
+*Reference:* FR-1.3
+
+---
+
+=== Story 2.7: Audio Recording
+*As a* user +
+*I want to* record audio for my entry +
+*So that* I can capture the spoken quote
+
+*Acceptance Criteria:*
+
+- "Record Audio" button visible
+- Microphone permission requested on first use
+- Recording interface with timer
+- Max duration 5 minutes
+- Audio recorded in M4A format
+- Stop/Cancel options during recording
+- Audio playback preview after recording
+
+*Reference:* FR-1.4
+
+---
+
+=== Story 2.8: Audio Deletion
+*As a* user +
+*I want to* remove audio from an entry +
+*So that* I can manage my audio attachments
+
+*Acceptance Criteria:*
+
+- Delete button in audio player control
+- Tapping delete removes audio
+- Confirmation prompt before deletion
+- Audio file deleted from storage
+- UI updates to show no audio
+
+*Reference:* FR-1.4
+
+---
+
+=== Story 2.9: Author Assignment
+*As a* user +
+*I want to* assign an author to my entry +
+*So that* I can track who said the quote
+
+*Acceptance Criteria:*
+
+- Author field with dropdown/picker
+- Shows existing authors alphabetically
+- "Create New Author" option at top
+- Optional field (can be left blank)
+- Search/filter for authors if list is long
+
+*Reference:* FR-2.1
+
+---
+
+=== Story 2.10: Label Assignment
+*As a* user +
+*I want to* add labels to my entry +
+*So that* I can categorize and organize my quotes
+
+*Acceptance Criteria:*
+
+- Label input field with autocomplete
+- Suggestions appear after 1 character typed
+- Shows top 10 matches (prefix-based)
+- User can select from suggestions or type new label
+- Labels displayed as chips/tags
+- User can add up to 50 labels
+- No duplicate labels on entry
+
+*Reference:* FR-3.1, FR-3.2, FR-3.3
+
+---
+
+=== Story 2.11: Entry Saving
+*As a* user +
+*I want to* save my completed entry +
+*So that* it's stored in my collection
+
+*Acceptance Criteria:*
+
+- Save button enabled when text is valid
+- Entry saved to database
+- New labels added to label database
+- Media files persisted
+- Entry immediately appears in search/folders
+- Success confirmation (navigate back or show toast)
+
+*Reference:* FR-1.5
+
+---
+
+=== Story 2.12: Entry Deletion
+*As a* user +
+*I want to* delete an entry by swiping left +
+*So that* I can remove quotes I no longer want
+
+*Acceptance Criteria:*
+
+- Swipe left on entry card reveals delete action
+- Confirmation dialog appears with entry preview (first 50 chars)
+- Confirm/Cancel buttons
+- Deletion removes entry from database
+- Associated images and audio files deleted
+- No undo after confirmation
+- UI updates to remove entry
+
+*Reference:* FR-1.6
+
+---
+
+=== Story 2.13: Entry Detail View
+*As a* user +
+*I want to* tap an entry to see its full details +
+*So that* I can read and review the complete quote
+
+*Acceptance Criteria:*
+
+- Tapping entry card opens detail view
+- Shows: full text, author, location (map + address), all images, audio player, labels
+- Edit button to modify entry
+- Back/Close button to return
+- Same form as creation for editing
+
+*Reference:* FR-5.2, FR-5.3, FR-5.4
+
+---
+
+== Epic 3: Author Management
+
+=== Story 3.1: Create Author
+*As a* user +
+*I want to* create a new author with metadata +
+*So that* I can store information about who said quotes
+
+*Acceptance Criteria:*
+
+- "Create New Author" option in author picker during entry creation
+- Opens author creation form
+- Fields: name (required), date of birth, location of birth, date of death, Wikipedia URL
+- Name max 200 characters
+- Date pickers for date fields
+- URL validation for Wikipedia field
+- Duplicate name check (case-insensitive)
+- Save/Cancel buttons
+
+*Reference:* FR-2.1, FR-2.2
+
+---
+
+=== Story 3.2: Author List Screen
+*As a* user +
+*I want to* access a list of all authors from the home screen +
+*So that* I can manage my author database
+
+*Acceptance Criteria:*
+
+- Author list icon in home screen navigation bar/toolbar
+- Tapping opens author list screen
+- Authors displayed alphabetically
+- Shows author name and entry count
+- Empty state: "No authors yet" message
+
+*Reference:* FR-2.3, FR-5.5
+
+---
+
+=== Story 3.3: Edit Author
+*As a* user +
+*I want to* tap an author to edit their information +
+*So that* I can update or correct author details
+
+*Acceptance Criteria:*
+
+- Tapping author in list opens edit form
+- Form pre-populated with current data
+- All fields editable (name, dates, location, Wikipedia URL)
+- Changes update all associated entries
+- Save/Cancel buttons
+- Validation same as creation
+
+*Reference:* FR-2.3
+
+---
+
+=== Story 3.4: Delete Author
+*As a* user +
+*I want to* delete authors who have no entries +
+*So that* I can keep my author list clean
+
+*Acceptance Criteria:*
+
+- Swipe left on author reveals delete action
+- Delete only available if author has 0 entries
+- If author has entries, show error: "Cannot delete author with existing entries"
+- Confirmation prompt shows author name
+- Confirm/Cancel buttons
+- Deleted authors removed from database
+
+*Reference:* FR-2.3
+
+---
+
+== Epic 4: Search and Organization
+
+=== Story 4.1: Text Search
+*As a* user +
+*I want to* search for entries using a text field on the home screen +
+*So that* I can quickly find specific quotes
+
+*Acceptance Criteria:*
+
+- Search text field visible on home screen
+- Entering text navigates to search results view
+- Results update as user types (300ms debounce)
+- Search matches: entry text, author name, labels
+- Case-insensitive partial match
+- Highlights matching terms in results
+- Shows "No matches found" for empty results
+
+*Reference:* FR-4.1, FR-5.5
+
+---
+
+=== Story 4.2: Search Results Display
+*As a* user +
+*I want to* see search results as scrollable cards +
+*So that* I can browse matching entries
+
+*Acceptance Criteria:*
+
+- Cards in vertical scroll list
+- Each card shows: text preview (first 160 chars), author, thumbnail, distance/date
+- Tapping card opens detail view
+- Smooth scrolling at 60fps minimum
+- Swipe left reveals delete action
+
+*Reference:* FR-5.3
+
+---
+
+=== Story 4.3: Create Smart Folder - UI
+*As a* user +
+*I want to* create a smart folder from a plus icon card +
+*So that* I can organize my quotes automatically
+
+*Acceptance Criteria:*
+
+- First card in folders section shows plus icon
+- Tapping opens folder creation form
+- Form has name field (required, max 100 characters)
+- Choice between "Natural Language" and "Criteria Builder" tabs
+- Save/Cancel buttons
+
+*Reference:* FR-4.4
+
+---
+
+=== Story 4.4: Criteria Builder
+*As a* user +
+*I want to* build folder criteria using a structured form +
+*So that* I can define my folder rules without using natural language
+
+*Acceptance Criteria:*
+
+- Labels section: multi-select with AND/OR toggle
+- Author section: single-select dropdown
+- Date range section: start/end date pickers
+- Location section: map picker + radius slider (km)
+- Text match section: text input field
+- Preview showing match count
+- All criteria optional (can combine any)
+
+*Reference:* FR-4.2, FR-4.4
+
+---
+
+=== Story 4.5: Natural Language Query Processing
+*As a* user +
+*I want to* describe my folder criteria in natural language +
+*So that* I can create folders without using a complex form
+
+*Acceptance Criteria:*
+
+- Text input field for natural language query
+- Example placeholder: "quotes about love from 2024 near Paris"
+- Submit button sends query to LLM
+- Processing indicator shown
+- LLM generates structured query (JSON)
+- Preview shows matching entries
+- Completes within 5 seconds
+- Fallback to criteria builder if LLM unavailable (iOS 17.x)
+
+*Reference:* FR-4.3, NFR-3
+
+---
+
+=== Story 4.6: Smart Folder Persistence
+*As a* developer +
+*I want to* store folder criteria as logical expressions +
+*So that* folders update dynamically without re-querying the LLM
+
+*Acceptance Criteria:*
+
+- Criteria stored as JSON in database
+- Query engine evaluates criteria against entries
+- Folders update when entries change (add/edit/delete)
+- No LLM required for subsequent folder updates
+- Efficient database queries with indexes
+
+*Reference:* FR-4.2, FR-4.3
+
+---
+
+=== Story 4.7: Edit Smart Folder
+*As a* user +
+*I want to* swipe right on a folder to edit it +
+*So that* I can modify the folder criteria
+
+*Acceptance Criteria:*
+
+- Swipe right on folder card reveals edit action
+- Tapping edit opens folder form
+- Form pre-populated with folder name and criteria
+- User can modify name or criteria
+- Save/Cancel buttons
+- Folder updates immediately
+
+*Reference:* FR-4.4
+
+---
+
+=== Story 4.8: Delete Smart Folder
+*As a* user +
+*I want to* swipe left on a folder to delete it +
+*So that* I can remove folders I no longer need
+
+*Acceptance Criteria:*
+
+- Swipe left on folder card reveals delete action
+- Confirmation prompt shows folder name
+- Confirm/Cancel buttons
+- Deletion removes folder but not entries
+- Folder removed from display
+
+*Reference:* FR-4.4
+
+---
+
+=== Story 4.9: Reorder Smart Folders
+*As a* user +
+*I want to* drag folders to reorder them +
+*So that* I can prioritize my most-used folders
+
+*Acceptance Criteria:*
+
+- Long press on folder card enables drag mode
+- User can drag folder to new position
+- Other folders shift to make space
+- Order persisted to database
+- Visual feedback during drag
+
+*Reference:* FR-4.4
+
+---
+
+=== Story 4.10: Folder Contents View
+*As a* user +
+*I want to* tap a folder to see matching entries +
+*So that* I can browse the quotes in that folder
+
+*Acceptance Criteria:*
+
+- Folder name at top
+- Criteria summary below name
+- Entry count displayed
+- Entries as scrollable cards (same format as search)
+- Tapping entry opens detail view
+- Swipe left on entry reveals delete
+- Empty state: "No matching entries"
+
+*Reference:* FR-5.4
+
+---
+
+== Epic 5: Home Screen and Navigation
+
+=== Story 5.1: Home Screen Layout
+*As a* user +
+*I want to* see a home screen with my nearest quote and navigation options +
+*So that* I have a useful starting point for the app
+
+*Acceptance Criteria:*
+
+- Plus button in navigation bar or FAB
+- Featured quote card (nearest within 10km or latest)
+- Featured quote shows: full text, author, distance/recency, thumbnail
+- Search text field below featured quote
+- Smart folders section below search (scrollable cards)
+- Author list icon in navigation bar/toolbar
+- Tapping featured quote opens detail view
+- Location updates when user moves >500m
+
+*Reference:* FR-5.2
+
+---
+
+=== Story 5.2: Featured Quote Selection
+*As a* developer +
+*I want to* implement logic to select the featured quote +
+*So that* the most relevant quote is displayed on the home screen
+
+*Acceptance Criteria:*
+
+- Calculate distance from current location to all entries
+- Select nearest entry within 10km radius
+- If no entries within 10km, select most recently created
+- Update when user location changes >500m
+- Efficient query (indexed location fields)
+
+*Reference:* FR-5.2
+
+---
+
+=== Story 5.3: Empty State - No Entries
+*As a* user +
+*I want to* see a helpful message when I have no entries +
+*So that* I know how to get started
+
+*Acceptance Criteria:*
+
+- Featured quote section hidden
+- Welcome message displayed
+- Prominent "+" button with call-to-action text
+- Folders section shows "No folders yet"
+- Clear, friendly copy encouraging first entry
+
+*Reference:* FR-5.5
+
+---
+
+=== Story 5.4: Empty State - Empty Folder
+*As a* user +
+*I want to* see a message when a folder has no matching entries +
+*So that* I understand the folder is working but has no results
+
+*Acceptance Criteria:*
+
+- "No matching entries" message in folder contents view
+- Suggestion to adjust criteria or add more entries
+- Edit folder button available
+
+*Reference:* FR-5.5
+
+---
+
+=== Story 5.5: Empty State - No Search Results
+*As a* user +
+*I want to* see a message when my search has no matches +
+*So that* I know my search completed but found nothing
+
+*Acceptance Criteria:*
+
+- "No matches found" message
+- Shows search term used
+- Suggestion to try different keywords
+
+*Reference:* FR-5.5
+
+---
+
+=== Story 5.6: Empty State - No Authors
+*As a* user +
+*I want to* see a message when I have no authors +
+*So that* I know the author list is empty
+
+*Acceptance Criteria:*
+
+- "No authors yet" message in author list
+- Explanation that authors are created when adding entries
+
+*Reference:* FR-5.5
+
+---
+
+== Epic 6: iOS Platform Integration
+
+=== Story 6.1: iOS Design System
+*As a* developer +
+*I want to* use iOS native components and design patterns +
+*So that* the app feels native to iOS users
+
+*Acceptance Criteria:*
+
+- UIKit or SwiftUI implementation
+- Native navigation bar, tab bar, buttons
+- iOS standard gestures (swipe, tap, long press, pinch)
+- System fonts and spacing
+- Follows Human Interface Guidelines
+
+*Reference:* FR-5.1
+
+---
+
+=== Story 6.2: Dark Mode Support
+*As a* user +
+*I want to* have the app automatically adapt to dark mode +
+*So that* it's comfortable to use in low light
+
+*Acceptance Criteria:*
+
+- Semantic colors defined (adaptable to light/dark)
+- All screens render correctly in dark mode
+- Switches automatically with system setting
+- Images/icons optimized for both modes
+
+*Reference:* FR-5.1
+
+---
+
+=== Story 6.3: Accessibility - VoiceOver
+*As a* user with visual impairment +
+*I want to* use VoiceOver to navigate the app +
+*So that* I can access all features
+
+*Acceptance Criteria:*
+
+- All UI elements have accessibility labels
+- Logical navigation order
+- Meaningful hints for complex interactions
+- Images have descriptions
+- Passes iOS accessibility audit
+
+*Reference:* FR-5.1
+
+---
+
+=== Story 6.4: Location Permission
+*As a* user +
+*I want to* be asked for location permission with clear explanation +
+*So that* I understand why the app needs my location
+
+*Acceptance Criteria:*
+
+- NSLocationWhenInUseUsageDescription in Info.plist
+- Clear explanation of location use
+- Permission requested on first entry creation
+- App functions with permission denied (no location capture)
+- Settings deeplink if user wants to change permission
+
+*Reference:* NFR-4, FR-1.2
+
+---
+
+=== Story 6.5: Camera and Photo Library Permissions
+*As a* user +
+*I want to* be asked for camera/photo permissions with clear explanation +
+*So that* I understand why the app needs access
+
+*Acceptance Criteria:*
+
+- NSCameraUsageDescription in Info.plist
+- NSPhotoLibraryUsageDescription in Info.plist
+- Clear explanations for each permission
+- Requested when user first attempts to add image
+- Feature disabled gracefully if permission denied
+
+*Reference:* NFR-4, FR-1.3
+
+---
+
+=== Story 6.6: Microphone Permission
+*As a* user +
+*I want to* be asked for microphone permission with clear explanation +
+*So that* I understand why the app needs access
+
+*Acceptance Criteria:*
+
+- NSMicrophoneUsageDescription in Info.plist
+- Clear explanation of microphone use
+- Requested when user first attempts to record audio
+- Feature disabled gracefully if permission denied
+
+*Reference:* NFR-4, FR-1.4
+
+---
+
+=== Story 6.7: Privacy Policy
+*As a* user +
+*I want to* see the privacy policy on first launch +
+*So that* I understand how my data is used
+
+*Acceptance Criteria:*
+
+- Privacy policy shown on first app launch
+- Accessible from settings afterward
+- Explains data storage (local only)
+- Explains optional iCloud sync
+- Explains LLM usage (network request for FR-4.3)
+
+*Reference:* NFR-4
+
+---
+
+=== Story 6.8: Platform Version Support
+*As a* developer +
+*I want to* support iOS 17.0+ with graceful degradation for LLM features +
+*So that* the app reaches the widest audience
+
+*Acceptance Criteria:*
+
+- Minimum deployment target iOS 17.0
+- Conditional compilation for iOS 18+ features
+- LLM features check iOS version at runtime
+- iOS 17.x users see only criteria builder (no natural language option)
+- Testing on iPhone SE (3rd gen) through iPhone 15 Pro Max
+- Responsive layout for all screen sizes
+
+*Reference:* NFR-3
+
+---
+
+== Epic 7: Performance and Quality
+
+=== Story 7.1: Home Screen Performance
+*As a* user +
+*I want to* see the home screen load quickly +
+*So that* the app feels responsive
+
+*Acceptance Criteria:*
+
+- Load time <2 seconds with 1,000 entries (iPhone 12+)
+- Database queries optimized with indexes
+- Images lazy-loaded as user scrolls
+- Featured quote query efficient
+- Folder count queries cached
+
+*Reference:* NFR-1
+
+---
+
+=== Story 7.2: Database Optimization
+*As a* developer +
+*I want to* optimize Core Data queries with indexes +
+*So that* searches and folder updates are fast
+
+*Acceptance Criteria:*
+
+- Indexes on: entry.text, entry.latitude, entry.longitude, entry.createdAt
+- Indexes on: author.name, label.name
+- Fetch request batch sizes configured
+- Faulting configured appropriately
+- NSFetchedResultsController for list views
+
+*Reference:* NFR-1
+
+---
+
+=== Story 7.3: Image Lazy Loading
+*As a* developer +
+*I want to* lazy-load images as user scrolls +
+*So that* list views scroll smoothly
+
+*Acceptance Criteria:*
+
+- Images loaded on-demand as cells appear
+- Image caching implemented
+- Placeholder shown while loading
+- Scroll performance maintains 60fps
+
+*Reference:* NFR-1
+
+---
+
+=== Story 7.4: Data Persistence and Crash Recovery
+*As a* developer +
+*I want to* ensure data survives app crashes +
+*So that* users never lose their entries
+
+*Acceptance Criteria:*
+
+- Core Data saves after each change
+- Auto-save on app background/terminate
+- Crash testing with zombie data
+- Database integrity checks on startup
+- No data loss in crash scenarios
+
+*Reference:* NFR-2
+
+---
+
+=== Story 7.5: Database Migrations
+*As a* developer +
+*I want to* handle schema changes automatically +
+*So that* users can upgrade without data loss
+
+*Acceptance Criteria:*
+
+- Core Data migration policy defined
+- Lightweight migrations enabled
+- Custom migration if needed for complex changes
+- Version tracking in database
+- Rollback strategy for failed migrations
+
+*Reference:* NFR-2
+
+---
+
+=== Story 7.6: iCloud Sync Settings
+*As a* user +
+*I want to* enable/disable iCloud sync in settings +
+*So that* I can control where my data is stored
+
+*Acceptance Criteria:*
+
+- Settings screen with iCloud toggle
+- Explanation of sync behavior
+- Initial sync progress indicator
+- Conflict resolution (last-write-wins or manual)
+- Option to download all data or selective sync
+
+*Reference:* NFR-2
+
+---
+
+== Epic 8: Testing and Quality Assurance
+
+=== Story 8.1: Unit Tests - Data Models
+*As a* developer +
+*I want to* write unit tests for data models +
+*So that* core data logic is verified
+
+*Acceptance Criteria:*
+
+- Tests for Entry, Author, Label, Image, Audio, SmartFolder models
+- Validation logic tested (character limits, required fields)
+- Relationship integrity tested
+- Edge cases covered (empty strings, max values, nulls)
+- 80%+ code coverage for model layer
+
+---
+
+=== Story 8.2: Unit Tests - Search and Query Logic
+*As a* developer +
+*I want to* write unit tests for search and folder query logic +
+*So that* search results are accurate
+
+*Acceptance Criteria:*
+
+- Tests for text search (partial match, case-insensitive)
+- Tests for folder criteria evaluation
+- Tests for location-based queries
+- Tests for date range queries
+- Edge cases (empty results, all results, special characters)
+
+---
+
+=== Story 8.3: UI Tests - Entry Creation Flow
+*As a* QA engineer +
+*I want to* write UI tests for entry creation +
+*So that* the main user flow is validated
+
+*Acceptance Criteria:*
+
+- Test: tap plus, enter text, save entry
+- Test: add images to entry
+- Test: record audio for entry
+- Test: assign author and labels
+- Test: modify location
+- Test: cancel entry creation
+
+---
+
+=== Story 8.4: UI Tests - Search and Navigation
+*As a* QA engineer +
+*I want to* write UI tests for search and navigation +
+*So that* key user journeys are verified
+
+*Acceptance Criteria:*
+
+- Test: search for entry by text
+- Test: create smart folder
+- Test: navigate to folder contents
+- Test: edit and delete folder
+- Test: tap entry to view details
+
+---
+
+=== Story 8.5: Performance Testing
+*As a* QA engineer +
+*I want to* test performance with large datasets +
+*So that* the app scales properly
+
+*Acceptance Criteria:*
+
+- Test with 1,000 entries
+- Test with 5,000 entries
+- Measure home screen load time
+- Measure search response time
+- Measure folder update time
+- Identify and fix performance bottlenecks
+
+---
+
+=== Story 8.6: Device Testing
+*As a* QA engineer +
+*I want to* test on multiple device sizes and iOS versions +
+*So that* the app works for all users
+
+*Acceptance Criteria:*
+
+- Test on iPhone SE (3rd gen) - small screen
+- Test on iPhone 15 Pro Max - large screen
+- Test on iOS 17.0
+- Test on iOS 18.0
+- Verify LLM feature availability on iOS versions
+- Verify responsive layout on all sizes
+
+---
+
+== Implementation Phases
+
+=== Phase 1: Foundation (Weeks 1-3)
+*Goal:* Core data models and basic entry management
+
+*Stories:*
+
+- Epic 1: All stories (1.1-1.6)
+- Epic 2: Stories 2.1-2.3, 2.11
+- Epic 6: Story 6.8 (platform setup)
+
+*Deliverable:* Can create and save basic entries with text and location
+
+---
+
+=== Phase 2: Rich Media and Authors (Weeks 4-5)
+*Goal:* Complete entry creation with media and authors
+
+*Stories:*
+
+- Epic 2: Stories 2.4-2.10
+- Epic 3: All stories (3.1-3.4)
+- Epic 6: Stories 6.4-6.6 (permissions)
+
+*Deliverable:* Full-featured entry creation with images, audio, authors, labels
+
+---
+
+=== Phase 3: Search and Organization (Weeks 6-8)
+*Goal:* Search and smart folders
+
+*Stories:*
+
+- Epic 4: All stories (4.1-4.10)
+- Epic 2: Stories 2.12-2.13 (deletion and detail view)
+
+*Deliverable:* Working search and smart folder system
+
+---
+
+=== Phase 4: Home Screen and UI Polish (Weeks 9-10)
+*Goal:* Complete home screen and empty states
+
+*Stories:*
+
+- Epic 5: All stories (5.1-5.6)
+- Epic 6: Stories 6.1-6.3, 6.7 (iOS design, dark mode, accessibility, privacy)
+
+*Deliverable:* Polished home screen with featured quote and navigation
+
+---
+
+=== Phase 5: Performance and iCloud (Week 11)
+*Goal:* Optimize performance and add iCloud sync
+
+*Stories:*
+
+- Epic 7: All stories (7.1-7.6)
+
+*Deliverable:* Fast, reliable app with optional iCloud sync
+
+---
+
+=== Phase 6: Testing and Release (Weeks 12-13)
+*Goal:* Comprehensive testing and App Store submission
+
+*Stories:*
+
+- Epic 8: All stories (8.1-8.6)
+- Bug fixes from testing
+- App Store assets and submission
+
+*Deliverable:* Zitate v1.0 on the App Store
+
+---
+
+== Definition of Done
+
+A story is considered "Done" when:
+
+1. Code is written and peer-reviewed
+2. Unit tests written and passing
+3. UI tests written for user-facing features
+4. Tested on iPhone SE and iPhone 15 Pro Max
+5. Tested on iOS 17.0 and iOS 18.0
+6. Accessibility labels added and tested with VoiceOver
+7. Dark mode verified
+8. Performance benchmarks met
+9. Code merged to main branch
+10. Stakeholder accepts the feature
+
+---
+
+== Technical Debt Tracking
+
+=== Known Compromises for v1.0
+
+1. **Label Management:** Deferred to v2.0 (FE-2)
+2. **LLM Label Suggestions:** Deferred to v2.0 (FE-1)
+3. **Advanced Media Editing:** No cropping/filters in v1.0
+4. **Export Functionality:** No export to PDF/sharing in v1.0
+5. **Statistics/Analytics:** No usage statistics in v1.0
+
+These will be prioritized based on user feedback after v1.0 launch.

@@ -1,0 +1,415 @@
+= Technical Specification: Zitate v1.0
+:toc:
+:toclevels: 3
+
+== Overview
+This document defines the technical architecture, tools, frameworks, and dependencies for the Zitate iOS application.
+
+== Technology Stack
+
+=== Primary Technologies
+- *Platform:* iOS 17.0+
+- *Language:* Swift 5.9+
+- *UI Framework:* SwiftUI
+- *IDE:* Xcode 15.0+
+- *Build System:* Swift Package Manager (SPM)
+
+=== Core Frameworks
+
+==== Apple Frameworks
+- *SwiftUI:* Declarative UI framework
+- *Core Data:* Local database and persistence
+- *CloudKit:* iCloud sync integration
+- *CoreLocation:* GPS and location services
+- *MapKit:* Map display and location picking
+- *AVFoundation:* Audio recording and playback
+- *Photos/PhotosUI:* Photo library access
+- *UIKit:* Camera capture (via UIViewControllerRepresentable)
+
+==== Optional Apple Intelligence
+- *Apple Intelligence API:* Natural language query processing (iOS 18.0+)
+- Graceful degradation for iOS 17.x
+
+== Project Structure
+
+=== Directory Layout
+```
+zitate/
+├── Zitate/                          # Main application target
+│   ├── ZitateApp.swift             # App entry point
+│   ├── Models/                     # Data models
+│   │   ├── Entry.swift
+│   │   ├── Author.swift
+│   │   ├── Label.swift
+│   │   ├── ImageAttachment.swift
+│   │   ├── AudioAttachment.swift
+│   │   └── SmartFolder.swift
+│   ├── ViewModels/                 # View models (MVVM)
+│   │   ├── EntryViewModel.swift
+│   │   ├── AuthorViewModel.swift
+│   │   ├── SearchViewModel.swift
+│   │   └── FolderViewModel.swift
+│   ├── Views/                      # SwiftUI views
+│   │   ├── Home/
+│   │   │   ├── HomeView.swift
+│   │   │   └── FeaturedQuoteCard.swift
+│   │   ├── Entry/
+│   │   │   ├── EntryCreationView.swift
+│   │   │   ├── EntryDetailView.swift
+│   │   │   └── EntryCardView.swift
+│   │   ├── Author/
+│   │   │   ├── AuthorListView.swift
+│   │   │   └── AuthorFormView.swift
+│   │   ├── Search/
+│   │   │   └── SearchResultsView.swift
+│   │   └── Folder/
+│   │       ├── FolderListView.swift
+│   │       ├── FolderFormView.swift
+│   │       └── FolderContentsView.swift
+│   ├── Services/                   # Business logic
+│   │   ├── PersistenceController.swift
+│   │   ├── LocationService.swift
+│   │   ├── MediaService.swift
+│   │   ├── SearchService.swift
+│   │   └── LLMService.swift
+│   ├── Utilities/                  # Helper utilities
+│   │   ├── Extensions/
+│   │   ├── Constants.swift
+│   │   └── Validators.swift
+│   └── Resources/                  # Assets and resources
+│       ├── Assets.xcassets
+│       ├── Zitate.xcdatamodeld     # Core Data model
+│       └── Info.plist
+├── ZitateTests/                    # Unit tests
+└── ZitateUITests/                  # UI tests
+```
+
+== Architecture Pattern
+
+=== MVVM (Model-View-ViewModel)
+- *Models:* Core Data entities and Swift structs
+- *Views:* SwiftUI views (declarative UI)
+- *ViewModels:* ObservableObject classes managing state and business logic
+- *Services:* Singleton/shared instances for cross-cutting concerns
+
+=== Data Flow
+```
+User Interaction → View → ViewModel → Service → Core Data
+                    ↑                              ↓
+                    └──────── Published ←──────────┘
+```
+
+== Core Data Schema
+
+=== Entities
+
+==== Entry
+- `id`: UUID (primary key)
+- `text`: String (1-10,000 characters)
+- `latitude`: Double (optional)
+- `longitude`: Double (optional)
+- `createdAt`: Date
+- `updatedAt`: Date
+- Relationships:
+  - `author`: Author (optional, to-one)
+  - `labels`: Label (many-to-many)
+  - `images`: ImageAttachment (one-to-many, max 10)
+  - `audio`: AudioAttachment (optional, to-one)
+
+==== Author
+- `id`: UUID (primary key)
+- `name`: String (required, unique, max 200 chars)
+- `dateOfBirth`: Date (optional)
+- `locationOfBirth`: String (optional, max 200 chars)
+- `dateOfDeath`: Date (optional)
+- `wikipediaURL`: String (optional)
+- Relationships:
+  - `entries`: Entry (one-to-many)
+
+==== Label
+- `id`: UUID (primary key)
+- `name`: String (required, unique, lowercase, max 50 chars)
+- Relationships:
+  - `entries`: Entry (many-to-many)
+
+==== ImageAttachment
+- `id`: UUID (primary key)
+- `filePath`: String (required)
+- `order`: Int16 (for sorting)
+- `createdAt`: Date
+- Relationships:
+  - `entry`: Entry (to-one)
+
+==== AudioAttachment
+- `id`: UUID (primary key)
+- `filePath`: String (required)
+- `duration`: Double (seconds)
+- `createdAt`: Date
+- Relationships:
+  - `entry`: Entry (to-one)
+
+==== SmartFolder
+- `id`: UUID (primary key)
+- `name`: String (required, max 100 chars)
+- `criteriaJSON`: String (JSON-encoded criteria)
+- `order`: Int16 (user-defined order)
+- `createdAt`: Date
+
+=== Indexes
+- Entry: `createdAt`, `latitude`, `longitude`, `text`
+- Author: `name`
+- Label: `name`
+
+== Persistence Strategy
+
+=== Core Data Stack
+- *Container:* NSPersistentCloudKitContainer (for iCloud support)
+- *Context:* Main queue context for UI, background context for imports
+- *Save Strategy:* Auto-save on every change, explicit save on app background/terminate
+
+=== File Storage
+- *Images:* Application Support directory, organized by entry ID
+- *Audio:* Application Support directory, organized by entry ID
+- *Naming:* UUID-based filenames to avoid conflicts
+
+=== iCloud Sync
+- *CloudKit Container:* iCloud.com.yourcompany.zitate
+- *Sync Scope:* All Core Data entities
+- *Conflict Resolution:* Last-write-wins (NSMergeByPropertyObjectTrump)
+- *User Control:* Toggle in Settings to enable/disable sync
+
+== Location Services
+
+=== Configuration
+- *Authorization:* When In Use (NSLocationWhenInUseUsageDescription)
+- *Accuracy:* Best accuracy for entry creation, reduced accuracy for home screen
+- *Updates:* Significant location changes (500m threshold)
+
+=== Geocoding
+- *Forward Geocoding:* CLGeocoder for address search
+- *Reverse Geocoding:* CLGeocoder for coordinates → address
+- *Caching:* Cache geocoding results to minimize API calls
+
+== Media Handling
+
+=== Images
+- *Input:* UIImagePickerController (camera/photo library)
+- *Compression:* JPEG compression to max 2MB per image
+- *Resize:* Max dimension 2048px (preserve aspect ratio)
+- *Thumbnails:* Generate 200px thumbnails for list views
+- *Storage Format:* JPEG files in app directory
+
+=== Audio
+- *Recording:* AVAudioRecorder with M4A format (AAC compression)
+- *Quality:* AVAudioQuality.medium (balance between size/quality)
+- *Max Duration:* 5 minutes (enforced in UI)
+- *Playback:* AVAudioPlayer with standard controls
+
+== Search Implementation
+
+=== Text Search
+- *Method:* Core Data NSPredicate with CONTAINS[cd] (case/diacritic insensitive)
+- *Fields:* Entry.text, Author.name, Label.name
+- *Debouncing:* 300ms delay to reduce query frequency
+- *Highlighting:* AttributedString with custom styles for matches
+
+=== Smart Folders
+- *Criteria Storage:* JSON dictionary in SmartFolder.criteriaJSON
+- *Query Generation:* Build NSPredicate from criteria at runtime
+- *Supported Criteria:*
+  - Labels: Array of label names with AND/OR logic
+  - Author: Author ID
+  - Date Range: Start/end dates
+  - Location: Center coordinates + radius (km)
+  - Text Match: Substring search
+- *Execution:* Fetch request with compound predicate
+
+=== LLM Integration (iOS 18.0+)
+- *Provider:* Apple Intelligence API
+- *Input:* Natural language string
+- *Output:* Structured JSON criteria
+- *Error Handling:* Fallback to manual criteria builder
+- *Timeout:* 5 seconds
+- *Privacy:* User consent required, data not stored by Apple
+
+== Performance Optimization
+
+=== Database
+- *Indexes:* All frequently queried fields indexed
+- *Batch Sizes:* NSFetchRequest.fetchBatchSize = 20
+- *Faulting:* Relationships as faults, loaded on-demand
+- *Background Context:* Heavy operations on background queue
+
+=== UI
+- *Lazy Loading:* LazyVStack/LazyVGrid for lists
+- *Image Loading:* AsyncImage with caching
+- *Pagination:* Load more as user scrolls
+- *View Caching:* @StateObject to prevent unnecessary re-creation
+
+=== Memory
+- *Image Cache:* URLCache with 100MB memory limit
+- *Audio Buffer:* Stream playback, don't load entire file
+- *Core Data:* NSFetchedResultsController for efficient list updates
+
+== Security and Privacy
+
+=== Data Protection
+- *File Protection:* NSFileProtectionComplete for all user data
+- *Keychain:* Not required (no passwords/tokens in v1.0)
+- *Encryption:* iOS file encryption (when device locked)
+
+=== Permissions
+- *Location:* NSLocationWhenInUseUsageDescription
+- *Camera:* NSCameraUsageDescription
+- *Photo Library:* NSPhotoLibraryUsageDescription
+- *Microphone:* NSMicrophoneUsageDescription
+
+=== Privacy Policy
+- *Required Disclosure:* Local storage, optional iCloud sync, LLM network requests
+- *Display:* On first launch and accessible in Settings
+
+== Testing Strategy
+
+=== Unit Tests
+- *Framework:* XCTest
+- *Coverage Target:* 80%+ for models, view models, services
+- *Mocking:* Protocol-based dependency injection
+- *Focus Areas:*
+  - Data validation
+  - Search query generation
+  - Folder criteria evaluation
+  - Location distance calculations
+
+=== UI Tests
+- *Framework:* XCUITest
+- *Coverage:* Critical user flows (entry creation, search, folder management)
+- *Accessibility IDs:* All interactive elements tagged
+- *Test Data:* Seed database with known entries
+
+=== Performance Tests
+- *Tool:* Instruments (Time Profiler, Allocations)
+- *Benchmarks:*
+  - Home screen load: <2s with 1,000 entries
+  - Search response: <500ms
+  - Scroll FPS: 60fps minimum
+
+== Build and Deployment
+
+=== Xcode Configuration
+- *Minimum iOS:* 17.0
+- *Swift Version:* 5.9
+- *Optimization:* Debug builds unoptimized, Release builds with -O optimization
+
+=== App Capabilities
+- iCloud (CloudKit)
+- Background Modes (for sync)
+- Location Services
+
+=== Code Signing
+- *Team:* Apple Developer Team ID
+- *Bundle ID:* com.yourcompany.zitate
+- *Provisioning:* Automatic signing (development), manual (production)
+
+=== Distribution
+- *Target:* App Store
+- *Testflight:* Internal testing before public release
+- *Version:* Semantic versioning (1.0.0)
+
+== Dependencies
+
+=== Swift Packages
+None required for v1.0 - using only Apple frameworks
+
+=== Potential Future Dependencies
+- *Networking:* Alamofire (if custom API needed)
+- *Image Processing:* Kingfisher (advanced caching)
+- *Analytics:* TelemetryDeck (privacy-focused analytics)
+
+Note: Keeping dependencies minimal to reduce maintenance burden and app size.
+
+== Development Environment
+
+=== Requirements
+- macOS 14.0+
+- Xcode 15.0+
+- iOS 17.0+ device or simulator for testing
+- iOS 18.0+ device for testing LLM features
+- Apple Developer Account (for device testing and distribution)
+
+=== Recommended Tools
+- *Version Control:* Git
+- *Code Review:* GitHub/GitLab
+- *CI/CD:* Xcode Cloud or GitHub Actions
+- *Design:* Figma (UI mockups)
+- *Project Management:* Linear/Jira (story tracking)
+
+== Performance Targets
+
+=== Load Times
+- Home screen: <2s (1,000 entries, iPhone 12+)
+- Entry detail: <500ms
+- Search results: <500ms (debounced)
+
+=== Resource Usage
+- Memory: <200MB typical usage
+- Storage: ~5MB per 100 entries (excluding media)
+- Battery: Background location updates minimal impact
+
+=== Network
+- iCloud sync: Background, low priority
+- LLM queries: <5s timeout, user-initiated only
+- Offline-first: All features work without network (except LLM)
+
+== Localization (Future)
+
+*Not in v1.0 scope*, but architecture should support:
+- String externalization (NSLocalizedString)
+- SwiftUI Text views for automatic localization
+- Date/number formatters respecting locale
+
+== Accessibility
+
+=== Compliance
+- VoiceOver support (all interactive elements labeled)
+- Dynamic Type (respect user font size preferences)
+- High Contrast mode
+- Reduce Motion (disable animations if requested)
+
+=== Testing
+- VoiceOver navigation audit
+- Accessibility Inspector validation
+- Manual testing with accessibility features enabled
+
+== Analytics and Monitoring (Future)
+
+*Not in v1.0 scope*, but consider:
+- Crash reporting (Apple's built-in crash logs)
+- Usage analytics (privacy-focused, no PII)
+- Performance monitoring (launch time, frame rates)
+
+== Technical Risks and Mitigations
+
+=== Risk: Core Data Migration Failures
+- *Mitigation:* Lightweight migrations only in v1.0, comprehensive testing
+
+=== Risk: iCloud Sync Conflicts
+- *Mitigation:* Last-write-wins policy, user notification on conflicts
+
+=== Risk: LLM API Availability/Changes
+- *Mitigation:* Graceful degradation to manual criteria builder
+
+=== Risk: Location Permission Denial
+- *Mitigation:* App fully functional without location (uses latest entry fallback)
+
+=== Risk: Large Media Files
+- *Mitigation:* Image compression, audio duration limits, file size monitoring
+
+== Version History
+
+|===
+| Version | Date | Changes
+
+| 1.0
+| TBD
+| Initial release - all Phase 1-6 features
+|===

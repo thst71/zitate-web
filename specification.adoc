@@ -1,0 +1,334 @@
+= Requirements Specification: Zitate v1.0
+:toc:
+:toclevels: 3
+
+== Overview
+Mobile iOS application for collecting and managing sayings, citations, and "bon mots" with rich metadata including location, media, and intelligent organization capabilities.
+
+== Functional Requirements
+
+=== FR-1: Data Collection and Storage
+
+==== FR-1.1: Text Entry
+*Requirement:* The system shall allow users to create entries containing text content with a minimum length of 1 character and maximum of 10,000 characters.
+
+*Acceptance Criteria:*
+
+- User can input text via keyboard
+- Text field validates input length
+- Entry saves to local database
+
+==== FR-1.2: Location Association and Modification
+*Requirement:* The system shall automatically capture and store GPS coordinates (latitude/longitude) for each entry at the time of creation, and allow users to immediately modify the location during entry creation or later during editing.
+
+*Acceptance Criteria:*
+
+- GPS coordinates captured automatically with accuracy of ±10 meters
+- Location permission requested on first use
+- Coordinates stored with each entry
+- Location displayed as address or coordinates in entry form
+- Location field is tappable to open interactive map interface
+- User can tap new location on map or search for address
+- Map shows both original and new location before confirmation
+- User can cancel location change without saving
+- Location modification available during initial creation and subsequent editing
+
+==== FR-1.3: Image Attachment
+*Requirement:* The system shall allow users to attach up to 10 images per entry from camera or photo library, and remove individual images.
+
+*Acceptance Criteria:*
+
+- User can take photo with camera
+- User can select from photo library
+- Images compressed to max 2MB each
+- Images stored in app sandbox
+- User can remove individual images via delete button on image thumbnail
+
+==== FR-1.4: Audio Recording
+*Requirement:* The system shall allow users to record and attach audio clips up to 5 minutes duration per entry, and remove audio recordings.
+
+*Acceptance Criteria:*
+
+- Microphone permission requested on first use
+- Audio recorded in M4A format
+- Maximum duration 5 minutes per clip
+- Audio playback available in entry detail view
+- User can remove audio via delete button in audio player control
+
+==== FR-1.5: Entry Creation Workflow
+*Requirement:* The system shall provide a "plus" button on the home screen that initiates the creation of a new entry with all data fields (text, location, images, audio, author, labels).
+
+*Acceptance Criteria:*
+
+- Plus button visible and accessible on home screen
+- Tapping plus button opens entry creation form
+- Form includes all entry fields: text, location, images, audio, author, labels
+- Text field is required; all other fields optional
+- Location auto-captured on form open
+- User can save entry or cancel without saving
+- Saved entry immediately appears in database and search results
+
+==== FR-1.6: Entry Deletion
+*Requirement:* The system shall allow users to delete entries using swipe gesture in list views, with confirmation prompt before permanent deletion.
+
+*Acceptance Criteria:*
+
+- Swipe left on entry card reveals delete action
+- Tapping delete shows confirmation dialog
+- Confirmation dialog shows entry preview (first 50 characters)
+- User can confirm or cancel deletion
+- Confirmed deletion removes entry permanently from database
+- Deletion removes associated images and audio files
+- No undo after confirmation
+
+=== FR-2: Author Management
+
+==== FR-2.1: Author Assignment
+*Requirement:* The system shall allow optional assignment of an author to each entry, with author selection from existing authors or creation of new author records.
+
+*Acceptance Criteria:*
+
+- Author field is optional on entry creation
+- Dropdown shows existing authors (alphabetically sorted)
+- "Create New Author" option available
+- No duplicate author names allowed (case-insensitive comparison)
+
+==== FR-2.2: Author Information Storage
+*Requirement:* The system shall store author metadata including name (required), date of birth (optional), location of birth (optional), date of death (optional), and Wikipedia URL (optional).
+
+*Acceptance Criteria:*
+
+- Name field required, max 200 characters
+- Date fields use standard date picker
+- Location stored as text, max 200 characters
+- Wikipedia URL validated as proper URL format
+- All optional fields can be left blank
+
+==== FR-2.3: Author Editing and Deletion
+*Requirement:* The system shall allow users to edit existing author information and delete authors that are not associated with any entries.
+
+*Acceptance Criteria:*
+
+- User can access author list from home screen icon
+- Tapping author in list opens edit form with all author fields
+- Changes to author information update all associated entries
+- Swipe left on author reveals delete action
+- Delete option available for authors with zero entries
+- Authors with existing entries cannot be deleted (error message shown)
+- Confirmation prompt before author deletion
+- Deleted authors removed permanently from database
+
+=== FR-3: Labeling and Categorization
+
+==== FR-3.1: Label Assignment
+*Requirement:* The system shall allow users to assign multiple labels (tags) to each entry, with case-insensitive storage and display.
+
+*Acceptance Criteria:*
+
+- User can assign 0 to 50 labels per entry
+- Labels stored in lowercase internally
+- Labels displayed with first letter capitalized
+- No duplicate labels on single entry
+
+==== FR-3.2: Label Autocomplete
+*Requirement:* The system shall suggest existing labels as user types, showing top 10 matches alphabetically.
+
+*Acceptance Criteria:*
+
+- Suggestions appear after 1 character typed
+- Matches based on prefix (case-insensitive)
+- Maximum 10 suggestions shown
+- User can select from suggestions or create new label
+
+==== FR-3.3: New Label Creation
+*Requirement:* The system shall allow users to create new labels on-the-fly during entry editing, with automatic addition to label database.
+
+*Acceptance Criteria:*
+
+- User can type new label not in suggestions
+- New label added to system on entry save
+- Label name max 50 characters
+- Special characters allowed except comma and semicolon
+
+=== FR-4: Search and Organization
+
+==== FR-4.1: Text Search
+*Requirement:* The system shall provide a search text field on home screen that filters entries by text content matching (case-insensitive, partial match).
+
+*Acceptance Criteria:*
+
+- Search text field visible on home screen
+- Entering text navigates to search results view
+- Results update as user types (debounced 300ms)
+- Matches entry text, author name, and labels
+- Search highlights matching terms in results
+
+==== FR-4.2: Smart Folders
+*Requirement:* The system shall allow users to create custom folders based on combinations of entry attributes (labels, author, date range, location radius, text-match).
+
+*Acceptance Criteria:*
+
+- User can create unlimited folders
+- Folder criteria include: labels (AND/OR), author, date range, location+radius, text-match
+- Folders update dynamically as entries change
+- Folders persist across app restarts
+
+==== FR-4.3: Natural Language Query Processing
+*Requirement:* The system shall convert natural language folder criteria (e.g., "quotes about love from 2024 near Paris") into logical search expressions using LLM integration.
+
+*Acceptance Criteria:*
+
+- User inputs criteria in free text
+- LLM processes text and generates structured query
+- Query stored as logical expression
+- Subsequent folder updates use stored expression (no LLM required)
+- Processing completes within 5 seconds
+
+==== FR-4.4: Smart Folder Management
+*Requirement:* The system shall provide UI for creating, editing, and deleting smart folders through intuitive gestures and a dedicated creation card.
+
+*Acceptance Criteria:*
+
+- First card in smart folders list displays plus icon for creating new folder
+- Tapping plus card opens folder creation form
+- Folder creation form includes name field (required, max 100 characters)
+- Form provides choice between natural language input (FR-4.3) or structured criteria builder
+- Criteria builder allows selecting: labels (AND/OR logic), author, date range, location+radius, text-match
+- Swipe right on folder card reveals edit options
+- Tapping edit reopens folder form with current criteria for modification
+- Swipe left on folder card reveals delete action
+- Delete action shows confirmation prompt with folder name
+- Deleting folder removes folder but not the entries within it
+- Folders can be reordered by drag-and-drop
+
+=== FR-5: User Interface
+
+==== FR-5.1: iOS Design Compliance
+*Requirement:* The system shall implement UI following iOS Human Interface Guidelines including native controls, gestures, and visual design patterns.
+
+*Acceptance Criteria:*
+
+- Uses UIKit or SwiftUI native components
+- Supports iOS dark/light mode
+- Implements standard iOS gestures (swipe, pinch, tap)
+- Passes iOS accessibility audit (VoiceOver compatible)
+
+==== FR-5.2: Home Screen Layout
+*Requirement:* The system shall display a home screen showing the nearest quote based on current location (or latest quote if no locations available), a search text field, intelligent folders as a list of cards, and access to author list editor.
+
+*Acceptance Criteria:*
+
+- Plus button for entry creation visible in navigation bar or as floating action button
+- Featured quote card displays nearest entry within 10km radius
+- If no entries within 10km, displays most recently created entry
+- Search text field prominently positioned below featured quote
+- Intelligent folders displayed as scrollable list of cards below search field
+- Each folder card shows folder name and entry count
+- Author list editor accessible via icon on home screen (e.g., in navigation bar or toolbar)
+- Featured quote shows: full text, author, distance/recency indicator, thumbnail
+- Tapping featured quote opens detail view
+- Tapping folder card opens folder contents view
+- Location updates when user moves >500m
+
+==== FR-5.3: Card-Based Search Results
+*Requirement:* The system shall display search results as scrollable cards showing entry preview (first 160 characters), author name, and primary image thumbnail.
+
+*Acceptance Criteria:*
+
+- Cards display in vertical scroll list
+- Each card shows: text preview, author, thumbnail, distance/date
+- Card tap navigates to detail view
+- Smooth scrolling at 60fps minimum
+
+==== FR-5.4: Folder Contents View
+*Requirement:* The system shall display entries matching folder criteria in a dedicated view with the same card-based layout as search results.
+
+*Acceptance Criteria:*
+
+- Folder name displayed at top of view
+- Folder criteria summary shown below name
+- Entry count displayed
+- Entries shown as scrollable cards (same format as FR-5.3)
+- Each card shows: text preview, author, thumbnail, distance/date
+- Tapping entry card opens detail view
+- Swipe left on entry reveals delete action
+- Empty folder shows "No matching entries" message
+
+==== FR-5.5: Empty State Handling
+*Requirement:* The system shall provide helpful empty state messages and calls-to-action when no data exists.
+
+*Acceptance Criteria:*
+
+- Home screen with 0 entries shows welcome message and prominent "+" button
+- Featured quote section hidden when no entries exist
+- Smart folders section shows "No folders yet" with hint to create first folder
+- Empty folder displays "No matching entries" message
+- Empty search results show "No matches found" with search term
+- Empty author list shows "No authors yet" message
+
+== Non-Functional Requirements
+
+=== NFR-1: Performance
+*Requirement:* The system shall load home screen with up to 1,000 entries within 2 seconds on iPhone 12 or newer.
+
+*Acceptance Criteria:*
+
+- Measured load time <2 seconds with 1,000 entries
+- Database queries optimized with indexes
+- Images lazy-loaded as user scrolls
+
+=== NFR-2: Data Persistence
+*Requirement:* The system shall store all data locally using Core Data or equivalent persistent storage with automatic backup to iCloud when enabled.
+
+*Acceptance Criteria:*
+
+- Data survives app restart
+- iCloud sync option in settings
+- No data loss on app crash
+- Database migrations handled automatically
+
+=== NFR-3: Platform Support
+*Requirement:* The system shall support iOS 17.0 and later on iPhone devices, with certain features requiring iOS 18.0+.
+
+*Acceptance Criteria:*
+
+- Minimum deployment target iOS 17.0
+- Tested on iPhone SE (3rd gen) through iPhone 15 Pro Max
+- Adapts to different screen sizes
+- LLM features (FR-4.3) require iOS 18.0+ and gracefully degrade on iOS 17.x
+- Users on iOS 17.x can use structured criteria builder instead of natural language input
+
+=== NFR-4: Privacy
+*Requirement:* The system shall request explicit user permission for location, camera, microphone, and photo library access per iOS requirements.
+
+*Acceptance Criteria:*
+
+- Permission prompts include clear usage description
+- App functions with permissions denied (features disabled gracefully)
+- Privacy policy displayed on first launch
+
+== Future Enhancements (Post v1.0)
+
+=== FE-1: LLM Label Suggestions
+*Description:* Integration with Apple Intelligence or similar LLM to automatically suggest relevant labels based on entry text content and existing label database.
+
+*Deferred Reason:* Depends on Apple Intelligence API availability and v1.0 user feedback on manual labeling workflow.
+
+=== FE-2: Label Management
+*Description:* Dedicated label management interface to view all labels, edit label names, delete unused labels, and merge duplicate labels.
+
+*Deferred Reason:* Label management through usage is sufficient for v1.0; advanced management features can be added based on user feedback.
+
+== Constraints
+
+- iOS platform only (no Android, web)
+- Offline-first architecture (no required server backend)
+- LLM features require iOS 18+ and compatible device for Apple Intelligence
+- Natural language query processing requires network connectivity
+
+== Assumptions
+
+- Users grant necessary permissions (location, camera, microphone, photos)
+- GPS accuracy sufficient in typical usage locations
+- Users have iCloud account for backup feature
+- LLM API (Apple Intelligence) available and accessible

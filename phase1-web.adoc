@@ -1,0 +1,578 @@
+= Phase 1 Implementation Plan: Foundation (Web)
+:toc:
+:toclevels: 3
+
+== Phase Overview
+
+*Goal:* Core data layer with IndexedDB and basic entry management
+
+*Duration:* Weeks 1-2
+
+*Deliverable:* Can create and save basic entries with text and location in the browser
+
+== Stories in Phase 1
+
+=== Epic 1: Core Data Layer and IndexedDB
+
+==== Story 1.1: IndexedDB Schema Setup
+*As a* developer +
+*I want to* create the IndexedDB schema with all required object stores +
+*So that* data can be stored and retrieved from the browser
+
+*Acceptance Criteria:*
+- Database "zitate-db" initialized on first app load
+- Object stores: entries, authors, labels, images, audio, folders
+- Indexes created for frequently queried fields
+- Schema version 1 defined
+- Migration system in place for future versions
+
+*Reference:* FR-1.1, FR-1.2, NFR-2
+
+*Technical Tasks:*
+1. Create `src/db/schema.ts` with object store definitions
+2. Implement database initialization in `src/services/db.service.ts`
+3. Add indexes (createdAt, name, entryId, latitude, longitude)
+4. Create migration system (version-based upgrades)
+5. Add error handling for quota exceeded
+6. Write unit tests with fake-indexeddb
+
+*Estimated Effort:* 6 hours
+
+---
+
+==== Story 1.2: TypeScript Interfaces
+*As a* developer +
+*I want to* define TypeScript interfaces for all data models +
+*So that* the codebase has type safety
+
+*Acceptance Criteria:*
+- Entry, Author, Label, ImageAttachment, AudioAttachment, SmartFolder interfaces
+- FolderCriteria nested interface
+- Validation types (ValidationResult)
+- Export all types from models/index.ts
+
+*Reference:* All FR requirements
+
+*Technical Tasks:*
+1. Create `src/models/Entry.ts` interface
+2. Create `src/models/Author.ts` interface
+3. Create `src/models/Label.ts` interface
+4. Create `src/models/ImageAttachment.ts` interface
+5. Create `src/models/AudioAttachment.ts` interface
+6. Create `src/models/SmartFolder.ts` interface
+7. Export all from `src/models/index.ts`
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 1.3: IndexedDB CRUD Service
+*As a* developer +
+*I want to* create a service wrapper for IndexedDB operations +
+*So that* components can easily interact with the database
+
+*Acceptance Criteria:*
+- DBService class with methods: get, getAll, add, update, delete, query
+- Transaction management (readonly vs readwrite)
+- Error handling and logging
+- Promise-based API
+- Cursor support for pagination (Phase 2+)
+
+*Reference:* NFR-2
+
+*Technical Tasks:*
+1. Create `src/services/db.service.ts`
+2. Implement init() method
+3. Implement CRUD methods (get, getAll, add, update, delete)
+4. Add query method with index support
+5. Add error handling
+6. Write unit tests with fake-indexeddb
+
+*Estimated Effort:* 6 hours
+
+---
+
+==== Story 1.4: Data Validation Utilities
+*As a* developer +
+*I want to* create validation functions for all data types +
+*So that* invalid data is prevented from being stored
+
+*Acceptance Criteria:*
+- validateEntryText (1-10,000 chars)
+- validateAuthorName (max 200 chars)
+- validateLabelName (max 50 chars, no comma/semicolon)
+- validateURL format
+- ValidationResult type for consistent error reporting
+
+*Reference:* FR-1.1, FR-2.2, FR-3.3
+
+*Technical Tasks:*
+1. Create `src/utils/validators.ts`
+2. Implement text validation
+3. Implement name validations
+4. Implement URL validation
+5. Create ValidationResult type
+6. Write unit tests for all validators
+
+*Estimated Effort:* 3 hours
+
+---
+
+=== Epic 2: Entry Management (Basic)
+
+==== Story 2.1: Project Setup and Build Configuration
+*As a* developer +
+*I want to* set up the project with Vite and React/TypeScript +
+*So that* development can begin
+
+*Acceptance Criteria:*
+- Vite project initialized
+- React 18+ and TypeScript configured
+- ESLint and Prettier configured
+- Git repository initialized
+- package.json with scripts
+
+*Reference:* NFR-3
+
+*Technical Tasks:*
+1. Run `npm create vite@latest zitate-web -- --template react-ts`
+2. Install dependencies (react, react-dom, idb, uuid)
+3. Configure tsconfig.json
+4. Set up ESLint with React plugin
+5. Set up Prettier
+6. Create .gitignore
+7. Initialize git repository
+8. Create directory structure
+
+*Estimated Effort:* 2 hours
+
+---
+
+==== Story 2.2: App Shell and Layout
+*As a* user +
+*I want to* have a consistent app layout +
+*So that* navigation is intuitive
+
+*Acceptance Criteria:*
+- Header with app name and plus button
+- Main content area
+- Responsive on mobile/tablet/desktop
+- Basic styling with CSS
+
+*Reference:* FR-5.1, FR-5.2
+
+*Technical Tasks:*
+1. Create `src/components/layout/Header.tsx`
+2. Create `src/components/layout/Layout.tsx`
+3. Create `src/styles/global.css` with CSS reset
+4. Create `src/styles/variables.css` with custom properties
+5. Implement mobile-first responsive design
+6. Add logo/title to header
+7. Add plus button to header
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 2.3: Entry Creation Form Component
+*As a* user +
+*I want to* click a plus button to create a new entry +
+*So that* I can add a new quote to my collection
+
+*Acceptance Criteria:*
+- Plus button visible in header
+- Clicking opens modal with entry form
+- Form includes: text area, location display
+- Text field is required
+- Cancel and Save buttons
+- Modal closes on cancel or save
+
+*Reference:* FR-1.5
+
+*Technical Tasks:*
+1. Create `src/components/common/Modal.tsx`
+2. Create `src/components/entry/EntryForm.tsx`
+3. Add state management for modal open/close
+4. Implement form with textarea and buttons
+5. Style modal (centered, overlay, responsive)
+6. Add keyboard support (Escape to close)
+7. Test modal flow
+
+*Estimated Effort:* 5 hours
+
+---
+
+==== Story 2.4: Text Input with Validation
+*As a* user +
+*I want to* enter text for my quote +
+*So that* I can record the saying or citation
+
+*Acceptance Criteria:*
+- Multi-line textarea
+- Character counter showing 0/10,000
+- Validation error if empty or >10,000 characters
+- Real-time validation as user types
+- Visual feedback (color coding)
+- Save button disabled when invalid
+
+*Reference:* FR-1.1
+
+*Technical Tasks:*
+1. Add textarea to EntryForm with onChange handler
+2. Add character counter display
+3. Implement validation logic (useEffect or onChange)
+4. Add visual feedback (border color, error message)
+5. Disable save button if text invalid
+6. Style form elements
+7. Test with 0 chars, 1 char, 10000 chars, 10001 chars
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 2.5: Geolocation Integration
+*As a* user +
+*I want to* have my current location automatically captured +
+*So that* I don't have to manually enter it
+
+*Acceptance Criteria:*
+- Browser geolocation permission requested on form open
+- GPS coordinates captured and displayed
+- Coordinates displayed as "lat, lng"
+- App works if permission denied (location optional)
+- Loading indicator while fetching location
+
+*Reference:* FR-1.2
+
+*Technical Tasks:*
+1. Create `src/services/location.service.ts`
+2. Implement getCurrentPosition using Geolocation API
+3. Handle permission request and denial
+4. Create `src/hooks/useLocation.ts` custom hook
+5. Integrate into EntryForm (useEffect on mount)
+6. Display coordinates in form
+7. Show loading state while fetching
+8. Handle errors gracefully
+
+*Estimated Effort:* 5 hours
+
+---
+
+==== Story 2.6: Entry Save to IndexedDB
+*As a* user +
+*I want to* save my completed entry +
+*So that* it's stored in my collection
+
+*Acceptance Criteria:*
+- Save button creates entry in IndexedDB
+- Entry includes text, coordinates, timestamps
+- Modal closes after save
+- Form resets for next entry
+- Error handling if save fails
+
+*Reference:* FR-1.5
+
+*Technical Tasks:*
+1. Create `src/hooks/useEntries.ts` custom hook
+2. Implement addEntry function calling db.service
+3. Generate UUID for new entry (using uuid library)
+4. Set createdAt and updatedAt timestamps
+5. Call DBService.add('entries', entry)
+6. Handle errors (quota exceeded, etc.)
+7. Close modal on success
+8. Reset form state
+9. Write integration test
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 2.7: Entry List Display
+*As a* user +
+*I want to* see my saved entries on the home screen +
+*So that* I can browse my collection
+
+*Acceptance Criteria:*
+- Entries displayed as cards
+- Shows text preview (first 160 chars), date
+- Sorted by creation date (newest first)
+- Empty state when no entries
+- Updates when new entry added
+
+*Reference:* FR-5.2, FR-5.5
+
+*Technical Tasks:*
+1. Create `src/components/entry/EntryCard.tsx`
+2. Create `src/components/entry/EntryList.tsx`
+3. Fetch entries from IndexedDB in useEffect
+4. Map entries to EntryCard components
+5. Implement empty state component
+6. Add basic card styling (border, padding, spacing)
+7. Format date display (date-fns)
+8. Test with 0, 1, and many entries
+
+*Estimated Effort:* 5 hours
+
+---
+
+=== Epic 3: UI Foundation
+
+==== Story 3.1: Dark Mode Support
+*As a* user +
+*I want to* use dark mode +
+*So that* the app is comfortable at night
+
+*Acceptance Criteria:*
+- Detects system preference (prefers-color-scheme)
+- CSS custom properties for colors
+- All components styled for both modes
+- Smooth transitions between modes
+
+*Reference:* FR-5.1
+
+*Technical Tasks:*
+1. Define CSS custom properties in `src/styles/variables.css`
+2. Create light theme color values
+3. Create dark theme with @media (prefers-color-scheme: dark)
+4. Update all components to use CSS variables
+5. Test in both light and dark modes
+6. Ensure WCAG contrast ratios met (4.5:1 for text)
+
+*Estimated Effort:* 3 hours
+
+---
+
+== Phase 1 Task Breakdown
+
+=== Week 1: Project Setup and Data Layer
+
+*Days 1-2: Project Setup*
+- Story 2.1: Project setup (2 hours)
+- Story 1.2: TypeScript interfaces (3 hours)
+- Story 1.4: Validation utilities (3 hours)
+
+*Days 3-5: IndexedDB Foundation*
+- Story 1.1: IndexedDB schema (6 hours)
+- Story 1.3: CRUD service (6 hours)
+- Integration testing
+
+*Total Week 1:* ~20 hours
+
+---
+
+=== Week 2: UI and Entry Management
+
+*Days 1-2: App Shell*
+- Story 2.2: Layout components (4 hours)
+- Story 3.1: Dark mode (3 hours)
+- Story 2.3: Entry form modal (5 hours)
+
+*Days 3-4: Entry Creation*
+- Story 2.4: Text input validation (3 hours)
+- Story 2.5: Geolocation (5 hours)
+
+*Day 5: Entry Save and Display*
+- Story 2.6: Save to IndexedDB (4 hours)
+- Story 2.7: Entry list display (5 hours)
+
+*Total Week 2:* ~29 hours
+
+---
+
+== Total Phase 1 Effort
+
+*Estimated Hours:* 49 hours
+*Calendar Time:* 2 weeks
+*Developer Capacity:* ~25 hours/week (part-time development)
+
+== Definition of Done (Phase 1)
+
+A story is considered "Done" when:
+
+1. ✅ Code is written and compiles without errors
+2. ✅ TypeScript types are correct (no 'any' types)
+3. ✅ Unit tests written and passing (where applicable)
+4. ✅ Tested in Chrome and Firefox
+5. ✅ Tested on mobile viewport (320px)
+6. ✅ Keyboard navigation works
+7. ✅ Dark mode tested
+8. ✅ Code formatted with Prettier
+9. ✅ ESLint passes with no errors
+10. ✅ Committed to git with descriptive message
+
+## Phase 1 Deliverables
+
+At the end of Phase 1, the web app should have:
+
+1. ✅ Complete IndexedDB schema with all object stores
+2. ✅ Working persistence layer (save/load from IndexedDB)
+3. ✅ Geolocation service that captures browser coordinates
+4. ✅ Entry creation modal with:
+   - Multi-line text input with character counter
+   - Automatic location capture and display
+   - Save and Cancel buttons
+5. ✅ Ability to create and save entries with text and location
+6. ✅ Entry list displaying saved entries
+7. ✅ Dark mode support
+8. ✅ Responsive layout (mobile/tablet/desktop)
+
+## What's NOT in Phase 1
+
+The following features are explicitly excluded from Phase 1:
+
+- ❌ Image attachment (Phase 2)
+- ❌ Audio recording (Phase 2)
+- ❌ Author assignment (Phase 2)
+- ❌ Label assignment (Phase 2)
+- ❌ Location modification with map picker (Phase 2)
+- ❌ Entry editing (Phase 2)
+- ❌ Entry deletion (Phase 2)
+- ❌ Search functionality (Phase 3)
+- ❌ Smart folders (Phase 3)
+- ❌ PWA/Service Worker (Phase 4)
+- ❌ Export/Import (Phase 4)
+
+## Technology Stack for Phase 1
+
+### Core Dependencies
+```json
+{
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "idb": "^7.1.1",
+    "uuid": "^9.0.0",
+    "date-fns": "^2.30.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^4.3.0",
+    "vitest": "^0.32.0",
+    "fake-indexeddb": "^4.0.2",
+    "eslint": "^8.42.0",
+    "prettier": "^2.8.8"
+  }
+}
+```
+
+### File Structure (Phase 1)
+```
+zitate-web/
+├── public/
+│   └── index.html
+├── src/
+│   ├── main.tsx
+│   ├── App.tsx
+│   ├── vite-env.d.ts
+│   ├── db/
+│   │   └── schema.ts
+│   ├── models/
+│   │   ├── Entry.ts
+│   │   ├── Author.ts
+│   │   ├── Label.ts
+│   │   ├── ImageAttachment.ts
+│   │   ├── AudioAttachment.ts
+│   │   ├── SmartFolder.ts
+│   │   └── index.ts
+│   ├── services/
+│   │   ├── db.service.ts
+│   │   └── location.service.ts
+│   ├── hooks/
+│   │   ├── useEntries.ts
+│   │   └── useLocation.ts
+│   ├── components/
+│   │   ├── common/
+│   │   │   └── Modal.tsx
+│   │   ├── entry/
+│   │   │   ├── EntryForm.tsx
+│   │   │   ├── EntryCard.tsx
+│   │   │   └── EntryList.tsx
+│   │   └── layout/
+│   │       ├── Header.tsx
+│   │       └── Layout.tsx
+│   ├── utils/
+│   │   └── validators.ts
+│   └── styles/
+│       ├── global.css
+│       └── variables.css
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── .gitignore
+```
+
+## Testing Strategy for Phase 1
+
+=== Unit Tests
+- Validators (text, name, URL validation)
+- DBService methods (with fake-indexeddb)
+- LocationService methods
+
+=== Component Tests
+- EntryForm rendering and interactions
+- EntryCard display
+- Modal open/close
+
+=== Manual Tests
+- Create entry with text
+- Create entry with location permission granted
+- Create entry with location permission denied
+- Text validation edge cases
+- Character counter updates
+- Save button disabled state
+- Modal keyboard navigation (Escape)
+- Dark mode toggle
+- Responsive design (320px, 768px, 1024px)
+- Browser compatibility (Chrome, Firefox, Safari)
+
+## Risk Mitigation
+
+=== Risk: IndexedDB Not Available
+*Mitigation:* Check for IndexedDB support on app load, show error message if unavailable
+
+=== Risk: Geolocation Permission Denied
+*Mitigation:* Location is optional, app works without it
+
+=== Risk: Browser Compatibility
+*Mitigation:* Target modern browsers (Chrome 90+, Firefox 88+, Safari 14+), use feature detection
+
+=== Risk: Storage Quota
+*Mitigation:* Handle quota exceeded errors gracefully, warn user (Phase 4 will add export)
+
+## Success Criteria
+
+Phase 1 is successful if:
+
+1. ✅ User can create an entry with text
+2. ✅ Location is automatically captured (if permission granted)
+3. ✅ Entry is saved to IndexedDB
+4. ✅ Entry persists after page refresh
+5. ✅ Entries displayed in list view
+6. ✅ Dark mode works
+7. ✅ Responsive on mobile and desktop
+8. ✅ All unit tests pass
+9. ✅ No console errors or warnings
+10. ✅ Code is maintainable and well-documented
+
+## Next Steps After Phase 1
+
+Once Phase 1 is complete and accepted:
+
+1. Review and retrospective
+2. Adjust estimates for Phase 2 based on learnings
+3. Begin Phase 2: Media and Authors
+   - Image upload and compression
+   - Audio recording with MediaRecorder
+   - Author assignment
+   - Label assignment
+   - Entry deletion
+4. Continue iterative development
+
+---
+
+*Last Updated:* 2026-03-15
+*Status:* Ready to Begin
+*Platform:* Web (React + TypeScript + IndexedDB)

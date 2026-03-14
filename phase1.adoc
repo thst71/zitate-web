@@ -1,0 +1,480 @@
+= Phase 1 Implementation Plan: Foundation
+:toc:
+:toclevels: 3
+
+== Phase Overview
+
+*Goal:* Core data models and basic entry management
+
+*Duration:* Weeks 1-3
+
+*Deliverable:* Can create and save basic entries with text and location
+
+== Stories in Phase 1
+
+=== Epic 1: Core Data Model and Persistence
+
+==== Story 1.1: Entry Data Model
+*As a* developer +
+*I want to* create the core Entry data model with all required fields +
+*So that* entries can be stored and retrieved from the database
+
+*Acceptance Criteria:*
+- Entry entity with fields: id, text, latitude, longitude, createdAt, updatedAt
+- Text field with 1-10,000 character validation
+- Location fields support nullable values
+- Core Data schema created
+- Database migration support implemented
+
+*Reference:* FR-1.1, FR-1.2
+
+*Technical Tasks:*
+1. Create Zitate.xcdatamodeld file
+2. Define Entry entity with attributes
+3. Add validation rules to Entry model class
+4. Create Entry+CoreDataClass.swift and Entry+CoreDataProperties.swift
+5. Write unit tests for Entry validation
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 1.2: Author Data Model
+*As a* developer +
+*I want to* create the Author data model with metadata fields +
+*So that* author information can be stored and linked to entries
+
+*Acceptance Criteria:*
+- Author entity with fields: id, name, dateOfBirth, locationOfBirth, dateOfDeath, wikipediaURL
+- Name required, max 200 characters
+- Optional fields properly nullable
+- One-to-many relationship with Entry
+- Unique constraint on name (case-insensitive)
+
+*Reference:* FR-2.1, FR-2.2
+
+*Technical Tasks:*
+1. Add Author entity to Core Data model
+2. Define all attributes with proper types
+3. Create relationship: Entry.author → Author
+4. Create relationship: Author.entries → [Entry]
+5. Add unique constraint on name
+6. Create Author+CoreDataClass.swift and Author+CoreDataProperties.swift
+7. Write unit tests for Author validation and relationships
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 1.3: Label Data Model
+*As a* developer +
+*I want to* create the Label data model with many-to-many relationship to entries +
+*So that* entries can be tagged with multiple labels
+
+*Acceptance Criteria:*
+- Label entity with fields: id, name
+- Name stored in lowercase, max 50 characters
+- Many-to-many relationship with Entry
+- Unique constraint on name
+
+*Reference:* FR-3.1
+
+*Technical Tasks:*
+1. Add Label entity to Core Data model
+2. Define name attribute (String, lowercase)
+3. Create many-to-many relationship: Entry.labels ↔ Label.entries
+4. Add unique constraint on name
+5. Create Label+CoreDataClass.swift and Label+CoreDataProperties.swift
+6. Implement lowercase conversion in setter
+7. Write unit tests for Label validation and relationships
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 1.4: Media Storage Model
+*As a* developer +
+*I want to* create models for storing image and audio file references +
+*So that* media can be associated with entries
+
+*Acceptance Criteria:*
+- Image entity with fields: id, filePath, order, entryId
+- Audio entity with fields: id, filePath, duration, entryId
+- One-to-many relationship from Entry to Image (max 10)
+- One-to-one relationship from Entry to Audio
+- File path validation
+
+*Reference:* FR-1.3, FR-1.4
+
+*Technical Tasks:*
+1. Add ImageAttachment entity to Core Data model
+2. Add AudioAttachment entity to Core Data model
+3. Define all attributes for both entities
+4. Create relationships: Entry.images → [ImageAttachment]
+5. Create relationship: Entry.audio → AudioAttachment (optional)
+6. Add validation for max 10 images
+7. Create model class files
+8. Write unit tests for media relationships
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 1.5: Smart Folder Data Model
+*As a* developer +
+*I want to* create the SmartFolder data model with criteria storage +
+*So that* folder configurations can be persisted
+
+*Acceptance Criteria:*
+- SmartFolder entity with fields: id, name, criteriaJSON, order, createdAt
+- Name required, max 100 characters
+- Criteria stored as JSON string
+- Order field for user-defined sorting
+
+*Reference:* FR-4.2, FR-4.4
+
+*Technical Tasks:*
+1. Add SmartFolder entity to Core Data model
+2. Define all attributes
+3. Create SmartFolder+CoreDataClass.swift and SmartFolder+CoreDataProperties.swift
+4. Add JSON encode/decode helpers for criteria
+5. Write unit tests for SmartFolder
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 1.6: Core Data Stack Setup
+*As a* developer +
+*I want to* set up the Core Data persistence stack +
+*So that* data can be saved and loaded reliably
+
+*Acceptance Criteria:*
+- PersistenceController singleton created
+- NSPersistentCloudKitContainer configured
+- Main context for UI operations
+- Background context for heavy operations
+- Preview context for SwiftUI previews
+- Auto-save on app background/terminate
+
+*Reference:* NFR-2
+
+*Technical Tasks:*
+1. Create PersistenceController.swift
+2. Initialize NSPersistentCloudKitContainer
+3. Configure viewContext (main queue)
+4. Create backgroundContext method
+5. Add preview static instance with in-memory store
+6. Implement save() method with error handling
+7. Add app lifecycle observers for auto-save
+8. Write unit tests for persistence operations
+
+*Estimated Effort:* 5 hours
+
+---
+
+=== Epic 2: Entry Management (Basic)
+
+==== Story 2.1: Create Entry Screen
+*As a* user +
+*I want to* tap a plus button to create a new entry +
+*So that* I can add a new quote to my collection
+
+*Acceptance Criteria:*
+- Plus button visible on home screen (navigation bar)
+- Tapping opens entry creation form
+- Form includes: text field, location display
+- Text field is required
+- Cancel and Save buttons
+
+*Reference:* FR-1.5, FR-5.2
+
+*Technical Tasks:*
+1. Create EntryCreationView.swift (SwiftUI)
+2. Create EntryViewModel.swift (ObservableObject)
+3. Add NavigationStack to ContentView
+4. Add toolbar button (plus icon) to navigate to creation view
+5. Implement text field with binding to ViewModel
+6. Add Cancel and Save buttons
+7. Implement save logic in ViewModel
+8. Add validation for text field
+9. Write UI tests for navigation and basic entry creation
+
+*Estimated Effort:* 6 hours
+
+---
+
+==== Story 2.2: Text Entry Input
+*As a* user +
+*I want to* enter text for my quote +
+*So that* I can record the saying or citation
+
+*Acceptance Criteria:*
+- Multi-line text field with keyboard input
+- Character counter showing 0/10,000
+- Validation error if empty or >10,000 characters
+- Auto-save draft locally (bonus for Phase 1)
+
+*Reference:* FR-1.1
+
+*Technical Tasks:*
+1. Add TextEditor to EntryCreationView
+2. Add character counter label below text field
+3. Implement character count computed property in ViewModel
+4. Add validation logic (1-10,000 chars)
+5. Show error message for invalid input
+6. Disable save button if validation fails
+7. Add unit tests for text validation
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 2.3: Automatic Location Capture
+*As a* user +
+*I want to* have my current location automatically captured +
+*So that* I don't have to manually enter it
+
+*Acceptance Criteria:*
+- Location permission requested on first entry creation
+- GPS coordinates captured when form opens
+- Accuracy ±10 meters
+- Location displayed as address (reverse geocoding)
+- Fallback to coordinates if geocoding fails
+
+*Reference:* FR-1.2
+
+*Technical Tasks:*
+1. Add NSLocationWhenInUseUsageDescription to Info.plist
+2. Create LocationService.swift (ObservableObject)
+3. Implement CLLocationManager wrapper
+4. Request location permission
+5. Get current location with desired accuracy
+6. Implement reverse geocoding with CLGeocoder
+7. Update EntryViewModel to use LocationService
+8. Display location in EntryCreationView
+9. Handle permission denial gracefully
+10. Write unit tests for LocationService
+
+*Estimated Effort:* 6 hours
+
+---
+
+==== Story 2.11: Entry Saving
+*As a* user +
+*I want to* save my completed entry +
+*So that* it's stored in my collection
+
+*Acceptance Criteria:*
+- Save button enabled when text is valid
+- Entry saved to database
+- Entry immediately appears in database
+- Success confirmation (navigate back)
+
+*Reference:* FR-1.5
+
+*Technical Tasks:*
+1. Implement saveEntry() method in EntryViewModel
+2. Create Entry entity in Core Data
+3. Set text, latitude, longitude, createdAt, updatedAt
+4. Call PersistenceController.shared.save()
+5. Handle save errors
+6. Navigate back on success
+7. Show error alert on failure
+8. Write unit tests for save operation
+9. Write integration tests for full save flow
+
+*Estimated Effort:* 4 hours
+
+---
+
+=== Epic 6: Platform Setup
+
+==== Story 6.8: Platform Version Support
+*As a* developer +
+*I want to* support iOS 17.0+ with proper configuration +
+*So that* the app runs on the target platform
+
+*Acceptance Criteria:*
+- Minimum deployment target iOS 17.0
+- Xcode project configured
+- SwiftUI app structure
+- App icon and basic assets
+- Launch screen
+
+*Reference:* NFR-3
+
+*Technical Tasks:*
+1. Create new Xcode project (iOS, SwiftUI App)
+2. Set deployment target to iOS 17.0
+3. Configure bundle identifier: com.yourcompany.zitate
+4. Set up project structure (Models, Views, ViewModels, Services, Resources)
+5. Create ZitateApp.swift with @main
+6. Add app icon to Assets.xcassets
+7. Configure Info.plist
+8. Set up .gitignore for Xcode
+9. Initialize git repository
+10. Create README.md with setup instructions
+
+*Estimated Effort:* 2 hours
+
+---
+
+== Phase 1 Task Breakdown
+
+=== Week 1: Project Setup and Core Data Models
+
+*Days 1-2: Project Setup*
+- Story 6.8: Platform Version Support (2 hours)
+- Set up project repository
+- Configure Xcode workspace
+- Create folder structure
+
+*Days 3-5: Core Data Models*
+- Story 1.1: Entry Data Model (4 hours)
+- Story 1.2: Author Data Model (3 hours)
+- Story 1.3: Label Data Model (3 hours)
+- Story 1.4: Media Storage Model (4 hours)
+- Story 1.5: Smart Folder Data Model (3 hours)
+
+*Total Week 1:* ~19 hours
+
+---
+
+=== Week 2: Persistence and Services
+
+*Days 1-2: Persistence Stack*
+- Story 1.6: Core Data Stack Setup (5 hours)
+- Integration testing of all models
+- Fix any schema issues
+
+*Days 3-5: Location Service*
+- Story 2.3: Automatic Location Capture (6 hours)
+- Test location service on device
+- Test permission flows
+
+*Total Week 2:* ~11 hours
+
+---
+
+=== Week 3: Entry Creation UI
+
+*Days 1-3: Basic UI*
+- Story 2.1: Create Entry Screen (6 hours)
+- Story 2.2: Text Entry Input (3 hours)
+
+*Days 4-5: Save Functionality*
+- Story 2.11: Entry Saving (4 hours)
+- Integration testing
+- Bug fixes and polish
+
+*Total Week 3:* ~13 hours
+
+---
+
+== Total Phase 1 Effort
+
+*Estimated Hours:* 43 hours
+*Calendar Time:* 3 weeks
+*Developer Capacity:* ~15 hours/week (part-time development)
+
+== Definition of Done (Phase 1)
+
+A story is considered "Done" when:
+
+1. ✅ Code is written and compiles without errors
+2. ✅ Unit tests written and passing (where applicable)
+3. ✅ Code peer-reviewed (or self-reviewed if solo)
+4. ✅ Tested on iOS 17.0 simulator
+5. ✅ Tested on physical device (for location features)
+6. ✅ No console errors or warnings
+7. ✅ Code formatted and follows Swift style guide
+8. ✅ Committed to version control with descriptive message
+
+## Phase 1 Deliverables
+
+At the end of Phase 1, the app should have:
+
+1. ✅ Complete Core Data schema with all entities
+2. ✅ Working persistence layer (save/load from database)
+3. ✅ Location service that captures GPS coordinates
+4. ✅ Entry creation screen with:
+   - Multi-line text input with character counter
+   - Automatic location capture and display
+   - Save and Cancel buttons
+5. ✅ Ability to create and save entries with text and location
+6. ✅ Basic navigation structure (home screen → create entry)
+
+## What's NOT in Phase 1
+
+The following features are explicitly excluded from Phase 1:
+
+- ❌ Home screen with featured quote (Phase 4)
+- ❌ Image attachment (Phase 2)
+- ❌ Audio recording (Phase 2)
+- ❌ Author assignment (Phase 2)
+- ❌ Label assignment (Phase 2)
+- ❌ Location modification/map picker (Phase 2)
+- ❌ Entry editing (Phase 2)
+- ❌ Entry deletion (Phase 3)
+- ❌ Search functionality (Phase 3)
+- ❌ Smart folders (Phase 3)
+- ❌ iCloud sync (Phase 5)
+
+## Testing Strategy for Phase 1
+
+=== Unit Tests
+- Entry model validation
+- Author model validation
+- Label model validation
+- Location service methods
+- Entry view model save logic
+
+=== Integration Tests
+- Save entry to Core Data
+- Load entry from Core Data
+- Relationship integrity (Entry ↔ Author, Entry ↔ Labels)
+
+=== Manual Tests
+- Create entry with text
+- Create entry with location
+- Create entry without location permission
+- Text validation edge cases (0 chars, 10,000 chars, 10,001 chars)
+- App restart (data persistence)
+
+## Risk Mitigation
+
+=== Risk: Core Data Schema Changes
+*Mitigation:* Keep schema simple in Phase 1, test migrations early
+
+=== Risk: Location Permission Denial
+*Mitigation:* Gracefully handle denial, allow entry creation without location
+
+=== Risk: iOS Version Compatibility
+*Mitigation:* Test on both iOS 17.0 simulator and latest iOS version
+
+## Success Criteria
+
+Phase 1 is successful if:
+
+1. ✅ User can create an entry with text
+2. ✅ Location is automatically captured (with permission)
+3. ✅ Entry is saved to Core Data
+4. ✅ Entry persists after app restart
+5. ✅ All unit tests pass
+6. ✅ No crashes or critical bugs
+7. ✅ Code is maintainable and well-documented
+
+## Next Steps After Phase 1
+
+Once Phase 1 is complete and accepted:
+
+1. Review and retrospective
+2. Adjust estimates for Phase 2 based on Phase 1 learnings
+3. Begin Phase 2: Rich Media and Authors
+4. Continue iterative development
+
+---
+
+*Last Updated:* 2026-03-14
+*Status:* Ready to Begin
