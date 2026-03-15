@@ -2,7 +2,7 @@ name: Build and Publish Web Docker Image
 
 on:
   push:
-    branches: [ "main" ]
+    tags: [ 'v*.*.*' ]
     # Only trigger if changes happen in the web directory or this workflow file
     paths:
       - 'Zitate.web/**'
@@ -13,7 +13,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-web
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push-image:
@@ -45,6 +45,8 @@ jobs:
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
