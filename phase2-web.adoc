@@ -1,0 +1,436 @@
+= Phase 2 Implementation Plan: Authors and Labels (Web)
+:toc:
+:toclevels: 3
+
+== Phase Overview
+
+*Goal:* Author management and label/tag system
+
+*Duration:* Weeks 3-4
+
+*Deliverable:* Can assign authors and labels to entries, manage both entities
+
+== Stories in Phase 2
+
+=== Epic 4: Author Management
+
+==== Story 4.1: Author Data Model and CRUD
+*As a* user +
+*I want to* create and manage authors +
+*So that* I can attribute quotes to their sources
+
+*Acceptance Criteria:*
+- Author object store in IndexedDB with name, createdAt, updatedAt
+- Create, read, update, delete operations
+- Author name validation (max 200 chars, required)
+- Duplicate author prevention (case-insensitive)
+- Authors sorted alphabetically
+
+*Reference:* FR-2.1, FR-2.2
+
+*Technical Tasks:*
+1. Create `src/hooks/useAuthors.ts` custom hook
+2. Implement addAuthor, updateAuthor, deleteAuthor, getAuthorById
+3. Add duplicate detection logic
+4. Sort authors alphabetically
+5. Add unit tests for all CRUD operations
+6. Test duplicate prevention
+
+*Estimated Effort:* 5 hours
+
+---
+
+==== Story 4.2: Author Selection Component
+*As a* user +
+*I want to* select an author when creating an entry +
+*So that* I can attribute the quote
+
+*Acceptance Criteria:*
+- Author dropdown in EntryForm
+- "No author" option available
+- Ability to create new author inline
+- Inline creation shows input field + save/cancel
+- Newly created author auto-selected
+
+*Reference:* FR-2.3
+
+*Technical Tasks:*
+1. Create `src/components/author/AuthorSelect.tsx`
+2. Add dropdown with authors from useAuthors hook
+3. Add "No author" option
+4. Add "+ Create new author..." option
+5. Implement inline creation mode
+6. Style component consistently
+7. Add unit tests
+
+*Estimated Effort:* 6 hours
+
+---
+
+==== Story 4.3: Author Display in Entry Card
+*As a* user +
+*I want to* see the author name in entry cards +
+*So that* I know who said each quote
+
+*Acceptance Criteria:*
+- Author name displayed below entry text
+- Formatted as "— Author Name"
+- Hidden if no author assigned
+- Styled distinctly from entry text
+
+*Reference:* FR-5.5
+
+*Technical Tasks:*
+1. Update `src/components/entry/EntryCard.tsx`
+2. Add author lookup using useAuthors hook
+3. Display author name with formatting
+4. Add conditional rendering
+5. Style author display
+6. Update unit tests
+
+*Estimated Effort:* 2 hours
+
+---
+
+=== Epic 5: Label Management
+
+==== Story 5.1: Label Data Model and CRUD
+*As a* user +
+*I want to* create and manage labels +
+*So that* I can organize my entries
+
+*Acceptance Criteria:*
+- Label object store in IndexedDB with name, createdAt, updatedAt
+- Create, read, delete operations (no update needed)
+- Label name validation (max 50 chars, no comma/semicolon)
+- Labels stored lowercase
+- Duplicate label prevention
+- Labels sorted alphabetically
+
+*Reference:* FR-3.1, FR-3.3
+
+*Technical Tasks:*
+1. Create `src/hooks/useLabels.ts` custom hook
+2. Implement addLabel, deleteLabel, getLabelsByIds
+3. Add normalization (toLowerCase)
+4. Add validation (no comma/semicolon)
+5. Implement searchLabels for autocomplete
+6. Add unit tests
+7. Test duplicate handling
+
+*Estimated Effort:* 5 hours
+
+---
+
+==== Story 5.2: Label Input Component with Autocomplete
+*As a* user +
+*I want to* add labels to my entry with autocomplete +
+*So that* I can reuse existing labels easily
+
+*Acceptance Criteria:*
+- Text input for label entry
+- Autocomplete dropdown shows matching labels (top 10)
+- Prefix-based search (case-insensitive)
+- Enter key or click adds label
+- Labels displayed as visual tags below input
+- Can remove labels by clicking X
+- Creates new label if doesn't exist
+- Returns existing label if matches (case-insensitive)
+
+*Reference:* FR-3.2, FR-3.4
+
+*Technical Tasks:*
+1. Create `src/components/label/LabelInput.tsx`
+2. Implement text input with onChange
+3. Add autocomplete dropdown with searchLabels
+4. Implement label tag display
+5. Add remove label functionality
+6. Style tags (rounded, colored, with X button)
+7. Handle keyboard navigation
+8. Add unit tests
+
+*Estimated Effort:* 8 hours
+
+---
+
+==== Story 5.3: Label Display in Entry Card
+*As a* user +
+*I want to* see labels in entry cards +
+*So that* I can quickly identify categorized entries
+
+*Acceptance Criteria:*
+- Labels displayed as visual badges
+- Multiple labels shown horizontally
+- Labels formatted with # prefix
+- Styled with background color and border
+- Empty if no labels assigned
+
+*Reference:* FR-5.5
+
+*Technical Tasks:*
+1. Update `src/components/entry/EntryCard.tsx`
+2. Add label lookup using useLabels hook
+3. Map labelIds to Label objects
+4. Display as badge components
+5. Add CSS for label badges
+6. Format with # prefix
+7. Update unit tests
+
+*Estimated Effort:* 3 hours
+
+---
+
+=== Epic 6: Enhanced Entry Management
+
+==== Story 6.1: Update EntryForm for Authors and Labels
+*As a* user +
+*I want to* assign authors and labels when creating entries +
+*So that* my entries are properly categorized
+
+*Acceptance Criteria:*
+- EntryForm includes AuthorSelect component
+- EntryForm includes LabelInput component
+- Form layout accommodates new fields
+- Save includes authorId and labelIds
+- Optional fields (can save without author/labels)
+
+*Reference:* FR-2.3, FR-3.2
+
+*Technical Tasks:*
+1. Update `src/components/entry/EntryForm.tsx`
+2. Add AuthorSelect component
+3. Add LabelInput component
+4. Update state management (authorId, labelIds)
+5. Update save handler to include new fields
+6. Update form layout and styling
+7. Update unit tests with new parameters
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 6.2: Update Entry Model and Hooks
+*As a* developer +
+*I want to* update the Entry model to include author and labels +
+*So that* the data structure supports Phase 2 features
+
+*Acceptance Criteria:*
+- Entry interface includes authorId (optional)
+- Entry interface includes labelIds array
+- useEntries hook updated for new fields
+- addEntry accepts authorId and labelIds
+- updateEntry handles author/label changes
+
+*Reference:* FR-2.1, FR-3.1
+
+*Technical Tasks:*
+1. Update `src/models/Entry.ts`
+2. Update `src/hooks/useEntries.ts`
+3. Update addEntry signature
+4. Update all Entry creation calls
+5. Update unit tests with new fields
+6. Test backward compatibility
+
+*Estimated Effort:* 3 hours
+
+---
+
+== Phase 2 Task Breakdown
+
+=== Week 3: Author Management
+
+*Days 1-2: Author Foundation*
+- Story 4.1: Author CRUD (5 hours)
+- Story 4.2: Author selection component (6 hours)
+
+*Days 3-4: Author Integration*
+- Story 4.3: Author display in cards (2 hours)
+- Story 6.2: Update Entry model (3 hours)
+- Story 6.1: Update EntryForm (partial, 2 hours)
+
+*Day 5: Testing and Polish*
+- Integration testing
+- Bug fixes
+- Documentation
+
+*Total Week 3:* ~18 hours
+
+---
+
+=== Week 4: Label Management
+
+*Days 1-3: Label Foundation*
+- Story 5.1: Label CRUD (5 hours)
+- Story 5.2: Label input with autocomplete (8 hours)
+
+*Days 4-5: Label Integration*
+- Story 5.3: Label display in cards (3 hours)
+- Story 6.1: Update EntryForm (complete, 2 hours)
+- Integration testing
+- Bug fixes
+
+*Total Week 4:* ~18 hours
+
+---
+
+== Total Phase 2 Effort
+
+*Estimated Hours:* 36 hours
+*Calendar Time:* 2 weeks
+*Developer Capacity:* ~18 hours/week
+
+== Definition of Done (Phase 2)
+
+All Phase 1 DoD criteria plus:
+
+1. ✅ Author CRUD operations working
+2. ✅ Label CRUD operations working
+3. ✅ Duplicate prevention tested
+4. ✅ Autocomplete working smoothly
+5. ✅ Unit tests for all new hooks
+6. ✅ Unit tests for all new components
+7. ✅ Integration tests for author/label assignment
+8. ✅ Tested with 0, 1, and many authors/labels
+9. ✅ Visual design consistent with Phase 1
+10. ✅ All Phase 1 tests still passing
+
+## Phase 2 Deliverables
+
+At the end of Phase 2, the web app should have:
+
+1. ✅ Author management system:
+   - Create authors inline or separately
+   - Assign author to entries
+   - Display author in entry cards
+   - Duplicate prevention
+
+2. ✅ Label management system:
+   - Create labels with autocomplete
+   - Assign multiple labels to entries
+   - Display labels as visual badges
+   - Prefix-based search
+   - Duplicate prevention
+
+3. ✅ Enhanced entry creation:
+   - Author selection dropdown
+   - Label input with autocomplete
+   - Visual tag display
+
+4. ✅ Enhanced entry display:
+   - Author name shown
+   - Labels shown as badges
+
+5. ✅ Data model updates:
+   - Entry includes authorId and labelIds
+   - All components updated
+
+## What's NOT in Phase 2
+
+The following features are explicitly excluded from Phase 2:
+
+- ❌ Image attachment (Phase 4)
+- ❌ Audio recording (Phase 4)
+- ❌ Location modification with map picker (Phase 4)
+- ❌ Entry editing (Phase 4)
+- ❌ Entry deletion (Phase 4)
+- ❌ Search functionality (Phase 3)
+- ❌ Smart folders (Phase 3)
+- ❌ PWA/Service Worker (Phase 5)
+- ❌ Export/Import (Phase 5)
+
+## Technology Additions for Phase 2
+
+No new major dependencies needed. Uses existing stack:
+- React 18
+- TypeScript
+- IndexedDB (idb library)
+- Vitest for testing
+
+## Testing Strategy for Phase 2
+
+=== Unit Tests
+- useAuthors hook (CRUD, duplicates, sorting)
+- useLabels hook (CRUD, search, normalization)
+- AuthorSelect component
+- LabelInput component
+- Updated EntryForm
+- Updated EntryCard
+
+=== Integration Tests
+- Create entry with author and labels
+- Author duplicate prevention
+- Label duplicate prevention
+- Autocomplete functionality
+- Tag removal
+
+=== Manual Tests
+- Create author inline
+- Assign author to entry
+- Create labels with autocomplete
+- Remove labels from input
+- Display author and labels in card
+- Handle entries without author/labels
+- Test with many authors (100+)
+- Test with many labels (100+)
+
+## Risk Mitigation
+
+=== Risk: Autocomplete Performance
+*Mitigation:* Limit results to top 10, use prefix-based search, debounce input
+
+=== Risk: Label Name Conflicts
+*Mitigation:* Normalize to lowercase, prevent duplicates, return existing on match
+
+=== Risk: Breaking Changes to Entry Model
+*Mitigation:* Make authorId and labelIds optional, maintain backward compatibility
+
+## Success Criteria
+
+Phase 2 is successful if:
+
+1. ✅ User can create and manage authors
+2. ✅ User can assign author to entry
+3. ✅ User can create labels with autocomplete
+4. ✅ User can assign multiple labels to entry
+5. ✅ Author and labels display in entry cards
+6. ✅ Duplicate prevention works
+7. ✅ All Phase 1 functionality still works
+8. ✅ All unit tests pass (Phase 1 + Phase 2)
+9. ✅ No performance degradation
+10. ✅ Code is maintainable and well-documented
+
+## Implementation Results
+
+Phase 2 was successfully completed with the following accomplishments:
+
+✅ **Implemented:**
+- useAuthors hook with CRUD operations
+- useLabels hook with CRUD and search
+- AuthorSelect component with inline creation
+- LabelInput component with autocomplete
+- Updated EntryForm to include author and labels
+- Updated EntryCard to display author and labels
+- Comprehensive unit tests (17 new tests)
+- All 133 tests passing
+
+✅ **Commits:**
+- feat-web-phase_2 branch created
+- All changes committed and merged to main
+
+## Next Steps After Phase 2
+
+Once Phase 2 is complete and accepted:
+
+1. Review and retrospective
+2. Begin Phase 3: Search and Smart Folders
+   - Multi-field search
+   - Debounced search input
+   - Smart folder creation with criteria
+   - Folder-based filtering
+3. Continue iterative development
+
+---
+
+*Last Updated:* 2026-03-15
+*Status:* ✅ Complete
+*Platform:* Web (React + TypeScript + IndexedDB)
