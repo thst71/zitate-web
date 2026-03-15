@@ -1,0 +1,480 @@
+= Phase 5 Implementation Plan: Image Attachments (Web)
+:toc:
+:toclevels: 3
+
+== Phase Overview
+
+*Goal:* Add image upload and display capabilities to entries
+
+*Duration:* Week 8
+
+*Deliverable:* Users can attach, view, and manage images on entries
+
+== Stories in Phase 5
+
+=== Epic 12: Image Upload and Storage
+
+==== Story 12.1: Image Upload Component
+*As a* user +
+*I want to* select and upload images for my entry +
+*So that* I can add visual context to my quotes
+
+*Acceptance Criteria:*
+- File input accepts image files (JPEG, PNG, HEIC, WebP)
+- Multiple file selection supported
+- Up to 10 images per entry
+- Preview thumbnails shown immediately after selection
+- File size validation (warn if >10MB before compression)
+- Drag-and-drop support (optional enhancement)
+
+*Reference:* FR-1.3 (Image Attachment)
+
+*Technical Tasks:*
+1. Create components/image/ImageUpload.tsx
+2. Add file input with accept="image/*" and multiple
+3. Implement file selection handler
+4. Show preview thumbnails using FileReader
+5. Add validation for file count (max 10)
+6. Add validation for file types
+7. Style upload area
+8. Add unit tests
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 12.2: Image Compression Service
+*As a* developer +
+*I want to* compress uploaded images +
+*So that* storage space is optimized
+
+*Acceptance Criteria:*
+- Images compressed to max 2MB each
+- Maintain aspect ratio
+- Quality adjustable (default 0.8)
+- EXIF orientation handled correctly
+- Returns compressed Blob
+- Progress callback for large images (optional)
+
+*Reference:* NFR-2 (Storage Efficiency)
+
+*Technical Tasks:*
+1. Install browser-image-compression library: `npm install browser-image-compression`
+2. Create services/image.service.ts
+3. Implement compressImage function
+4. Handle EXIF orientation
+5. Set max file size to 2MB
+6. Set quality to 0.8
+7. Test with various image sizes
+8. Add error handling
+
+*Estimated Effort:* 2 hours
+
+---
+
+==== Story 12.3: Image Storage in IndexedDB
+*As a* developer +
+*I want to* store images in IndexedDB +
+*So that* images persist locally
+
+*Acceptance Criteria:*
+- Images stored as Blobs in 'images' object store
+- Each image has: id, entryId, blob, mimeType, createdAt
+- Images linked to entries via imageIds array
+- Efficient retrieval by entryId
+- Support for batch operations
+
+*Reference:* NFR-2 (IndexedDB Storage)
+
+*Technical Tasks:*
+1. Verify 'images' object store exists in schema
+2. Add index on entryId field
+3. Update dbService with image methods:
+   - addImage(entryId, blob, mimeType)
+   - getImagesByEntryId(entryId)
+   - deleteImage(imageId)
+4. Update Entry model's imageIds array on image add/delete
+5. Test image storage and retrieval
+6. Add unit tests
+
+*Estimated Effort:* 2 hours
+
+---
+
+=== Epic 13: Image Display and Management
+
+==== Story 13.1: Image Thumbnails in EntryForm
+*As a* user +
+*I want to* see thumbnails of uploaded images in the form +
+*So that* I can review images before saving
+
+*Acceptance Criteria:*
+- Thumbnails displayed in grid (2-3 per row)
+- Each thumbnail shows image preview
+- Delete button (X) on each thumbnail
+- Clicking thumbnail shows full-size preview (optional)
+- Thumbnails update when images added/removed
+- Max 10 thumbnails displayed
+
+*Reference:* FR-1.3
+
+*Technical Tasks:*
+1. Create components/image/ImageThumbnail.tsx
+2. Create components/image/ImageGrid.tsx
+3. Display thumbnails in EntryForm
+4. Add delete button to each thumbnail
+5. Handle thumbnail click (preview, optional)
+6. Style grid (responsive, 2-3 columns)
+7. Add loading states
+8. Add unit tests
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 13.2: Image Display on Entry Cards
+*As a* user +
+*I want to* see image thumbnails on entry cards +
+*So that* I can quickly identify entries with images
+
+*Acceptance Criteria:*
+- First 1-3 images shown as thumbnails on card
+- Thumbnails displayed below text, above meta
+- Clicking thumbnail opens image viewer
+- "+N more" indicator if >3 images
+- No thumbnails shown if no images
+- Lazy loading for performance
+
+*Reference:* FR-5.5 (Entry Card Display)
+
+*Technical Tasks:*
+1. Update EntryCard component
+2. Load images for entry from IndexedDB
+3. Display first 3 images as thumbnails
+4. Add "+N more" text if applicable
+5. Add click handler to open viewer
+6. Style thumbnail grid
+7. Implement lazy loading (optional)
+8. Add unit tests
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 13.3: Image Viewer/Gallery Modal
+*As a* user +
+*I want to* view full-size images +
+*So that* I can see image details
+
+*Acceptance Criteria:*
+- Modal displays full-size image
+- Navigation arrows (prev/next) if multiple images
+- Close button (X) and ESC key support
+- Image counter (e.g., "2 of 5")
+- Zooming support (optional)
+- Swipe gestures on mobile (optional)
+
+*Reference:* FR-1.3
+
+*Technical Tasks:*
+1. Create components/image/ImageViewer.tsx
+2. Display full-size image in modal
+3. Add prev/next navigation
+4. Add image counter display
+5. Add close button and ESC handler
+6. Style viewer (fullscreen, centered)
+7. Add keyboard navigation (arrow keys)
+8. Test on mobile
+9. Add unit tests
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 13.4: Image Deletion
+*As a* user +
+*I want to* delete individual images +
+*So that* I can manage my attachments
+
+*Acceptance Criteria:*
+- Delete button (X) on thumbnails in form
+- Delete button in image viewer (optional)
+- Confirmation dialog for deletion
+- Image removed from IndexedDB
+- Entry's imageIds array updated
+- UI updates immediately
+
+*Reference:* FR-1.3
+
+*Technical Tasks:*
+1. Add delete handler in ImageUpload
+2. Call dbService.deleteImage(imageId)
+3. Update entry.imageIds array
+4. Remove from local state
+5. Show confirmation (optional)
+6. Add unit tests
+
+*Estimated Effort:* 2 hours
+
+---
+
+=== Epic 14: Image Integration
+
+==== Story 14.1: Update Entry Model and Hooks
+*As a* developer +
+*I want to* update Entry model to handle images +
+*So that* image functionality integrates seamlessly
+
+*Acceptance Criteria:*
+- Entry interface includes imageIds: string[]
+- addEntry saves images to IndexedDB
+- updateEntry handles image changes
+- deleteEntry cascades to delete images
+- useEntries exposes image operations
+
+*Reference:* Data Model Consistency
+
+*Technical Tasks:*
+1. Entry model already has imageIds (verify)
+2. Update addEntry to save images
+3. Update updateEntry to handle image changes
+4. Update deleteEntry to cascade delete images
+5. Add getImagesForEntry helper
+6. Update unit tests
+
+*Estimated Effort:* 2 hours
+
+---
+
+==== Story 14.2: EntryForm Image Integration
+*As a* user +
+*I want to* upload images when creating entries +
+*So that* I can attach visuals to new quotes
+
+*Acceptance Criteria:*
+- ImageUpload component in EntryForm
+- Images saved when entry saved
+- Images preserved when editing entry
+- Image upload section clearly labeled
+- Works in both create and edit modes
+
+*Reference:* FR-1.5 (Entry Creation)
+
+*Technical Tasks:*
+1. Add ImageUpload to EntryForm
+2. Track selected images in state
+3. Save images on form submit
+4. Load existing images in edit mode
+5. Update form layout
+6. Add unit tests
+
+*Estimated Effort:* 2 hours
+
+---
+
+== Phase 5 Task Breakdown
+
+=== Week 8: Image Attachments
+
+*Days 1-2: Upload and Compression*
+- Story 12.1: Image upload component (3 hours)
+- Story 12.2: Image compression service (2 hours)
+- Story 12.3: Image storage in IndexedDB (2 hours)
+
+*Days 3-4: Display and Viewer*
+- Story 13.1: Thumbnails in EntryForm (3 hours)
+- Story 13.2: Image display on entry cards (3 hours)
+- Story 13.3: Image viewer/gallery (4 hours)
+
+*Day 5: Integration and Polish*
+- Story 13.4: Image deletion (2 hours)
+- Story 14.1: Update Entry model (2 hours)
+- Story 14.2: EntryForm integration (2 hours)
+- Testing and bug fixes (2 hours)
+
+*Total Week 8:* ~27 hours
+
+---
+
+== Total Phase 5 Effort
+
+*Estimated Hours:* 27 hours
+*Calendar Time:* 1 week
+*Developer Capacity:* ~27 hours/week
+
+== Definition of Done (Phase 5)
+
+All Phase 1-4 DoD criteria plus:
+
+1. ✅ User can upload images (JPEG, PNG, HEIC, WebP)
+2. ✅ Images compressed to max 2MB
+3. ✅ Up to 10 images per entry
+4. ✅ Thumbnails displayed on entry cards
+5. ✅ Full-size image viewer works
+6. ✅ Individual image deletion works
+7. ✅ Images stored in IndexedDB
+8. ✅ Images persist across sessions
+9. ✅ Unit tests for all new components
+10. ✅ All Phase 1-4 tests still passing
+
+## Phase 5 Deliverables
+
+At the end of Phase 5, the web app should have:
+
+1. ✅ Image upload:
+   - File picker (multiple selection)
+   - Image preview thumbnails
+   - File type and count validation
+   - Compression to 2MB max
+
+2. ✅ Image storage:
+   - IndexedDB 'images' object store
+   - Blob storage with metadata
+   - Linked to entries via imageIds
+
+3. ✅ Image display:
+   - Thumbnails in EntryForm
+   - Thumbnails on entry cards (first 3)
+   - "+N more" indicator
+   - Full-size image viewer
+
+4. ✅ Image management:
+   - Delete individual images
+   - Update imageIds array
+   - Cascade delete on entry deletion
+
+5. ✅ Integration:
+   - Works in create mode
+   - Works in edit mode
+   - Preserves existing images when editing
+
+## What's NOT in Phase 5
+
+The following features are explicitly excluded from Phase 5:
+
+- ❌ Image editing (crop, rotate, filters) - Future enhancement
+- ❌ Image captions/descriptions - Future enhancement
+- ❌ Drag-and-drop reordering - Future enhancement
+- ❌ Cloud image storage - v2.0 feature
+- ❌ Image recognition/tagging - v2.0 feature
+- ❌ Sharing images - v2.0 feature
+
+## Technology Additions for Phase 5
+
+**New Dependencies:**
+```json
+{
+  "dependencies": {
+    "browser-image-compression": "^2.0.2"
+  }
+}
+```
+
+**Why browser-image-compression:**
+- Client-side compression (no backend needed)
+- EXIF orientation handling
+- Configurable quality and max size
+- Progress callbacks
+- Well-maintained library
+
+## Testing Strategy for Phase 5
+
+=== Unit Tests
+- ImageUpload component
+- ImageThumbnail component
+- ImageGrid component
+- ImageViewer component
+- imageService.compressImage
+- dbService image methods
+- Updated useEntries
+
+=== Component Tests
+- File selection flow
+- Image preview rendering
+- Thumbnail grid layout
+- Image viewer navigation
+- Delete image functionality
+
+=== Integration Tests
+- Upload images in new entry
+- Upload images in edit entry
+- View images on entry card
+- Delete image from entry
+- Entry deletion cascades to images
+
+=== Manual Tests
+- Upload various image formats
+- Upload large images (>10MB)
+- Upload max 10 images
+- View images in gallery
+- Delete images
+- Test on mobile (file picker)
+- Test image persistence (refresh page)
+- Test compression quality
+- Test with slow connections
+
+## Performance Considerations
+
+=== Upload Performance
+- Compress images before storage
+- Show progress for large images
+- Limit to 10 images per entry
+- Validate file size before compression
+
+=== Display Performance
+- Lazy load images on entry cards
+- Create object URLs for thumbnails
+- Revoke object URLs when done
+- Limit thumbnail count (first 3)
+
+=== Storage Considerations
+- 2MB max per image (after compression)
+- 20MB max per entry (10 × 2MB)
+- IndexedDB quota handling
+- Warn user if quota approaching
+
+## Risk Mitigation
+
+=== Risk: IndexedDB Quota Exceeded
+*Mitigation:* Compress images aggressively, warn user, provide export/delete options
+
+=== Risk: Large Image Upload Performance
+*Mitigation:* Show progress indicator, compress in background, prevent multiple simultaneous uploads
+
+=== Risk: Browser Compatibility (HEIC)
+*Mitigation:* Convert HEIC to JPEG client-side, fallback to unsupported message
+
+=== Risk: Memory Leaks from Object URLs
+*Mitigation:* Always revoke object URLs in cleanup, use useEffect cleanup
+
+## Success Criteria
+
+Phase 5 is successful if:
+
+1. ✅ User can upload images to entries
+2. ✅ Images compressed and stored efficiently
+3. ✅ Thumbnails display correctly on cards
+4. ✅ Image viewer provides good UX
+5. ✅ Individual images can be deleted
+6. ✅ Images persist across sessions
+7. ✅ No performance degradation
+8. ✅ All Phase 1-4 functionality still works
+9. ✅ All tests pass
+10. ✅ Works on mobile and desktop
+
+## Next Steps After Phase 5
+
+Once Phase 5 is complete and accepted:
+
+1. Review and retrospective
+2. Begin Phase 6: Location Display with Mini-Maps
+   - Static map tiles on entry cards
+   - OpenStreetMap integration
+   - Full-size map modal
+3. Continue iterative development
+
+---
+
+*Last Updated:* 2026-03-15
+*Status:* 📝 Planning
+*Platform:* Web (React + TypeScript + IndexedDB)

@@ -1,9 +1,12 @@
-import React from 'react';
-import { Entry } from '../../models';
+import React, { useState, useEffect } from 'react';
+import { Entry, ImageAttachment } from '../../models';
 import { formatCoordinates } from '../../services/location.service';
 import { useAuthors } from '../../hooks/useAuthors';
 import { useLabels } from '../../hooks/useLabels';
+import { useEntries } from '../../hooks/useEntries';
 import { formatLabelForDisplay } from '../../utils/validators';
+import { ImageGrid } from '../image/ImageGrid';
+import { ImageViewer } from '../image/ImageViewer';
 import './EntryCard.css';
 
 interface EntryCardProps {
@@ -15,9 +18,19 @@ interface EntryCardProps {
 export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete }) => {
   const { getAuthorById } = useAuthors();
   const { getLabelsByIds } = useLabels();
+  const { getImagesForEntry } = useEntries();
+  const [images, setImages] = useState<ImageAttachment[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   const author = entry.authorId ? getAuthorById(entry.authorId) : undefined;
   const labels = getLabelsByIds(entry.labelIds);
+
+  useEffect(() => {
+    if (entry.imageIds.length > 0) {
+      getImagesForEntry(entry.id).then(setImages);
+    }
+  }, [entry.id, entry.imageIds, getImagesForEntry]);
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -45,6 +58,11 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete })
     }
   };
 
+  const handleImageClick = (index: number) => {
+    setViewerIndex(index);
+    setViewerOpen(true);
+  };
+
   const hasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
 
   return (
@@ -66,6 +84,15 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete })
               </span>
             ))}
           </div>
+        )}
+
+        {images.length > 0 && (
+          <ImageGrid
+            images={images}
+            onImageClick={handleImageClick}
+            maxDisplay={3}
+            showMoreIndicator={true}
+          />
         )}
 
         <div className="entry-meta">
@@ -141,6 +168,13 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete })
           </button>
         )}
       </div>
+
+      <ImageViewer
+        images={images}
+        initialIndex={viewerIndex}
+        isOpen={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+      />
     </div>
   );
 };
