@@ -12,6 +12,7 @@ import { useEntries } from './hooks/useEntries';
 import { useSearch } from './hooks/useSearch';
 import { useFolders } from './hooks/useFolders';
 import type { SmartFolder, Entry } from './models';
+import type { SelectedImage } from './components/image/ImageUpload';
 
 const App: React.FC = () => {
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
@@ -51,12 +52,13 @@ const App: React.FC = () => {
     latitude?: number,
     longitude?: number,
     authorId?: string,
-    labelIds?: string[]
+    labelIds?: string[],
+    selectedImages?: SelectedImage[]
   ) => {
     if (editingEntry) {
       await updateEntry(editingEntry.id, text, authorId, labelIds);
     } else {
-      await addEntry(text, latitude, longitude, authorId, labelIds);
+      await addEntry(text, latitude, longitude, authorId, labelIds, selectedImages);
     }
     setIsEntryModalOpen(false);
     setEditingEntry(null);

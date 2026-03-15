@@ -6,11 +6,12 @@ import { useLocation } from '../../hooks/useLocation';
 import { validateEntryText } from '../../utils/validators';
 import { AuthorSelect } from '../author/AuthorSelect';
 import { LabelInput } from '../label/LabelInput';
+import { ImageUpload, type SelectedImage } from '../image/ImageUpload';
 import type { Entry } from '../../models';
 import './EntryForm.css';
 
 interface EntryFormProps {
-  onSave: (text: string, latitude?: number, longitude?: number, authorId?: string, labelIds?: string[]) => Promise<void>;
+  onSave: (text: string, latitude?: number, longitude?: number, authorId?: string, labelIds?: string[], selectedImages?: SelectedImage[]) => Promise<void>;
   onCancel: () => void;
   initialEntry?: Entry;
 }
@@ -19,10 +20,12 @@ export function EntryForm({ onSave, onCancel, initialEntry }: EntryFormProps) {
   const [text, setText] = useState(initialEntry?.text || '');
   const [authorId, setAuthorId] = useState<string | undefined>(initialEntry?.authorId);
   const [labelIds, setLabelIds] = useState<string[]>(initialEntry?.labelIds || []);
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isEditing = !!initialEntry;
+  const existingImageCount = initialEntry?.imageIds.length || 0;
 
   const {
     coords,
@@ -51,7 +54,7 @@ export function EntryForm({ onSave, onCancel, initialEntry }: EntryFormProps) {
     setError(null);
 
     try {
-      await onSave(text, latitude, longitude, authorId, labelIds);
+      await onSave(text, latitude, longitude, authorId, labelIds, selectedImages);
       // Form will be closed by parent
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save entry');
@@ -144,6 +147,14 @@ export function EntryForm({ onSave, onCancel, initialEntry }: EntryFormProps) {
       <AuthorSelect selectedAuthorId={authorId} onSelect={setAuthorId} />
 
       <LabelInput selectedLabelIds={labelIds} onLabelsChange={setLabelIds} />
+
+      {!isEditing && (
+        <ImageUpload
+          onImagesSelected={setSelectedImages}
+          maxImages={10}
+          currentImageCount={existingImageCount}
+        />
+      )}
 
       {error && (
         <div className="form-error" role="alert">

@@ -1,0 +1,23 @@
+.image-grid {
+  margin: var(--spacing-md) 0;
+}
+
+.image-grid-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--spacing-sm);
+  max-width: 340px;
+}
+
+.image-more-indicator {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+@media (max-width: 480px) {
+  .image-grid-thumbnails {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+}
