@@ -1,24 +1,28 @@
 /**
- * EntryForm Component - Form for creating new entries
+ * EntryForm Component - Form for creating/editing entries
  */
 import { useState, useEffect, FormEvent } from 'react';
 import { useLocation } from '../../hooks/useLocation';
 import { validateEntryText } from '../../utils/validators';
 import { AuthorSelect } from '../author/AuthorSelect';
 import { LabelInput } from '../label/LabelInput';
+import type { Entry } from '../../models';
 import './EntryForm.css';
 
 interface EntryFormProps {
   onSave: (text: string, latitude?: number, longitude?: number, authorId?: string, labelIds?: string[]) => Promise<void>;
   onCancel: () => void;
+  initialEntry?: Entry;
 }
 
-export function EntryForm({ onSave, onCancel }: EntryFormProps) {
-  const [text, setText] = useState('');
-  const [authorId, setAuthorId] = useState<string | undefined>();
-  const [labelIds, setLabelIds] = useState<string[]>([]);
+export function EntryForm({ onSave, onCancel, initialEntry }: EntryFormProps) {
+  const [text, setText] = useState(initialEntry?.text || '');
+  const [authorId, setAuthorId] = useState<string | undefined>(initialEntry?.authorId);
+  const [labelIds, setLabelIds] = useState<string[]>(initialEntry?.labelIds || []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEditing = !!initialEntry;
 
   const {
     coords,
@@ -26,11 +30,15 @@ export function EntryForm({ onSave, onCancel }: EntryFormProps) {
     error: locationError,
     fetchLocation,
     formatCoords,
-  } = useLocation({ autoFetch: true}); // Auto-fetch on mount
+  } = useLocation({ autoFetch: !isEditing }); // Only auto-fetch for new entries
 
   const validation = validateEntryText(text);
   const characterCount = text.length;
   const isValid = validation.isValid;
+
+  // Use existing location when editing, or new location when creating
+  const latitude = isEditing ? initialEntry.latitude : coords?.latitude;
+  const longitude = isEditing ? initialEntry.longitude : coords?.longitude;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -43,7 +51,7 @@ export function EntryForm({ onSave, onCancel }: EntryFormProps) {
     setError(null);
 
     try {
-      await onSave(text, coords?.latitude, coords?.longitude, authorId, labelIds);
+      await onSave(text, latitude, longitude, authorId, labelIds);
       // Form will be closed by parent
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save entry');
@@ -92,17 +100,31 @@ export function EntryForm({ onSave, onCancel }: EntryFormProps) {
             <circle cx="12" cy="10" r="3"></circle>
           </svg>
           <div className="location-text">
-            {locationLoading ? (
-              <span className="location-loading">Getting location...</span>
-            ) : coords ? (
-              <span className="location-coords">{formatCoords()}</span>
-            ) : locationError ? (
-              <span className="location-error">{locationError}</span>
+            {isEditing ? (
+              // Show existing location when editing
+              latitude && longitude ? (
+                <span className="location-coords">
+                  {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                </span>
+              ) : (
+                <span className="location-none">No location</span>
+              )
             ) : (
-              <span className="location-none">No location</span>
+              // Show live location fetch for new entries
+              <>
+                {locationLoading ? (
+                  <span className="location-loading">Getting location...</span>
+                ) : coords ? (
+                  <span className="location-coords">{formatCoords()}</span>
+                ) : locationError ? (
+                  <span className="location-error">{locationError}</span>
+                ) : (
+                  <span className="location-none">No location</span>
+                )}
+              </>
             )}
           </div>
-          {!coords && !locationLoading && (
+          {!isEditing && !coords && !locationLoading && (
             <button
               type="button"
               className="location-retry"
@@ -113,7 +135,9 @@ export function EntryForm({ onSave, onCancel }: EntryFormProps) {
           )}
         </div>
         <p className="form-hint">
-          Location is optional. Grant permission to auto-capture.
+          {isEditing
+            ? 'Location cannot be edited'
+            : 'Location is optional. Grant permission to auto-capture.'}
         </p>
       </div>
 
@@ -141,7 +165,7 @@ export function EntryForm({ onSave, onCancel }: EntryFormProps) {
           className="btn btn-primary"
           disabled={!isValid || saving}
         >
-          {saving ? 'Saving...' : 'Save Quote'}
+          {saving ? 'Saving...' : isEditing ? 'Update Quote' : 'Save Quote'}
         </button>
       </div>
     </form>

@@ -7,6 +7,7 @@ interface EntryListProps {
   entries: Entry[];
   loading?: boolean;
   error?: string;
+  onEditEntry?: (entry: Entry) => void;
   onDeleteEntry?: (id: string) => void;
 }
 
@@ -14,6 +15,7 @@ export const EntryList: React.FC<EntryListProps> = ({
   entries,
   loading = false,
   error,
+  onEditEntry,
   onDeleteEntry,
 }) => {
   if (loading) {
@@ -74,7 +76,12 @@ export const EntryList: React.FC<EntryListProps> = ({
   return (
     <div className="entry-list">
       {entries.map((entry) => (
-        <EntryCard key={entry.id} entry={entry} onDelete={onDeleteEntry} />
+        <EntryCard
+          key={entry.id}
+          entry={entry}
+          onEdit={onEditEntry}
+          onDelete={onDeleteEntry}
+        />
       ))}
     </div>
   );

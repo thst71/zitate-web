@@ -74,6 +74,13 @@
   color: var(--color-primary);
 }
 
+.entry-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.entry-edit,
 .entry-delete {
   flex-shrink: 0;
   padding: var(--spacing-sm);
@@ -88,11 +95,17 @@
   justify-content: center;
 }
 
+.entry-edit:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
+}
+
 .entry-delete:hover {
   background-color: rgba(239, 68, 68, 0.1);
   color: var(--color-error);
 }
 
+.entry-edit:active,
 .entry-delete:active {
   transform: scale(0.95);
 }

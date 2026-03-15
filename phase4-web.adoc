@@ -1,0 +1,516 @@
+= Phase 4 Implementation Plan: Entry Editing and Deletion (Web)
+:toc:
+:toclevels: 3
+
+== Phase Overview
+
+*Goal:* Complete CRUD operations for entries (Update and Delete)
+
+*Duration:* Week 7
+
+*Deliverable:* Users can edit and delete entries, completing core entry management
+
+== Stories in Phase 4
+
+=== Epic 9: Entry Editing
+
+==== Story 9.1: Edit Entry UI
+*As a* user +
+*I want to* edit an existing entry +
+*So that* I can fix mistakes or update information
+
+*Acceptance Criteria:*
+- Edit button visible on entry cards (hover on desktop, always on mobile)
+- Clicking opens modal with pre-filled EntryForm
+- All fields editable: text, author, labels
+- Save button updates entry
+- Cancel discards changes
+- Modal title shows "Edit Entry"
+
+*Reference:* Implied by FR-1.5 (CRUD operations)
+
+*Technical Tasks:*
+1. Add edit button to EntryCard component
+2. Update EntryForm to accept initialEntry prop
+3. Pre-fill form fields when editing
+4. Update Modal title prop for edit mode
+5. Style edit button (pencil icon)
+6. Handle edit state in App.tsx
+7. Add unit tests for edit button
+8. Test form pre-filling
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 9.2: Update Entry Logic
+*As a* developer +
+*I want to* implement entry update functionality +
+*So that* edited entries are saved to IndexedDB
+
+*Acceptance Criteria:*
+- updateEntry function in useEntries hook
+- Updates entry in IndexedDB
+- Updates updatedAt timestamp
+- Maintains createdAt timestamp
+- Entry list refreshes with updated data
+- Error handling if update fails
+
+*Reference:* NFR-2 (IndexedDB persistence)
+
+*Technical Tasks:*
+1. Add updateEntry function to useEntries hook
+2. Call DBService.update('entries', entry)
+3. Set updatedAt to current timestamp
+4. Preserve createdAt value
+5. Update local state after save
+6. Handle errors gracefully
+7. Add unit tests for updateEntry
+8. Test with partial updates
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 9.3: Edit Entry Form Enhancements
+*As a* user +
+*I want to* see what has changed when editing +
+*So that* I know what I'm updating
+
+*Acceptance Criteria:*
+- Form shows original values
+- Save button enabled when changes made
+- Save button disabled if no changes
+- Validation still works on edited fields
+- Can update author selection
+- Can add/remove labels
+- Location cannot be edited (future feature)
+
+*Reference:* FR-1.1, FR-2.3, FR-3.2
+
+*Technical Tasks:*
+1. Implement change detection (compare with original)
+2. Disable save if no changes
+3. Maintain all validation rules
+4. Update AuthorSelect to work in edit mode
+5. Update LabelInput to work in edit mode
+6. Add "unsaved changes" warning (optional)
+7. Test edit workflows
+8. Test validation in edit mode
+
+*Estimated Effort:* 5 hours
+
+---
+
+=== Epic 10: Entry Deletion
+
+==== Story 10.1: Delete Entry UI
+*As a* user +
+*I want to* delete an entry +
+*So that* I can remove quotes I no longer want
+
+*Acceptance Criteria:*
+- Delete button visible on entry cards
+- Clicking shows confirmation dialog
+- Confirmation shows entry preview (first 100 chars)
+- "Delete" and "Cancel" buttons in dialog
+- Delete button is destructive color (red)
+- Entry removed from list immediately
+
+*Reference:* FR-1.6
+
+*Technical Tasks:*
+1. Add delete button to EntryCard
+2. Create ConfirmDialog component (reusable)
+3. Show entry preview in dialog
+4. Style delete button (trash icon, red)
+5. Handle confirmation flow
+6. Add unit tests for ConfirmDialog
+7. Test deletion cancellation
+8. Test deletion confirmation
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 10.2: Delete Entry Logic
+*As a* developer +
+*I want to* implement entry deletion functionality +
+*So that* entries are removed from IndexedDB
+
+*Acceptance Criteria:*
+- deleteEntry function in useEntries hook
+- Removes entry from IndexedDB 'entries' store
+- Entry list updates immediately
+- Error handling if delete fails
+- No orphaned data (future: cascade delete for media)
+
+*Reference:* FR-1.6, NFR-2
+
+*Technical Tasks:*
+1. Add deleteEntry function to useEntries hook
+2. Call DBService.delete('entries', entryId)
+3. Update local state to remove entry
+4. Handle errors gracefully
+5. Add unit tests for deleteEntry
+6. Test with multiple deletions
+7. Verify IndexedDB state after delete
+
+*Estimated Effort:* 2 hours
+
+---
+
+==== Story 10.3: Bulk Delete (Optional Enhancement)
+*As a* user +
+*I want to* delete multiple entries at once +
+*So that* I can quickly clean up my collection
+
+*Acceptance Criteria:*
+- Select mode with checkboxes on entry cards
+- "Select All" option
+- Bulk delete button appears when items selected
+- Confirmation shows count (e.g., "Delete 5 entries?")
+- All selected entries deleted
+
+*Reference:* Enhancement beyond MVP
+
+*Technical Tasks:*
+1. Add selection mode to EntryList
+2. Add checkboxes to EntryCard
+3. Track selected entry IDs in state
+4. Add "Select All" / "Deselect All" buttons
+5. Add bulk delete button
+6. Update ConfirmDialog for bulk operations
+7. Delete all selected entries in transaction
+8. Exit selection mode after deletion
+
+*Estimated Effort:* 6 hours
+
+*Note:* This is optional and may be deferred to Phase 5 if time is limited.
+
+---
+
+=== Epic 11: UI Polish and UX Improvements
+
+==== Story 11.1: Toast Notifications
+*As a* user +
+*I want to* see feedback when actions complete +
+*So that* I know my changes were saved
+
+*Acceptance Criteria:*
+- Toast appears after create/update/delete
+- Messages: "Entry created", "Entry updated", "Entry deleted"
+- Auto-dismisses after 3 seconds
+- Appears in bottom-right corner
+- Styled consistently with app theme
+- Supports dark mode
+
+*Reference:* FR-5.1 (User Experience)
+
+*Technical Tasks:*
+1. Create components/common/Toast.tsx
+2. Create hooks/useToast.ts
+3. Implement toast queue system
+4. Add auto-dismiss timer
+5. Style toast (position, animation)
+6. Integrate into create/update/delete flows
+7. Add unit tests
+8. Test with multiple rapid toasts
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 11.2: Loading States
+*As a* user +
+*I want to* see loading indicators +
+*So that* I know the app is working
+
+*Acceptance Criteria:*
+- Loading spinner on initial data fetch
+- Loading state while saving entry
+- Loading state while deleting entry
+- Skeleton screens for entry list (optional)
+- Disabled buttons during operations
+
+*Reference:* FR-5.1, NFR-4 (Performance)
+
+*Technical Tasks:*
+1. Create components/common/Spinner.tsx
+2. Add loading states to useEntries hook
+3. Show spinner during CRUD operations
+4. Disable buttons during saves
+5. Add skeleton loader for EntryList (optional)
+6. Style loading states
+7. Test loading state transitions
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 11.3: Empty States
+*As a* user +
+*I want to* see helpful messages when lists are empty +
+*So that* I understand what to do next
+
+*Acceptance Criteria:*
+- Empty state for no entries
+- Empty state for no search results
+- Empty state for empty folder
+- Clear call-to-action (e.g., "Create your first entry")
+- Icon or illustration
+- Helpful text
+
+*Reference:* FR-5.1
+
+*Technical Tasks:*
+1. Create components/common/EmptyState.tsx
+2. Add props for icon, message, action
+3. Update EntryList to show empty states
+4. Add different messages for different contexts
+5. Style empty states
+6. Add illustrations (optional)
+7. Test all empty state scenarios
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 11.4: Error Handling and User Feedback
+*As a* user +
+*I want to* see clear error messages when things fail +
+*So that* I understand what went wrong
+
+*Acceptance Criteria:*
+- Error messages displayed for validation errors
+- Error messages for save/delete failures
+- Error messages for quota exceeded
+- Retry option for network-related errors
+- Non-blocking error display (not alert())
+
+*Reference:* NFR-3 (Error Handling)
+
+*Technical Tasks:*
+1. Create ErrorBoundary component
+2. Add error state to hooks
+3. Display inline errors in forms
+4. Show toast for operation errors
+5. Add retry mechanism where applicable
+6. Handle quota exceeded gracefully
+7. Test error scenarios
+8. Test error recovery
+
+*Estimated Effort:* 4 hours
+
+---
+
+== Phase 4 Task Breakdown
+
+=== Week 7: Edit, Delete, and Polish
+
+*Days 1-2: Entry Editing*
+- Story 9.1: Edit entry UI (4 hours)
+- Story 9.2: Update entry logic (3 hours)
+- Story 9.3: Edit form enhancements (5 hours)
+
+*Days 3-4: Entry Deletion*
+- Story 10.1: Delete entry UI (4 hours)
+- Story 10.2: Delete entry logic (2 hours)
+- Testing and integration (4 hours)
+
+*Day 5: Polish and Testing*
+- Story 11.1: Toast notifications (4 hours)
+- Story 11.2: Loading states (3 hours)
+- Story 11.3: Empty states (3 hours)
+- Story 11.4: Error handling (4 hours)
+- Final testing and bug fixes
+
+*Total Week 7:* ~40 hours
+
+*Optional (if time permits):*
+- Story 10.3: Bulk delete (6 hours)
+
+---
+
+== Total Phase 4 Effort
+
+*Estimated Hours:* 40 hours (core) + 6 hours (optional bulk delete)
+*Calendar Time:* 1 week
+*Developer Capacity:* ~40 hours/week (full-time)
+
+== Definition of Done (Phase 4)
+
+All Phase 1-3 DoD criteria plus:
+
+1. ✅ User can edit existing entries
+2. ✅ User can delete entries with confirmation
+3. ✅ Toast notifications appear for all CRUD operations
+4. ✅ Loading states shown during operations
+5. ✅ Empty states displayed appropriately
+6. ✅ Error handling comprehensive and user-friendly
+7. ✅ All CRUD operations work correctly
+8. ✅ Unit tests for all new components and hooks
+9. ✅ All Phase 1-3 tests still passing
+10. ✅ No console errors or warnings
+
+## Phase 4 Deliverables
+
+At the end of Phase 4, the web app should have:
+
+1. ✅ Complete CRUD operations:
+   - ✅ Create (Phase 1)
+   - ✅ Read (Phase 1)
+   - ✅ Update (Phase 4) - NEW
+   - ✅ Delete (Phase 4) - NEW
+
+2. ✅ Entry editing:
+   - Edit button on entry cards
+   - Pre-filled edit form
+   - Change detection
+   - Update functionality
+
+3. ✅ Entry deletion:
+   - Delete button with confirmation
+   - ConfirmDialog component
+   - Immediate UI update
+
+4. ✅ UI polish:
+   - Toast notifications
+   - Loading states
+   - Empty states
+   - Error handling
+
+5. ✅ Enhanced UX:
+   - Clear user feedback
+   - Disabled states during operations
+   - Helpful empty states
+   - Graceful error recovery
+
+## What's NOT in Phase 4
+
+The following features are explicitly excluded from Phase 4:
+
+- ❌ Image attachment (Phase 5 or later)
+- ❌ Audio recording (Phase 5 or later)
+- ❌ Location editing with map picker (Phase 5 or later)
+- ❌ Entry duplication (Future enhancement)
+- ❌ Undo/redo (Future enhancement)
+- ❌ PWA/Service Worker (Phase 5)
+- ❌ Export/Import (Phase 5)
+- ❌ Bulk operations (Optional, may defer)
+
+## Technology Additions for Phase 4
+
+No new major dependencies needed. Uses existing stack:
+- React 18
+- TypeScript
+- IndexedDB (idb library)
+- Vitest for testing
+- React Testing Library
+
+May consider adding:
+- `react-hot-toast` or similar for toast notifications (optional)
+- Or implement custom toast system with CSS animations
+
+## Testing Strategy for Phase 4
+
+=== Unit Tests
+- useEntries updateEntry function
+- useEntries deleteEntry function
+- ConfirmDialog component
+- Toast component
+- EmptyState component
+- Edit flow in EntryForm
+- Change detection logic
+
+=== Component Tests
+- EntryCard edit button
+- EntryCard delete button
+- EntryForm in edit mode
+- ConfirmDialog interactions
+- Toast display and dismiss
+
+=== Integration Tests
+- Complete edit workflow
+- Complete delete workflow
+- Edit without changes (save disabled)
+- Delete cancellation
+- Toast appears after operations
+- Error handling flows
+
+=== Manual Tests
+- Edit entry and save
+- Edit entry and cancel
+- Delete entry and confirm
+- Delete entry and cancel
+- Form validation in edit mode
+- Change detection accuracy
+- Toast notifications display
+- Loading states appear
+- Empty states display
+- Error messages clear
+- Dark mode compatibility
+
+## Performance Considerations
+
+=== Edit Performance
+- Minimal re-renders when editing
+- Efficient change detection
+- Form state isolated to modal
+
+=== Delete Performance
+- Immediate UI update (optimistic)
+- Background IndexedDB deletion
+- Batch deletes if bulk operation
+
+=== Toast Performance
+- Queue system for multiple toasts
+- CSS transitions (not JS animations)
+- Auto-cleanup of dismissed toasts
+
+## Risk Mitigation
+
+=== Risk: Data Loss on Edit
+*Mitigation:* Keep original entry until save confirmed, validation prevents invalid saves
+
+=== Risk: Accidental Deletion
+*Mitigation:* Confirmation dialog with preview, clear destructive styling
+
+=== Risk: Stale Data After Edit
+*Mitigation:* Refresh entry list after update, optimistic updates with rollback on error
+
+=== Risk: Complex Change Detection
+*Mitigation:* Deep equality check with JSON.stringify, or shallow comparison of primitives
+
+## Success Criteria
+
+Phase 4 is successful if:
+
+1. ✅ User can edit any entry field
+2. ✅ Changes save correctly to IndexedDB
+3. ✅ User can delete entries safely
+4. ✅ Confirmation prevents accidental deletion
+5. ✅ Toast notifications provide clear feedback
+6. ✅ Loading states show during operations
+7. ✅ Empty states are helpful and clear
+8. ✅ Errors handled gracefully with recovery options
+9. ✅ All Phase 1-3 functionality still works
+10. ✅ All tests pass (220+ total expected)
+
+## Next Steps After Phase 4
+
+Once Phase 4 is complete and accepted:
+
+1. Review and retrospective
+2. Consider Phase 5 options:
+   - **Option A:** Media Features (images, audio)
+   - **Option B:** PWA & Offline (service worker, manifest)
+   - **Option C:** Advanced Features (location editing, export/import)
+3. Gather user feedback on priorities
+4. Plan Phase 5 based on needs
+
+---
+
+*Last Updated:* 2026-03-15
+*Status:* 📝 Planning
+*Platform:* Web (React + TypeScript + IndexedDB)

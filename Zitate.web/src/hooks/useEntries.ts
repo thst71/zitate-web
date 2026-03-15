@@ -66,6 +66,45 @@ export function useEntries() {
   );
 
   /**
+   * Update an existing entry
+   */
+  const updateEntry = useCallback(
+    async (
+      id: string,
+      text: string,
+      authorId?: string,
+      labelIds: string[] = []
+    ): Promise<Entry> => {
+      // Find the existing entry
+      const existingEntry = entries.find((e) => e.id === id);
+      if (!existingEntry) {
+        throw new Error('Entry not found');
+      }
+
+      const updatedEntry: Entry = {
+        ...existingEntry,
+        text,
+        authorId,
+        labelIds,
+        updatedAt: Date.now(),
+      };
+
+      try {
+        await dbService.update(STORES.ENTRIES, updatedEntry);
+        setEntries((prev) =>
+          prev.map((entry) => (entry.id === id ? updatedEntry : entry))
+        );
+        return updatedEntry;
+      } catch (err) {
+        throw new Error(
+          err instanceof Error ? err.message : 'Failed to update entry'
+        );
+      }
+    },
+    [entries]
+  );
+
+  /**
    * Delete an entry
    */
   const deleteEntry = useCallback(async (id: string): Promise<void> => {
@@ -89,6 +128,7 @@ export function useEntries() {
     loading,
     error,
     addEntry,
+    updateEntry,
     deleteEntry,
     reload: loadEntries,
   };

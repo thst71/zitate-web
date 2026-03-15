@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Header } from './components/layout/Header';
 import { Layout } from './components/layout/Layout';
 import { Modal } from './components/common/Modal';
+import { ConfirmDialog } from './components/common/ConfirmDialog';
 import { EntryForm } from './components/entry/EntryForm';
 import { EntryList } from './components/entry/EntryList';
 import { SearchBar } from './components/search/SearchBar';
@@ -10,13 +11,15 @@ import { FolderForm } from './components/folder/FolderForm';
 import { useEntries } from './hooks/useEntries';
 import { useSearch } from './hooks/useSearch';
 import { useFolders } from './hooks/useFolders';
-import type { SmartFolder } from './models';
+import type { SmartFolder, Entry } from './models';
 
 const App: React.FC = () => {
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+  const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<SmartFolder | null>(null);
-  const { entries, loading, error, addEntry, deleteEntry } = useEntries();
+  const { entries, loading, error, addEntry, updateEntry, deleteEntry } = useEntries();
   const { searchQuery, filteredEntries, handleSearch, isSearching } = useSearch(entries);
   const {
     folders,
@@ -36,6 +39,7 @@ const App: React.FC = () => {
 
   const handleCloseEntryModal = () => {
     setIsEntryModalOpen(false);
+    setEditingEntry(null);
   };
 
   const handleCloseFolderModal = () => {
@@ -49,12 +53,33 @@ const App: React.FC = () => {
     authorId?: string,
     labelIds?: string[]
   ) => {
-    await addEntry(text, latitude, longitude, authorId, labelIds);
+    if (editingEntry) {
+      await updateEntry(editingEntry.id, text, authorId, labelIds);
+    } else {
+      await addEntry(text, latitude, longitude, authorId, labelIds);
+    }
     setIsEntryModalOpen(false);
+    setEditingEntry(null);
   };
 
-  const handleDeleteEntry = async (id: string) => {
-    await deleteEntry(id);
+  const handleEditEntry = (entry: Entry) => {
+    setEditingEntry(entry);
+    setIsEntryModalOpen(true);
+  };
+
+  const handleDeleteEntryClick = (id: string) => {
+    setDeletingEntryId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingEntryId) {
+      await deleteEntry(deletingEntryId);
+      setDeletingEntryId(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeletingEntryId(null);
   };
 
   const handleSaveFolder = async (
@@ -124,7 +149,8 @@ const App: React.FC = () => {
         entries={displayEntries}
         loading={loading}
         error={error}
-        onDeleteEntry={handleDeleteEntry}
+        onEditEntry={handleEditEntry}
+        onDeleteEntry={handleDeleteEntryClick}
       />
 
       <button
@@ -154,9 +180,13 @@ const App: React.FC = () => {
       <Modal
         isOpen={isEntryModalOpen}
         onClose={handleCloseEntryModal}
-        title="New Entry"
+        title={editingEntry ? 'Edit Entry' : 'New Entry'}
       >
-        <EntryForm onSave={handleSaveEntry} onCancel={handleCloseEntryModal} />
+        <EntryForm
+          onSave={handleSaveEntry}
+          onCancel={handleCloseEntryModal}
+          initialEntry={editingEntry || undefined}
+        />
       </Modal>
 
       <Modal
@@ -169,6 +199,27 @@ const App: React.FC = () => {
           onCancel={handleCloseFolderModal}
         />
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deletingEntryId}
+        title="Delete Entry"
+        message={
+          deletingEntryId
+            ? `Are you sure you want to delete this entry? "${
+                entries.find((e) => e.id === deletingEntryId)?.text.slice(0, 100) || ''
+              }${
+                entries.find((e) => e.id === deletingEntryId)?.text.length! > 100
+                  ? '...'
+                  : ''
+              }"`
+            : ''
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        destructive
+      />
     </Layout>
   );
 };
