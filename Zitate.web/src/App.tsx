@@ -21,9 +21,11 @@ const App: React.FC = () => {
   const handleSaveEntry = async (
     text: string,
     latitude?: number,
-    longitude?: number
+    longitude?: number,
+    authorId?: string,
+    labelIds?: string[]
   ) => {
-    await addEntry(text, latitude, longitude);
+    await addEntry(text, latitude, longitude, authorId, labelIds);
     setIsModalOpen(false);
   };
 

@@ -4,15 +4,19 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useLocation } from '../../hooks/useLocation';
 import { validateEntryText } from '../../utils/validators';
+import { AuthorSelect } from '../author/AuthorSelect';
+import { LabelInput } from '../label/LabelInput';
 import './EntryForm.css';
 
 interface EntryFormProps {
-  onSave: (text: string, latitude?: number, longitude?: number) => Promise<void>;
+  onSave: (text: string, latitude?: number, longitude?: number, authorId?: string, labelIds?: string[]) => Promise<void>;
   onCancel: () => void;
 }
 
 export function EntryForm({ onSave, onCancel }: EntryFormProps) {
   const [text, setText] = useState('');
+  const [authorId, setAuthorId] = useState<string | undefined>();
+  const [labelIds, setLabelIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +43,7 @@ export function EntryForm({ onSave, onCancel }: EntryFormProps) {
     setError(null);
 
     try {
-      await onSave(text, coords?.latitude, coords?.longitude);
+      await onSave(text, coords?.latitude, coords?.longitude, authorId, labelIds);
       // Form will be closed by parent
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save entry');
@@ -112,6 +116,10 @@ export function EntryForm({ onSave, onCancel }: EntryFormProps) {
           Location is optional. Grant permission to auto-capture.
         </p>
       </div>
+
+      <AuthorSelect selectedAuthorId={authorId} onSelect={setAuthorId} />
+
+      <LabelInput selectedLabelIds={labelIds} onLabelsChange={setLabelIds} />
 
       {error && (
         <div className="form-error" role="alert">

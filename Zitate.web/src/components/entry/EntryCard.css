@@ -19,12 +19,35 @@
 }
 
 .entry-text {
-  margin: 0 0 var(--spacing-md) 0;
+  margin: 0 0 var(--spacing-sm) 0;
   color: var(--color-text);
   font-size: var(--font-size-base);
   line-height: 1.6;
   word-wrap: break-word;
   overflow-wrap: break-word;
+}
+
+.entry-author {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-style: italic;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.entry-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.entry-label {
+  padding: 2px var(--spacing-xs);
+  background-color: var(--color-primary);
+  color: white;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
 }
 
 .entry-meta {

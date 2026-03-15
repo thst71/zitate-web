@@ -35,7 +35,9 @@ export function useEntries() {
     async (
       text: string,
       latitude?: number,
-      longitude?: number
+      longitude?: number,
+      authorId?: string,
+      labelIds: string[] = []
     ): Promise<Entry> => {
       const now = Date.now();
       const entry: Entry = {
@@ -43,7 +45,8 @@ export function useEntries() {
         text,
         latitude,
         longitude,
-        labelIds: [],
+        authorId,
+        labelIds,
         imageIds: [],
         createdAt: now,
         updatedAt: now,

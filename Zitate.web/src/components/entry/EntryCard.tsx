@@ -1,6 +1,9 @@
 import React from 'react';
 import { Entry } from '../../models';
 import { formatCoordinates } from '../../services/location.service';
+import { useAuthors } from '../../hooks/useAuthors';
+import { useLabels } from '../../hooks/useLabels';
+import { formatLabelForDisplay } from '../../utils/validators';
 import './EntryCard.css';
 
 interface EntryCardProps {
@@ -9,6 +12,11 @@ interface EntryCardProps {
 }
 
 export const EntryCard: React.FC<EntryCardProps> = ({ entry, onDelete }) => {
+  const { getAuthorById } = useAuthors();
+  const { getLabelsByIds } = useLabels();
+
+  const author = entry.authorId ? getAuthorById(entry.authorId) : undefined;
+  const labels = getLabelsByIds(entry.labelIds);
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -42,6 +50,22 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onDelete }) => {
     <div className="entry-card">
       <div className="entry-card-content">
         <p className="entry-text">{entry.text}</p>
+
+        {author && (
+          <div className="entry-author">
+            — {author.name}
+          </div>
+        )}
+
+        {labels.length > 0 && (
+          <div className="entry-labels">
+            {labels.map((label) => (
+              <span key={label.id} className="entry-label">
+                {formatLabelForDisplay(label.name)}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="entry-meta">
           <span className="entry-date">{formatDate(entry.createdAt)}</span>
