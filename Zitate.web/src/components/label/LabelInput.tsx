@@ -69,7 +69,7 @@ export const LabelInput: React.FC<LabelInputProps> = ({
     inputRef.current?.focus();
   };
 
-  const handleKeyDown = (e: React.KeyEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const value = inputValue.trim();

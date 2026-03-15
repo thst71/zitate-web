@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { FolderCard } from './FolderCard';
@@ -8,9 +7,9 @@ describe('FolderCard', () => {
   const mockFolder: SmartFolder = {
     id: '1',
     name: 'Work Folder',
-    criteria: { labelIds: ['label-1'] },
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
+    criteria: { labels: { values: ['label-1'], operator: 'OR' } },
+    order: 0,
+    createdAt: new Date('2024-01-01').getTime(),
   };
 
   it('should render folder name', () => {

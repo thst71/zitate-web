@@ -6,15 +6,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { dbService, STORES } from '../services/db.service';
 import type { SmartFolder, Entry } from '../models';
 import { validateFolderName } from '../utils/validators';
-import { useAuthors } from './useAuthors';
-import { useLabels } from './useLabels';
 
 export function useFolders() {
   const [folders, setFolders] = useState<SmartFolder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { getAuthorById } = useAuthors();
-  const { getLabelsByIds } = useLabels();
 
   /**
    * Load all folders from IndexedDB
@@ -61,6 +57,7 @@ export function useFolders() {
         id: uuidv4(),
         name: normalizedName,
         criteria,
+        order: folders.length,
         createdAt: now,
       };
 
@@ -146,8 +143,8 @@ export function useFolders() {
         const criteria = folder.criteria;
 
         // Filter by labels
-        if (criteria.labelIds && criteria.labelIds.length > 0) {
-          const hasMatchingLabel = criteria.labelIds.some((labelId) =>
+        if (criteria.labels && criteria.labels.values.length > 0) {
+          const hasMatchingLabel = criteria.labels.values.some((labelId: string) =>
             entry.labelIds.includes(labelId)
           );
           if (!hasMatchingLabel) return false;
@@ -159,22 +156,23 @@ export function useFolders() {
         }
 
         // Filter by date range
-        if (criteria.dateFrom) {
-          if (entry.createdAt < criteria.dateFrom) return false;
+        if (criteria.dateRange?.start) {
+          if (entry.createdAt < criteria.dateRange.start) return false;
         }
-        if (criteria.dateTo) {
-          if (entry.createdAt > criteria.dateTo) return false;
+        if (criteria.dateRange?.end) {
+          if (entry.createdAt > criteria.dateRange.end) return false;
         }
 
-        // Filter by location (has location)
-        if (criteria.hasLocation !== undefined) {
+        // Filter by location
+        if (criteria.location) {
           const entryHasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
-          if (criteria.hasLocation !== entryHasLocation) return false;
+          if (!entryHasLocation) return false;
+          // Note: Distance calculation could be added here if needed
         }
 
         // Filter by text (case-insensitive partial match)
-        if (criteria.textContains) {
-          const query = criteria.textContains.toLowerCase();
+        if (criteria.textMatch) {
+          const query = criteria.textMatch.toLowerCase();
           if (!entry.text.toLowerCase().includes(query)) return false;
         }
 

@@ -1,7 +1,7 @@
 /**
  * EntryForm Component - Form for creating/editing entries
  */
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { useLocation } from '../../hooks/useLocation';
 import { validateEntryText } from '../../utils/validators';
 import { AuthorSelect } from '../author/AuthorSelect';

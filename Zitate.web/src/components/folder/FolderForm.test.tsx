@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { FolderForm } from './FolderForm';
@@ -148,8 +147,8 @@ describe('FolderForm', () => {
       id: '1',
       name: 'Existing Folder',
       criteria: {},
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      order: 0,
+      createdAt: new Date().getTime(),
     };
 
     render(<FolderForm onSave={onSave} onCancel={onCancel} initialFolder={existingFolder} />);
@@ -165,10 +164,10 @@ describe('FolderForm', () => {
       id: '1',
       name: 'Existing Folder',
       criteria: {
-        textContains: 'important',
+        textMatch: 'important',
       },
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      order: 0,
+      createdAt: new Date().getTime(),
     };
 
     render(<FolderForm onSave={onSave} onCancel={onCancel} initialFolder={existingFolder} />);

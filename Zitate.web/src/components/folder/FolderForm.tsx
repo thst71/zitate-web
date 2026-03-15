@@ -24,13 +24,10 @@ export const FolderForm: React.FC<FolderFormProps> = ({
     initialFolder?.criteria.authorId
   );
   const [labelIds, setLabelIds] = useState<string[]>(
-    initialFolder?.criteria.labelIds || []
+    initialFolder?.criteria.labels?.values || []
   );
-  const [textContains, setTextContains] = useState(
-    initialFolder?.criteria.textContains || ''
-  );
-  const [hasLocation, setHasLocation] = useState<boolean | undefined>(
-    initialFolder?.criteria.hasLocation
+  const [textMatch, setTextMatch] = useState(
+    initialFolder?.criteria.textMatch || ''
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,10 +46,9 @@ export const FolderForm: React.FC<FolderFormProps> = ({
     setError(null);
 
     const criteria: SmartFolder['criteria'] = {
-      labelIds: labelIds.length > 0 ? labelIds : undefined,
+      labels: labelIds.length > 0 ? { values: labelIds, operator: 'OR' as const } : undefined,
       authorId: authorId || undefined,
-      textContains: textContains.trim() || undefined,
-      hasLocation: hasLocation,
+      textMatch: textMatch.trim() || undefined,
     };
 
     try {
@@ -103,44 +99,12 @@ export const FolderForm: React.FC<FolderFormProps> = ({
             id="text-contains"
             type="text"
             className="form-input"
-            value={textContains}
-            onChange={(e) => setTextContains(e.target.value)}
+            value={textMatch}
+            onChange={(e) => setTextMatch(e.target.value)}
             placeholder="Enter text to search for..."
           />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Location</label>
-          <div className="radio-group">
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="location"
-                checked={hasLocation === undefined}
-                onChange={() => setHasLocation(undefined)}
-              />
-              <span>Any (with or without location)</span>
-            </label>
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="location"
-                checked={hasLocation === true}
-                onChange={() => setHasLocation(true)}
-              />
-              <span>With location</span>
-            </label>
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="location"
-                checked={hasLocation === false}
-                onChange={() => setHasLocation(false)}
-              />
-              <span>Without location</span>
-            </label>
-          </div>
-        </div>
       </div>
 
       {error && (

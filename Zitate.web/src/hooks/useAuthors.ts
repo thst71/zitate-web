@@ -52,11 +52,9 @@ export function useAuthors() {
         throw new Error('An author with this name already exists');
       }
 
-      const now = Date.now();
       const author: Author = {
         id: uuidv4(),
         name: normalizedName,
-        createdAt: now,
       };
 
       try {

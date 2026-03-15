@@ -21,7 +21,7 @@ class DBService {
     }
 
     this.initPromise = openDB(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion, newVersion, transaction) {
+      upgrade(db, oldVersion, newVersion) {
         const event = {
           target: { result: db },
           oldVersion,

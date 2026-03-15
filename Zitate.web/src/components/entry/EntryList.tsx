@@ -6,7 +6,7 @@ import './EntryList.css';
 interface EntryListProps {
   entries: Entry[];
   loading?: boolean;
-  error?: string;
+  error?: string | null;
   onEditEntry?: (entry: Entry) => void;
   onDeleteEntry?: (id: string) => void;
 }

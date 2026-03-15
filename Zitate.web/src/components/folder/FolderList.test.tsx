@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { FolderList } from './FolderList';
@@ -9,16 +8,16 @@ describe('FolderList', () => {
     {
       id: '1',
       name: 'Work Folder',
-      criteria: { labelIds: ['label-1'] },
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01'),
+      criteria: { labels: { values: ['label-1'], operator: 'OR' } },
+      order: 0,
+      createdAt: new Date('2024-01-01').getTime(),
     },
     {
       id: '2',
       name: 'Personal Folder',
       criteria: { authorId: 'author-1' },
-      createdAt: new Date('2024-01-02'),
-      updatedAt: new Date('2024-01-02'),
+      order: 1,
+      createdAt: new Date('2024-01-02').getTime(),
     },
   ];
 
@@ -29,8 +28,8 @@ describe('FolderList', () => {
       authorId: 'author-1',
       labelIds: ['label-1'],
       imageIds: [],
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01'),
+      createdAt: new Date('2024-01-01').getTime(),
+      updatedAt: new Date('2024-01-01').getTime(),
     },
     {
       id: 'entry-2',
@@ -38,8 +37,8 @@ describe('FolderList', () => {
       authorId: 'author-1',
       labelIds: [],
       imageIds: [],
-      createdAt: new Date('2024-01-02'),
-      updatedAt: new Date('2024-01-02'),
+      createdAt: new Date('2024-01-02').getTime(),
+      updatedAt: new Date('2024-01-02').getTime(),
     },
   ];
 

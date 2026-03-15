@@ -51,11 +51,9 @@ export function useLabels() {
         return existing; // Return existing label
       }
 
-      const now = Date.now();
       const label: Label = {
         id: uuidv4(),
         name: normalizedName,
-        createdAt: now,
       };
 
       try {

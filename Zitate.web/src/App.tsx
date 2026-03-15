@@ -21,7 +21,7 @@ const App: React.FC = () => {
   const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<SmartFolder | null>(null);
   const { entries, loading, error, addEntry, updateEntry, deleteEntry } = useEntries();
-  const { searchQuery, filteredEntries, handleSearch, isSearching } = useSearch(entries);
+  const { filteredEntries, handleSearch, isSearching } = useSearch(entries);
   const {
     folders,
     addFolder,
@@ -187,7 +187,7 @@ const App: React.FC = () => {
         <EntryForm
           onSave={handleSaveEntry}
           onCancel={handleCloseEntryModal}
-          initialEntry={editingEntry || undefined}
+          initialEntry={editingEntry ?? undefined}
         />
       </Modal>
 
