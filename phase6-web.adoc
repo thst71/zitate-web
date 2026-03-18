@@ -1,0 +1,602 @@
+= Phase 6 Implementation Plan: PWA and Location Enhancement (Web)
+:toc:
+:toclevels: 3
+
+== Phase Overview
+
+*Goal:* Complete the application with PWA capabilities, enhanced location features, and production readiness
+
+*Duration:* Weeks 9-10
+
+*Deliverable:* Production-ready PWA with offline capability, location mapping, and deployment automation
+
+== Stories in Phase 6
+
+=== Epic 15: Progressive Web App (PWA)
+
+==== Story 15.1: Service Worker Implementation
+*As a* user +
+*I want to* use the app offline +
+*So that* I can access my quotes without internet connection
+
+*Acceptance Criteria:*
+- Service Worker caches app shell and static assets
+- App works completely offline after first load
+- Cache-first strategy for static assets
+- Network-first for API calls (future-proofing)
+- Cache invalidation on app updates
+- Offline indicator in UI
+
+*Reference:* NFR-6 (Offline Capability)
+
+*Technical Tasks:*
+1. Install vite-plugin-pwa: `npm install vite-plugin-pwa -D`
+2. Configure PWA plugin in vite.config.ts
+3. Create public/sw.js service worker
+4. Implement cache-first strategy for assets
+5. Add offline detection (navigator.onLine)
+6. Create offline indicator component
+7. Test offline functionality
+8. Add service worker update notifications
+
+*Estimated Effort:* 6 hours
+
+---
+
+==== Story 15.2: PWA Manifest and Installation
+*As a* user +
+*I want to* install the app on my device +
+*So that* I can access it like a native app
+
+*Acceptance Criteria:*
+- Web App Manifest with app metadata
+- App icons for various sizes (192px, 512px)
+- Installable on desktop and mobile
+- Custom install prompt
+- Proper app name, description, and theme colors
+- Standalone display mode
+
+*Reference:* NFR-6 (PWA)
+
+*Technical Tasks:*
+1. Create public/manifest.json
+2. Design and add app icons (192px, 512px, favicon)
+3. Configure manifest in vite.config.ts PWA plugin
+4. Set theme-color meta tags
+5. Add custom install button (beforeinstallprompt)
+6. Test installation on Chrome, Firefox, Safari
+7. Verify standalone mode functionality
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 15.3: Data Export/Import for Backup
+*As a* user +
+*I want to* export and import my data +
+*So that* I can backup and restore my collection
+
+*Acceptance Criteria:*
+- Export button downloads JSON file with all data
+- Import accepts JSON file and merges/replaces data
+- Export includes entries, authors, labels, folders
+- Images included as Base64 in export
+- Validation of import file format
+- Progress indicators for large exports/imports
+- User chooses merge or replace strategy
+
+*Reference:* NFR-5 (Data Portability)
+
+*Technical Tasks:*
+1. Create services/export.service.ts
+2. Implement exportAllData() function
+3. Convert image Blobs to Base64 for export
+4. Create downloadFile utility
+5. Implement importData() function
+6. Add JSON validation for import
+7. Create import/export UI in settings
+8. Add progress indicators
+9. Test with large datasets (>100 entries)
+10. Add unit tests for export/import
+
+*Estimated Effort:* 8 hours
+
+---
+
+=== Epic 16: Enhanced Location Features
+
+==== Story 16.1: Location Editing with Map
+*As a* user +
+*I want to* edit entry location on an interactive map +
+*So that* I can correct or customize the location
+
+*Acceptance Criteria:*
+- Location field in EntryForm is clickable
+- Opens full-screen map modal
+- Current location marked on map
+- User can click to select new location
+- Search box for address lookup
+- Confirm/Cancel buttons
+- Selected coordinates update entry
+
+*Reference:* FR-1.2 (Location Modification)
+
+*Technical Tasks:*
+1. Install Leaflet: `npm install leaflet @types/leaflet`
+2. Create components/map/LocationPicker.tsx
+3. Integrate OpenStreetMap tiles
+4. Add click handler to set coordinates
+5. Implement address search (Nominatim API)
+6. Add current location button
+7. Style map controls
+8. Make location field clickable in EntryForm
+9. Handle map modal open/close
+10. Test geolocation accuracy
+11. Add unit tests
+
+*Estimated Effort:* 10 hours
+
+---
+
+==== Story 16.2: Mini-Maps on Entry Cards
+*As a* user +
+*I want to* see location context on entry cards +
+*So that* I can quickly identify where quotes were collected
+
+*Acceptance Criteria:*
+- Small static map displayed on entry cards with location
+- Map shows marker at entry coordinates
+- Click mini-map opens full LocationViewer
+- Maps lazy-loaded for performance
+- Fallback to coordinates if map fails to load
+- Optional feature (can be disabled in settings)
+
+*Reference:* FR-5.3 (Entry Card Enhancement)
+
+*Technical Tasks:*
+1. Create components/map/MiniMap.tsx
+2. Generate static map tiles URL (OpenStreetMap)
+3. Add lazy loading with IntersectionObserver
+4. Integrate into EntryCard component
+5. Add click handler to open full map
+6. Handle loading and error states
+7. Add settings toggle for mini-maps
+8. Optimize for performance (limit concurrent requests)
+9. Test on mobile and desktop
+10. Add unit tests
+
+*Estimated Effort:* 6 hours
+
+---
+
+==== Story 16.3: Location Viewer Modal
+*As a* user +
+*I want to* view entry location on a full-size map +
+*So that* I can see detailed location context
+
+*Acceptance Criteria:*
+- Full-screen map modal
+- Entry location marked with custom icon
+- Shows address if available
+- Zoom controls
+- Close button and ESC key support
+- Mobile-friendly touch controls
+- Shows "Location not available" if no coordinates
+
+*Reference:* FR-5.4 (Enhanced Location Display)
+
+*Technical Tasks:*
+1. Create components/map/LocationViewer.tsx
+2. Full-screen modal with Leaflet map
+3. Custom marker for entry location
+4. Add address display if available
+5. Implement zoom controls
+6. Add keyboard and touch support
+7. Handle entries without location
+8. Style for mobile and desktop
+9. Add unit tests
+
+*Estimated Effort:* 5 hours
+
+---
+
+=== Epic 17: Production Readiness and Performance
+
+==== Story 17.1: Performance Optimization
+*As a* developer +
+*I want to* optimize app performance +
+*So that* the app loads quickly and runs smoothly
+
+*Acceptance Criteria:*
+- Bundle size <500KB gzipped
+- Lighthouse performance score >90
+- Virtual scrolling for large entry lists (>100 items)
+- Image lazy loading optimization
+- Code splitting for map components
+- Service Worker caching optimization
+
+*Reference:* NFR-1 (Performance)
+
+*Technical Tasks:*
+1. Implement virtual scrolling in EntryList
+2. Add code splitting for map components (React.lazy)
+3. Optimize bundle size (analyze with bundlephobia)
+4. Implement image lazy loading improvements
+5. Add compression for service worker assets
+6. Run Lighthouse audits and fix issues
+7. Add performance monitoring
+8. Test with 1000+ entries
+
+*Estimated Effort:* 6 hours
+
+---
+
+==== Story 17.2: Error Boundaries and Error Handling
+*As a* user +
+*I want to* receive helpful error messages +
+*So that* I understand when something goes wrong
+
+*Acceptance Criteria:*
+- React Error Boundaries catch component errors
+- Graceful degradation for API failures
+- User-friendly error messages
+- Error reporting to console (no external services)
+- Retry mechanisms for recoverable errors
+- Fallback UI for broken components
+
+*Reference:* NFR-4 (Error Handling)
+
+*Technical Tasks:*
+1. Create components/common/ErrorBoundary.tsx
+2. Wrap main app sections with error boundaries
+3. Add error state handling in all hooks
+4. Create user-friendly error messages
+5. Add retry buttons for recoverable errors
+6. Implement fallback UI components
+7. Test error scenarios
+8. Add error logging
+
+*Estimated Effort:* 4 hours
+
+---
+
+==== Story 17.3: Accessibility Enhancements
+*As a* user with disabilities +
+*I want to* use the app with assistive technology +
+*So that* the app is accessible to everyone
+
+*Acceptance Criteria:*
+- All interactive elements have proper ARIA labels
+- Keyboard navigation works throughout app
+- Focus management in modals
+- Screen reader announcements for dynamic content
+- High contrast mode support
+- Color contrast ratios meet WCAG 2.1 AA
+- Skip links for main content
+
+*Reference:* FR-5.1 (Accessibility)
+
+*Technical Tasks:*
+1. Add ARIA labels to all buttons and inputs
+2. Implement focus trap in modals
+3. Add keyboard navigation for maps
+4. Create screen reader announcements
+5. Test with NVDA/JAWS/VoiceOver
+6. Fix color contrast issues
+7. Add skip links
+8. Run accessibility audit tools
+9. Test keyboard-only navigation
+
+*Estimated Effort:* 5 hours
+
+---
+
+=== Epic 18: Deployment and CI/CD
+
+==== Story 18.1: Docker Production Optimization
+*As a* developer +
+*I want to* optimize the Docker image for production +
+*So that* deployment is efficient and secure
+
+*Acceptance Criteria:*
+- Multi-stage Docker build for smaller image
+- Nginx configuration for optimal serving
+- Proper security headers
+- Gzip compression enabled
+- Health check endpoint
+- Non-root user for security
+
+*Reference:* Docker workflow provided
+
+*Technical Tasks:*
+1. Update Dockerfile with multi-stage build
+2. Optimize nginx.conf for production
+3. Add security headers (CSP, HSTS, etc.)
+4. Enable Gzip compression
+5. Add health check endpoint
+6. Use non-root user
+7. Test Docker image locally
+8. Verify security best practices
+
+*Estimated Effort:* 3 hours
+
+---
+
+==== Story 18.2: Environment Configuration
+*As a* developer +
+*I want to* manage different environment configurations +
+*So that* the app works in development and production
+
+*Acceptance Criteria:*
+- Environment variables for API URLs (future)
+- Build-time configuration
+- Development vs production builds
+- Feature flags for experimental features
+- Version information display
+
+*Reference:* Production deployment
+
+*Technical Tasks:*
+1. Create .env.example file
+2. Add environment variable handling
+3. Configure Vite for environment variables
+4. Add version display in app
+5. Create feature flags system
+6. Update build scripts
+7. Document environment setup
+
+*Estimated Effort:* 2 hours
+
+---
+
+==== Story 18.3: GitHub Actions Enhancements
+*As a* developer +
+*I want to* enhance the CI/CD pipeline +
+*So that* deployment is automated and reliable
+
+*Acceptance Criteria:*
+- Automated testing in CI
+- Lighthouse CI for performance monitoring
+- Security scanning
+- Automated dependency updates
+- Branch protection rules
+
+*Reference:* Existing docker-publish.yml
+
+*Technical Tasks:*
+1. Add test job to GitHub Actions
+2. Implement Lighthouse CI
+3. Add security scanning (npm audit)
+4. Configure Dependabot
+5. Update docker-publish.yml with tests
+6. Add branch protection requirements
+7. Test full CI/CD pipeline
+
+*Estimated Effort:* 4 hours
+
+---
+
+== Phase 6 Task Breakdown
+
+=== Week 9: PWA and Location Features
+
+*Days 1-2: PWA Foundation*
+- Story 15.1: Service Worker (6 hours)
+- Story 15.2: PWA Manifest (4 hours)
+
+*Days 3-4: Enhanced Location*
+- Story 16.1: Location editing with map (10 hours)
+- Story 16.2: Mini-maps setup (3 hours)
+
+*Day 5: Location Completion*
+- Story 16.2: Mini-maps completion (3 hours)
+- Story 16.3: Location viewer modal (5 hours)
+
+*Total Week 9:* ~31 hours
+
+---
+
+=== Week 10: Production Readiness
+
+*Days 1-2: Performance and Export*
+- Story 15.3: Data export/import (8 hours)
+- Story 17.1: Performance optimization (6 hours)
+
+*Days 3-4: Error Handling and Accessibility*
+- Story 17.2: Error boundaries (4 hours)
+- Story 17.3: Accessibility enhancements (5 hours)
+
+*Day 5: Deployment and CI/CD*
+- Story 18.1: Docker optimization (3 hours)
+- Story 18.2: Environment config (2 hours)
+- Story 18.3: CI/CD enhancements (4 hours)
+
+*Total Week 10:* ~32 hours
+
+---
+
+== Total Phase 6 Effort
+
+*Estimated Hours:* 63 hours
+*Calendar Time:* 2 weeks
+*Developer Capacity:* ~32 hours/week
+
+== Definition of Done (Phase 6)
+
+All Phase 1-5 DoD criteria plus:
+
+1. ✅ App works completely offline (PWA)
+2. ✅ Installable on desktop and mobile
+3. ✅ Location editing with interactive map
+4. ✅ Mini-maps display on entry cards
+5. ✅ Data export/import functionality
+6. ✅ Performance optimizations implemented
+7. ✅ Accessibility standards met (WCAG 2.1 AA)
+8. ✅ Error boundaries handle failures gracefully
+9. ✅ Production Docker image optimized
+10. ✅ CI/CD pipeline includes tests and monitoring
+11. ✅ All Phase 1-5 functionality preserved
+12. ✅ Lighthouse score >90
+
+## Phase 6 Deliverables
+
+At the end of Phase 6, the web app will have:
+
+1. **Progressive Web App Capabilities:**
+   - Complete offline functionality
+   - App installation support
+   - Service Worker caching
+   - Data export/import for backup
+
+2. **Enhanced Location Features:**
+   - Interactive map for location editing
+   - Mini-maps on entry cards
+   - Full-screen location viewer
+   - Address search and geocoding
+
+3. **Production Readiness:**
+   - Performance optimizations (virtual scrolling, code splitting)
+   - Comprehensive error handling
+   - Full accessibility compliance
+   - Optimized Docker deployment
+
+4. **DevOps Integration:**
+   - Enhanced CI/CD pipeline
+   - Automated testing and monitoring
+   - Security scanning
+   - Environment configuration
+
+## Technology Additions for Phase 6
+
+**New Dependencies:**
+```json
+{
+  "dependencies": {
+    "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.8",
+    "vite-plugin-pwa": "^0.17.0",
+    "@lhci/cli": "^0.12.0"
+  }
+}
+```
+
+**Updated vite.config.ts:**
+```typescript
+import { VitePWA } from 'vite-plugin-pwa'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+      },
+      manifest: {
+        name: 'Zitate - Quote Collection',
+        short_name: 'Zitate',
+        description: 'Collect and organize quotes with rich metadata',
+        theme_color: '#3b82f6',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
+  ]
+});
+```
+
+## Testing Strategy for Phase 6
+
+=== Unit Tests
+- Service Worker functionality
+- Export/import services
+- Map components (LocationPicker, MiniMap, LocationViewer)
+- Error boundary components
+- Accessibility helpers
+
+=== Integration Tests
+- PWA installation flow
+- Offline functionality
+- Location editing workflow
+- Data export/import cycle
+- Full app keyboard navigation
+
+=== Performance Tests
+- Lighthouse CI automation
+- Bundle size monitoring
+- Virtual scrolling with large datasets
+- Service Worker cache efficiency
+
+=== Accessibility Tests
+- Screen reader compatibility (NVDA, JAWS, VoiceOver)
+- Keyboard-only navigation
+- High contrast mode
+- Focus management
+
+## Risk Mitigation
+
+=== Risk: Map API Rate Limits
+*Mitigation:* Use OpenStreetMap (free), implement request throttling, cache map tiles
+
+=== Risk: Service Worker Conflicts
+*Mitigation:* Thorough testing, clear cache strategies, update notifications
+
+=== Risk: Large Export Files
+*Mitigation:* Implement streaming for large datasets, progress indicators, file size warnings
+
+=== Risk: Browser Compatibility
+*Mitigation:* Feature detection, graceful degradation, polyfills where needed
+
+## Success Criteria
+
+Phase 6 is successful if:
+
+1. ✅ App installs as PWA on desktop and mobile
+2. ✅ Works completely offline after first load
+3. ✅ Location editing works with interactive map
+4. ✅ Data can be exported and imported successfully
+5. ✅ Lighthouse performance score >90
+6. ✅ Passes accessibility audit (WAVE, axe)
+7. ✅ Docker image deploys successfully
+8. ✅ CI/CD pipeline runs without errors
+9. ✅ All previous functionality preserved
+10. ✅ No critical bugs or performance regressions
+
+## Post-Phase 6: Version 1.0 Release
+
+After Phase 6 completion:
+
+1. **User Acceptance Testing**
+2. **Performance validation on production**
+3. **Security audit**
+4. **Documentation finalization**
+5. **Version 1.0 release**
+
+## Future Enhancements (Version 2.0)
+
+Deferred features for post-v1.0:
+- Audio recording functionality
+- LLM integration for natural language queries
+- Cloud synchronization options
+- Social sharing features
+- Advanced analytics and insights
+- Collaborative collections
+
+---
+
+*Last Updated:* 2026-03-18
+*Status:* 📋 Ready to Begin
+*Platform:* Web (React + TypeScript + IndexedDB + PWA)
+*Dependencies:* Leaflet, PWA Plugin, Lighthouse CI
