@@ -112,6 +112,20 @@
   background-color: var(--color-border);
 }
 
+.location-edit {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  color: white;
+  transition: background-color var(--transition-fast);
+}
+
+.location-edit:hover {
+  background-color: var(--color-primary-hover);
+}
+
 .form-hint {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);

@@ -1,0 +1,102 @@
+.virtual-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.virtual-scroll-spacer {
+  position: relative;
+  width: 100%;
+}
+
+.virtual-scroll-content {
+  position: relative;
+  width: 100%;
+  will-change: transform;
+}
+
+.virtual-scroll-item {
+  width: 100%;
+  overflow: hidden;
+  will-change: transform;
+}
+
+/* Smooth scrolling for better UX */
+.virtual-scroll-container {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar styling */
+.virtual-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.virtual-scroll-container::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary, #f9fafb);
+  border-radius: 4px;
+}
+
+.virtual-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-border, #e5e7eb);
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.virtual-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary, #9ca3af);
+}
+
+/* Firefox scrollbar */
+.virtual-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border, #e5e7eb) var(--color-bg-secondary, #f9fafb);
+}
+
+/* Focus styles for keyboard navigation */
+.virtual-scroll-container:focus {
+  outline: 2px solid var(--color-primary, #3b82f6);
+  outline-offset: -2px;
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+  .virtual-scroll-container::-webkit-scrollbar-track {
+    background: var(--color-bg-secondary, #374151);
+  }
+
+  .virtual-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--color-border, #4b5563);
+  }
+
+  .virtual-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-tertiary, #6b7280);
+  }
+
+  .virtual-scroll-container {
+    scrollbar-color: var(--color-border, #4b5563) var(--color-bg-secondary, #374151);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .virtual-scroll-container {
+    scroll-behavior: auto;
+  }
+
+  .virtual-scroll-content,
+  .virtual-scroll-item {
+    will-change: auto;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .virtual-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--color-text-primary, #111827);
+  }
+
+  .virtual-scroll-container:focus {
+    outline-width: 3px;
+  }
+}

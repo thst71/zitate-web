@@ -1,5 +1,5 @@
 /**
- * Location Service - Handles browser Geolocation API
+ * Location Service - Handles browser Geolocation API and geocoding
  */
 
 export interface GeolocationCoords {
@@ -8,7 +8,20 @@ export interface GeolocationCoords {
   accuracy: number;
 }
 
+export interface LocationResult {
+  coords: GeolocationCoords;
+  address?: string;
+}
+
+export interface AddressResult {
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
 class LocationService {
+  private readonly NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
+
   /**
    * Check if Geolocation API is available
    */
@@ -58,6 +71,72 @@ class LocationService {
   }
 
   /**
+   * Get current position with optional address resolution
+   */
+  async getCurrentPositionWithAddress(): Promise<LocationResult> {
+    const coords = await this.getCurrentPosition();
+
+    try {
+      const address = await this.reverseGeocode(coords.latitude, coords.longitude);
+      return { coords, address };
+    } catch {
+      return { coords };
+    }
+  }
+
+  /**
+   * Reverse geocode coordinates to address
+   */
+  async reverseGeocode(latitude: number, longitude: number): Promise<string | undefined> {
+    try {
+      const response = await fetch(
+        `${this.NOMINATIM_BASE_URL}/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'Zitate-Web-App',
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Geocoding request failed');
+      }
+
+      const data = await response.json();
+      return data.display_name;
+    } catch (error) {
+      console.warn('Reverse geocoding failed:', error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Search for addresses
+   */
+  async searchAddress(query: string): Promise<AddressResult[]> {
+    try {
+      const response = await fetch(
+        `${this.NOMINATIM_BASE_URL}/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
+        {
+          headers: {
+            'User-Agent': 'Zitate-Web-App',
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Address search failed');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Address search failed:', error);
+      return [];
+    }
+  }
+
+  /**
    * Format coordinates as string
    */
   formatCoordinates(latitude: number, longitude: number): string {
@@ -93,6 +172,19 @@ class LocationService {
    */
   private toRad(degrees: number): number {
     return (degrees * Math.PI) / 180;
+  }
+
+  /**
+   * Format distance in human readable format
+   */
+  formatDistance(km: number): string {
+    if (km < 1) {
+      return `${Math.round(km * 1000)}m`;
+    } else if (km < 10) {
+      return `${km.toFixed(1)}km`;
+    } else {
+      return `${Math.round(km)}km`;
+    }
   }
 }
 

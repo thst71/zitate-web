@@ -9,6 +9,7 @@ interface EntryListProps {
   error?: string | null;
   onEditEntry?: (entry: Entry) => void;
   onDeleteEntry?: (id: string) => void;
+  onLocationClick?: (latitude: number, longitude: number, address?: string, title?: string) => void;
 }
 
 export const EntryList: React.FC<EntryListProps> = ({
@@ -17,6 +18,7 @@ export const EntryList: React.FC<EntryListProps> = ({
   error,
   onEditEntry,
   onDeleteEntry,
+  onLocationClick,
 }) => {
   if (loading) {
     return (
@@ -81,6 +83,7 @@ export const EntryList: React.FC<EntryListProps> = ({
           entry={entry}
           onEdit={onEditEntry}
           onDelete={onDeleteEntry}
+          onLocationClick={onLocationClick}
         />
       ))}
     </div>

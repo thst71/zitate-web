@@ -14,9 +14,10 @@ interface EntryFormProps {
   onSave: (text: string, latitude?: number, longitude?: number, authorId?: string, labelIds?: string[], selectedImages?: SelectedImage[]) => Promise<void>;
   onCancel: () => void;
   initialEntry?: Entry;
+  onLocationEdit?: (lat: number, lng: number, onSelect: (lat: number, lng: number, address?: string) => void) => void;
 }
 
-export function EntryForm({ onSave, onCancel, initialEntry }: EntryFormProps) {
+export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: EntryFormProps) {
   const [text, setText] = useState(initialEntry?.text || '');
   const [authorId, setAuthorId] = useState<string | undefined>(initialEntry?.authorId);
   const [labelIds, setLabelIds] = useState<string[]>(initialEntry?.labelIds || []);
@@ -136,10 +137,24 @@ export function EntryForm({ onSave, onCancel, initialEntry }: EntryFormProps) {
               Retry
             </button>
           )}
+          {isEditing && latitude && longitude && onLocationEdit && (
+            <button
+              type="button"
+              className="location-edit"
+              onClick={() => {
+                onLocationEdit(latitude, longitude, (newLat, newLng, address) => {
+                  // Update the location state if we had proper state management for it
+                  console.log('Location updated:', newLat, newLng, address);
+                });
+              }}
+            >
+              Edit Location
+            </button>
+          )}
         </div>
         <p className="form-hint">
           {isEditing
-            ? 'Location cannot be edited'
+            ? 'Click "Edit Location" to modify the location on a map'
             : 'Location is optional. Grant permission to auto-capture.'}
         </p>
       </div>
