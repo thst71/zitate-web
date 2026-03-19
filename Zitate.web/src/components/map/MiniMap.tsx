@@ -22,8 +22,6 @@ export const MiniMap = ({
   // Generate static map tile URL using OpenStreetMap
   const getStaticMapUrl = () => {
     const zoom = size === 'small' ? 13 : 15;
-    const width = size === 'small' ? 150 : 200;
-    const height = size === 'small' ? 100 : 120;
     
     // Use OpenStreetMap static tiles via a service that provides static maps
     // For production, you might want to use a dedicated static map service
