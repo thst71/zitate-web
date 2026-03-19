@@ -10,7 +10,7 @@ describe('DBService', () => {
     for (const store of stores) {
       const all = await dbService.getAll(store);
       for (const item of all) {
-        await dbService.delete(store, (item as any).id);
+        await dbService.delete(store, (item as { id: string }).id);
       }
     }
   });

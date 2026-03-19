@@ -1,10 +1,12 @@
+import type { Entry, Author, Label, SmartFolder, ImageAttachment, AudioAttachment } from '../models';
+
 export interface ExportData {
   version: number;
   exportedAt: number;
-  entries: any[];
-  authors: any[];
-  labels: any[];
-  folders: any[];
+  entries: Entry[];
+  authors: Author[];
+  labels: Label[];
+  folders: SmartFolder[];
   media: {
     images: { id: string; entryId: string; data: string; mimeType: string; order: number; createdAt: number }[];
     audio: { id: string; entryId: string; data: string; mimeType: string; duration: number; createdAt: number }[];
@@ -39,16 +41,16 @@ class ExportService {
       
       // Get all data from IndexedDB
       const [entries, authors, labels, folders] = await Promise.all([
-        dbService.getAll('entries'),
-        dbService.getAll('authors'), 
-        dbService.getAll('labels'),
-        dbService.getAll('folders')
+        dbService.getAll<Entry>('entries'),
+        dbService.getAll<Author>('authors'), 
+        dbService.getAll<Label>('labels'),
+        dbService.getAll<SmartFolder>('folders')
       ]);
 
       // Get all images and convert to base64
-      const images = await dbService.getAll('images');
+      const images = await dbService.getAll<ImageAttachment>('images');
       const imagesData = await Promise.all(
-        images.map(async (image: any) => ({
+        images.map(async (image) => ({
           id: image.id,
           entryId: image.entryId,
           data: await this.blobToBase64(image.blob),
@@ -59,9 +61,9 @@ class ExportService {
       );
 
       // Get all audio and convert to base64
-      const audio = await dbService.getAll('audio');
+      const audio = await dbService.getAll<AudioAttachment>('audio');
       const audioData = await Promise.all(
-        audio.map(async (audioItem: any) => ({
+        audio.map(async (audioItem) => ({
           id: audioItem.id,
           entryId: audioItem.entryId,
           data: await this.blobToBase64(audioItem.blob),
@@ -113,7 +115,7 @@ class ExportService {
         await this.clearAllData();
       }
 
-      let stats = {
+      const stats = {
         entries: 0,
         authors: 0,
         labels: 0,
@@ -233,22 +235,24 @@ class ExportService {
     URL.revokeObjectURL(url);
   }
 
-  private validateImportData(data: any): { isValid: boolean; error?: string } {
+  private validateImportData(data: unknown): { isValid: boolean; error?: string } {
     if (!data || typeof data !== 'object') {
       return { isValid: false, error: 'Invalid file format' };
     }
 
-    if (!data.version || typeof data.version !== 'number') {
+    const record = data as Record<string, unknown>;
+
+    if (!record.version || typeof record.version !== 'number') {
       return { isValid: false, error: 'Missing or invalid version' };
     }
 
-    if (data.version > ExportService.CURRENT_VERSION) {
+    if (record.version > ExportService.CURRENT_VERSION) {
       return { isValid: false, error: 'File was exported from a newer version of the app' };
     }
 
     const requiredFields = ['entries', 'authors', 'labels', 'folders'];
     for (const field of requiredFields) {
-      if (!Array.isArray(data[field])) {
+      if (!Array.isArray(record[field])) {
         return { isValid: false, error: `Missing or invalid ${field} data` };
       }
     }
@@ -263,7 +267,7 @@ class ExportService {
     for (const store of stores) {
       const items = await dbService.getAll(store);
       for (const item of items) {
-        await dbService.delete(store, (item as any).id);
+        await dbService.delete(store, (item as { id: string }).id);
       }
     }
   }

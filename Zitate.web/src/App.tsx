@@ -289,7 +289,7 @@ const App: React.FC = () => {
               ? `Are you sure you want to delete this entry? "${
                   entries.find((e) => e.id === deletingEntryId)?.text.slice(0, 100) || ''
                 }${
-                  entries.find((e) => e.id === deletingEntryId)?.text.length! > 100
+                  (entries.find((e) => e.id === deletingEntryId)?.text.length ?? 0) > 100
                     ? '...'
                     : ''
                 }"`

@@ -102,6 +102,7 @@ export function VirtualScrollList<T>({
 }
 
 // Hook for calculating item height dynamically
+// eslint-disable-next-line react-refresh/only-export-components
 export const useVirtualScrollItemHeight = () => {
   const [itemHeight, setItemHeight] = useState(100);
   const measureRef = useRef<HTMLDivElement>(null);

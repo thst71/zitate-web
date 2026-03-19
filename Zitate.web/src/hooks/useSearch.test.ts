@@ -1,5 +1,5 @@
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { useSearch } from './useSearch';
 import type { Entry } from '../models';
 

@@ -9,7 +9,7 @@ describe('useEntries', () => {
     // Clear entries before each test
     const all = await dbService.getAll(STORES.ENTRIES);
     for (const item of all) {
-      await dbService.delete(STORES.ENTRIES, (item as any).id);
+      await dbService.delete(STORES.ENTRIES, (item as { id: string }).id);
     }
   });
 

@@ -1,7 +1,7 @@
 /**
  * ImageViewer Component - Full-size image viewer modal with navigation
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '../common/Modal';
 import { createImageURL, revokeImageURL } from '../../services/image.service';
 import type { ImageAttachment } from '../../models';
@@ -33,6 +33,14 @@ export function ImageViewer({ images, initialIndex, isOpen, onClose }: ImageView
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
 
+  const handlePrevious = useCallback(() => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+  }, [images.length]);
+
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+  }, [images.length]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -48,15 +56,7 @@ export function ImageViewer({ images, initialIndex, isOpen, onClose }: ImageView
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentIndex, images.length]);
-
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
-  };
+  }, [isOpen, handleNext, handlePrevious, onClose]);
 
   if (!isOpen || images.length === 0) {
     return null;

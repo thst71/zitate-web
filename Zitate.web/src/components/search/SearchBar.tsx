@@ -24,7 +24,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     if (hasInteracted) {
       onSearch(debouncedValue);
     }
-  }, [debouncedValue, onSearch]); // Remove hasInteracted from dependencies
+  }, [debouncedValue, onSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
