@@ -27,5 +27,6 @@ export interface FolderCriteria {
     longitude: number;
     radiusKm: number;
   };
+  hasLocation?: boolean;         // Filter by presence/absence of location
   textMatch?: string;
 }

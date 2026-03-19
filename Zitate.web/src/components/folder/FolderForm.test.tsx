@@ -17,6 +17,7 @@ vi.mock('../../hooks/useLabels', () => ({
     loading: false,
     addLabel: vi.fn(),
     searchLabels: vi.fn(() => []),
+    getLabelsByIds: vi.fn(() => []),
   }),
 }));
 
@@ -46,8 +47,8 @@ describe('FolderForm', () => {
     render(<FolderForm onSave={onSave} onCancel={onCancel} />);
 
     expect(screen.getByText(/any.*with or without location/i)).toBeInTheDocument();
-    expect(screen.getByText(/with location/i)).toBeInTheDocument();
-    expect(screen.getByText(/without location/i)).toBeInTheDocument();
+    expect(screen.getByText(/^with location$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^without location$/i)).toBeInTheDocument();
   });
 
   it('should update folder name when typed', () => {

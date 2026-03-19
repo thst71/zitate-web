@@ -1,6 +1,7 @@
-import React from 'react';
+import * as React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import '@testing-library/jest-dom';
 import { SearchBar } from './SearchBar';
 
 describe('SearchBar', () => {
@@ -68,6 +69,14 @@ describe('SearchBar', () => {
 
     fireEvent.change(input, { target: { value: 'test' } });
     expect(input.value).toBe('test');
+
+    // Wait for the first search to complete
+    await waitFor(() => {
+      expect(onSearch).toHaveBeenCalledWith('test');
+    }, { timeout: 500 });
+
+    // Clear the mock to test the clear functionality
+    onSearch.mockClear();
 
     const clearButton = screen.getByRole('button', { name: /clear search/i });
     fireEvent.click(clearButton);

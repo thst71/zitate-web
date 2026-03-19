@@ -75,7 +75,7 @@ describe('EntryForm', () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(onSave).toHaveBeenCalledWith('Test entry', undefined, undefined, undefined, []);
+      expect(onSave).toHaveBeenCalledWith('Test entry', undefined, undefined, undefined, [], []);
     });
   });
 
@@ -153,7 +153,7 @@ describe('EntryForm', () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(onSave).toHaveBeenCalledWith('Entry with location', 52.52, 13.405, undefined, []);
+      expect(onSave).toHaveBeenCalledWith('Entry with location', 52.52, 13.405, undefined, [], []);
     });
   });
 

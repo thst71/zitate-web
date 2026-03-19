@@ -15,15 +15,27 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = 'Search quotes, authors, labels...',
 }) => {
   const [inputValue, setInputValue] = useState('');
+  const [hasInteracted, setHasInteracted] = useState(false);
   const debouncedValue = useDebounce(inputValue, 300);
 
-  // Trigger search when debounced value changes
+  // Trigger search when debounced value changes, but only after user interaction
   React.useEffect(() => {
-    onSearch(debouncedValue);
-  }, [debouncedValue, onSearch]);
+    // Only call onSearch if user has interacted
+    if (hasInteracted) {
+      onSearch(debouncedValue);
+    }
+  }, [debouncedValue, onSearch]); // Remove hasInteracted from dependencies
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    if (!hasInteracted) {
+      setHasInteracted(true);
+    }
+  };
 
   const handleClear = () => {
     setInputValue('');
+    // Keep hasInteracted true so the empty search is triggered
   };
 
   return (
@@ -48,7 +60,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           type="search"
           className="search-input"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={handleInputChange}
           placeholder={placeholder}
           aria-label="Search"
         />
