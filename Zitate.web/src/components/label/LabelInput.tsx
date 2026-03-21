@@ -3,6 +3,7 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { useLabels } from '../../hooks/useLabels';
+import type { Label } from '../../models';
 import './LabelInput.css';
 
 interface LabelInputProps {
@@ -14,9 +15,9 @@ export const LabelInput: React.FC<LabelInputProps> = ({
   selectedLabelIds,
   onLabelsChange,
 }) => {
-  const { labels, addLabel, searchLabels, getLabelsByIds } = useLabels();
+  const { addLabel, searchLabels, getLabelsByIds } = useLabels();
   const [inputValue, setInputValue] = useState('');
-  const [suggestions, setSuggestions] = useState<typeof labels>([]);
+  const [suggestions, setSuggestions] = useState<Label[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);

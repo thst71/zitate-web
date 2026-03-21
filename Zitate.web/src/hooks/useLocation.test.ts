@@ -151,7 +151,7 @@ describe('useLocation', () => {
       },
     };
 
-    const getCurrentPositionSpy = vi
+    vi
       .spyOn(navigator.geolocation, 'getCurrentPosition')
       .mockImplementationOnce((_, error) => {
         error!(mockError as GeolocationPositionError);

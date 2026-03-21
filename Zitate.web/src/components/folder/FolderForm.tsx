@@ -29,6 +29,9 @@ export const FolderForm: React.FC<FolderFormProps> = ({
   const [textMatch, setTextMatch] = useState(
     initialFolder?.criteria.textMatch || ''
   );
+  const [hasLocation, setHasLocation] = useState<boolean | undefined>(
+    initialFolder?.criteria.hasLocation
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +52,7 @@ export const FolderForm: React.FC<FolderFormProps> = ({
       labels: labelIds.length > 0 ? { values: labelIds, operator: 'OR' as const } : undefined,
       authorId: authorId || undefined,
       textMatch: textMatch.trim() || undefined,
+      hasLocation: hasLocation,
     };
 
     try {
@@ -103,6 +107,42 @@ export const FolderForm: React.FC<FolderFormProps> = ({
             onChange={(e) => setTextMatch(e.target.value)}
             placeholder="Enter text to search for..."
           />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Location</label>
+          <div className="radio-group">
+            <div className="radio-option">
+              <input
+                type="radio"
+                id="location-any"
+                name="hasLocation"
+                checked={hasLocation === undefined}
+                onChange={() => setHasLocation(undefined)}
+              />
+              <label htmlFor="location-any">Any (with or without location)</label>
+            </div>
+            <div className="radio-option">
+              <input
+                type="radio"
+                id="location-with"
+                name="hasLocation"
+                checked={hasLocation === true}
+                onChange={() => setHasLocation(true)}
+              />
+              <label htmlFor="location-with">With location</label>
+            </div>
+            <div className="radio-option">
+              <input
+                type="radio"
+                id="location-without"
+                name="hasLocation"
+                checked={hasLocation === false}
+                onChange={() => setHasLocation(false)}
+              />
+              <label htmlFor="location-without">Without location</label>
+            </div>
+          </div>
         </div>
 
       </div>

@@ -9,7 +9,7 @@ describe('useLabels', () => {
     // Clear labels before each test
     const all = await dbService.getAll(STORES.LABELS);
     for (const item of all) {
-      await dbService.delete(STORES.LABELS, (item as any).id);
+      await dbService.delete(STORES.LABELS, (item as { id: string }).id);
     }
   });
 

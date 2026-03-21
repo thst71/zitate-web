@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { useSearch } from './useSearch';
 import type { Entry } from '../models';
 
@@ -37,8 +37,8 @@ describe('useSearch', () => {
       authorId: 'author-1',
       labelIds: ['label-1', 'label-2'],
       imageIds: [],
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01'),
+      createdAt: new Date('2024-01-01').valueOf(),
+      updatedAt: new Date('2024-01-01').valueOf(),
     },
     {
       id: '2',
@@ -46,16 +46,16 @@ describe('useSearch', () => {
       authorId: 'author-2',
       labelIds: ['label-3'],
       imageIds: [],
-      createdAt: new Date('2024-01-02'),
-      updatedAt: new Date('2024-01-02'),
+      createdAt: new Date('2024-01-02').valueOf(),
+      updatedAt: new Date('2024-01-02').valueOf(),
     },
     {
       id: '3',
       text: 'Third entry with no author',
       labelIds: [],
       imageIds: [],
-      createdAt: new Date('2024-01-03'),
-      updatedAt: new Date('2024-01-03'),
+      createdAt: new Date('2024-01-03').valueOf(),
+      updatedAt: new Date('2024-01-03').valueOf(),
     },
   ];
 
@@ -68,7 +68,9 @@ describe('useSearch', () => {
   it('should filter entries by text content', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('programming');
+    act(() => {
+      result.current.handleSearch('programming');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('1');
@@ -78,7 +80,9 @@ describe('useSearch', () => {
   it('should be case-insensitive when searching text', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('DESIGN');
+    act(() => {
+      result.current.handleSearch('DESIGN');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('2');
@@ -87,7 +91,9 @@ describe('useSearch', () => {
   it('should filter entries by author name', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('John Doe');
+    act(() => {
+      result.current.handleSearch('John Doe');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('1');
@@ -96,7 +102,9 @@ describe('useSearch', () => {
   it('should be case-insensitive when searching author name', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('jane smith');
+    act(() => {
+      result.current.handleSearch('jane smith');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('2');
@@ -105,7 +113,9 @@ describe('useSearch', () => {
   it('should filter entries by label name', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('work');
+    act(() => {
+      result.current.handleSearch('work');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('1');
@@ -114,7 +124,9 @@ describe('useSearch', () => {
   it('should be case-insensitive when searching label name', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('PERSONAL');
+    act(() => {
+      result.current.handleSearch('PERSONAL');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('2');
@@ -123,7 +135,9 @@ describe('useSearch', () => {
   it('should return multiple matches when search matches multiple entries', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('entry');
+    act(() => {
+      result.current.handleSearch('entry');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(3);
   });
@@ -131,7 +145,9 @@ describe('useSearch', () => {
   it('should trim whitespace from search query', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('  programming  ');
+    act(() => {
+      result.current.handleSearch('  programming  ');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('1');
@@ -140,7 +156,9 @@ describe('useSearch', () => {
   it('should return empty array when no matches found', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('nonexistent');
+    act(() => {
+      result.current.handleSearch('nonexistent');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(0);
     expect(result.current.isSearching).toBe(true);
@@ -149,10 +167,14 @@ describe('useSearch', () => {
   it('should update filteredEntries when search query changes', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('programming');
+    act(() => {
+      result.current.handleSearch('programming');
+    });
     expect(result.current.filteredEntries).toHaveLength(1);
 
-    result.current.handleSearch('design');
+    act(() => {
+      result.current.handleSearch('design');
+    });
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('2');
   });
@@ -163,7 +185,9 @@ describe('useSearch', () => {
       { initialProps: { entries: mockEntries } }
     );
 
-    result.current.handleSearch('programming');
+    act(() => {
+      result.current.handleSearch('programming');
+    });
     expect(result.current.filteredEntries).toHaveLength(1);
 
     const newEntries: Entry[] = [
@@ -173,8 +197,8 @@ describe('useSearch', () => {
         text: 'Another programming entry',
         labelIds: [],
         imageIds: [],
-        createdAt: new Date('2024-01-04'),
-        updatedAt: new Date('2024-01-04'),
+        createdAt: new Date('2024-01-04').valueOf(),
+        updatedAt: new Date('2024-01-04').valueOf(),
       },
     ];
 
@@ -186,11 +210,15 @@ describe('useSearch', () => {
   it('should clear search results when search query becomes empty', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('programming');
+    act(() => {
+      result.current.handleSearch('programming');
+    });
     expect(result.current.isSearching).toBe(true);
     expect(result.current.filteredEntries).toHaveLength(1);
 
-    result.current.handleSearch('');
+    act(() => {
+      result.current.handleSearch('');
+    });
     expect(result.current.isSearching).toBe(false);
     expect(result.current.filteredEntries).toEqual(mockEntries);
   });
@@ -198,7 +226,9 @@ describe('useSearch', () => {
   it('should handle entries with no author or labels', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('Third');
+    act(() => {
+      result.current.handleSearch('Third');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('3');
@@ -207,7 +237,9 @@ describe('useSearch', () => {
   it('should match partial text in entry content', () => {
     const { result } = renderHook(() => useSearch(mockEntries));
 
-    result.current.handleSearch('prog');
+    act(() => {
+      result.current.handleSearch('prog');
+    });
 
     expect(result.current.filteredEntries).toHaveLength(1);
     expect(result.current.filteredEntries[0].id).toBe('1');

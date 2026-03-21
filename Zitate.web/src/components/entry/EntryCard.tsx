@@ -7,15 +7,17 @@ import { useEntries } from '../../hooks/useEntries';
 import { formatLabelForDisplay } from '../../utils/validators';
 import { ImageGrid } from '../image/ImageGrid';
 import { ImageViewer } from '../image/ImageViewer';
+import { MiniMap } from '../map/MiniMap';
 import './EntryCard.css';
 
 interface EntryCardProps {
   entry: Entry;
   onEdit?: (entry: Entry) => void;
   onDelete?: (id: string) => void;
+  onLocationClick?: (latitude: number, longitude: number, address?: string, title?: string) => void;
 }
 
-export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete }) => {
+export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, onLocationClick }) => {
   const { getAuthorById } = useAuthors();
   const { getLabelsByIds } = useLabels();
   const { getImagesForEntry } = useEntries();
@@ -99,23 +101,37 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete })
           <span className="entry-date">{formatDate(entry.createdAt)}</span>
 
           {hasLocation && (
-            <span className="entry-location">
-              <svg
-                className="location-icon"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-              {formatCoordinates(entry.latitude!, entry.longitude!)}
-            </span>
+            <div className="entry-location">
+              <MiniMap
+                latitude={entry.latitude!}
+                longitude={entry.longitude!}
+                size="small"
+                onClick={onLocationClick ? () => onLocationClick(
+                  entry.latitude!, 
+                  entry.longitude!, 
+                  undefined, 
+                  `Quote from ${formatDate(entry.createdAt)}`
+                ) : undefined}
+                className="entry-mini-map"
+              />
+              <span className="location-coords">
+                <svg
+                  className="location-icon"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                {formatCoordinates(entry.latitude!, entry.longitude!)}
+              </span>
+            </div>
           )}
         </div>
       </div>

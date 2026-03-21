@@ -66,7 +66,7 @@ export function ImageUpload({
           previewUrl,
           id: `preview-${Date.now()}-${i}`,
         });
-      } catch (err) {
+      } catch {
         errors.push(`${file.name}: Failed to load preview`);
       }
     }

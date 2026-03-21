@@ -9,7 +9,7 @@ describe('useAuthors', () => {
     // Clear authors before each test
     const all = await dbService.getAll(STORES.AUTHORS);
     for (const item of all) {
-      await dbService.delete(STORES.AUTHORS, (item as any).id);
+      await dbService.delete(STORES.AUTHORS, (item as { id: string }).id);
     }
   });
 

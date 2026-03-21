@@ -105,7 +105,7 @@ describe('FolderList', () => {
     const onFolderClick = vi.fn();
     const onDeleteFolder = vi.fn();
 
-    const { container } = render(
+    render(
       <FolderList
         folders={mockFolders}
         entries={mockEntries}
