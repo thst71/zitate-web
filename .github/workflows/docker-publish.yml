@@ -3,9 +3,6 @@ name: Build and Publish Web Docker Image
 on:
   push:
     tags: [ 'v*.*.*' ]
-    paths:
-      - 'Zitate.web/**'
-      - '.github/workflows/docker-publish.yml'
   pull_request:
     branches: [ "main" ]
     paths:
