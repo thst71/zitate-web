@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: Zitate.web/package-lock.json
 
@@ -54,12 +54,6 @@ jobs:
         working-directory: ./Zitate.web
         run: npm run build
 
-      - name: Run Lighthouse CI
-        working-directory: ./Zitate.web
-        run: |
-          npm install -g @lhci/cli
-          npm run build
-          lhci autorun || echo "Lighthouse CI completed with warnings"
 
   security-scan:
     runs-on: ubuntu-latest
@@ -72,7 +66,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: Zitate.web/package-lock.json
 

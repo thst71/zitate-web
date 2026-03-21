@@ -23,7 +23,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
-    "@lhci/cli": "^0.15.1",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
@@ -51,7 +50,6 @@
   },
   "overrides": {
     "flatted": "3.4.2",
-    "serialize-javascript": "7.0.4",
-    "tmp": "0.2.4"
+    "serialize-javascript": "7.0.4"
   }
 }
