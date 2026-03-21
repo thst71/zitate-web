@@ -51,6 +51,7 @@
   },
   "overrides": {
     "flatted": "3.4.2",
+    "serialize-javascript": "7.0.4",
     "tmp": "0.2.4"
   }
 }
