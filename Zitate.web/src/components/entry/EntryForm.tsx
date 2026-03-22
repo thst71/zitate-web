@@ -24,6 +24,11 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editedLocation, setEditedLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    address?: string;
+  } | null>(null);
 
   const isEditing = !!initialEntry;
   const existingImageCount = initialEntry?.imageIds.length || 0;
@@ -40,9 +45,9 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   const characterCount = text.length;
   const isValid = validation.isValid;
 
-  // Use existing location when editing, or new location when creating
-  const latitude = isEditing ? initialEntry.latitude : coords?.latitude;
-  const longitude = isEditing ? initialEntry.longitude : coords?.longitude;
+  // Use edited location if available, then existing location when editing, or new location when creating
+  const latitude = editedLocation?.latitude ?? (isEditing ? initialEntry.latitude : coords?.latitude);
+  const longitude = editedLocation?.longitude ?? (isEditing ? initialEntry.longitude : coords?.longitude);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -104,7 +109,12 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
             <circle cx="12" cy="10" r="3"></circle>
           </svg>
           <div className="location-text">
-            {isEditing ? (
+            {editedLocation ? (
+              // Show edited location
+              <span className="location-coords">
+                {editedLocation.address || `${editedLocation.latitude.toFixed(6)}, ${editedLocation.longitude.toFixed(6)}`}
+              </span>
+            ) : isEditing ? (
               // Show existing location when editing
               latitude && longitude ? (
                 <span className="location-coords">
@@ -137,14 +147,13 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
               Retry
             </button>
           )}
-          {isEditing && latitude && longitude && onLocationEdit && (
+          {latitude && longitude && onLocationEdit && (
             <button
               type="button"
               className="location-edit"
               onClick={() => {
                 onLocationEdit(latitude, longitude, (newLat, newLng, address) => {
-                  // Update the location state if we had proper state management for it
-                  console.log('Location updated:', newLat, newLng, address);
+                  setEditedLocation({ latitude: newLat, longitude: newLng, address });
                 });
               }}
             >

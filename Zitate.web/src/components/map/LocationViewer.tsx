@@ -49,6 +49,14 @@ export const LocationViewer = ({
 
     leafletMapRef.current = map;
 
+    // Leaflet calculates tile positions from the container size at init time.
+    // If the modal is still animating/rendering, the size is wrong and tiles
+    // appear shifted. invalidateSize() forces a recalculation.
+    requestAnimationFrame(() => {
+      map.invalidateSize();
+      map.setView([latitude, longitude], 15);
+    });
+
     // Handle ESC key
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

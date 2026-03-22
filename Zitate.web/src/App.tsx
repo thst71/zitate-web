@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Header } from './components/layout/Header';
 import { Layout } from './components/layout/Layout';
 import { Modal } from './components/common/Modal';
@@ -31,8 +31,8 @@ const App: React.FC = () => {
     isOpen: boolean;
     latitude?: number;
     longitude?: number;
-    onSelect: (lat: number, lng: number, address?: string) => void;
   } | null>(null);
+  const locationPickerCallbackRef = useRef<((lat: number, lng: number, address?: string) => void) | null>(null);
   const [locationViewer, setLocationViewer] = useState<{
     latitude: number;
     longitude: number;
@@ -75,7 +75,7 @@ const App: React.FC = () => {
     selectedImages?: SelectedImage[]
   ) => {
     if (editingEntry) {
-      await updateEntry(editingEntry.id, text, authorId, labelIds);
+      await updateEntry(editingEntry.id, text, authorId, labelIds, latitude, longitude);
     } else {
       await addEntry(text, latitude, longitude, authorId, labelIds, selectedImages);
     }
@@ -227,9 +227,10 @@ const App: React.FC = () => {
               onSave={handleSaveEntry}
               onCancel={handleCloseEntryModal}
               initialEntry={editingEntry ?? undefined}
-              onLocationEdit={(lat, lng, onSelect) => 
-                setLocationPicker({ isOpen: true, latitude: lat, longitude: lng, onSelect })
-              }
+              onLocationEdit={(lat, lng, onSelect) => {
+                locationPickerCallbackRef.current = onSelect;
+                setLocationPicker({ isOpen: true, latitude: lat, longitude: lng });
+              }}
             />
           </ErrorBoundary>
         </Modal>
@@ -263,10 +264,14 @@ const App: React.FC = () => {
             initialLatitude={locationPicker.latitude}
             initialLongitude={locationPicker.longitude}
             onLocationSelect={(lat, lng, address) => {
-              locationPicker.onSelect(lat, lng, address);
+              locationPickerCallbackRef.current?.(lat, lng, address);
+              locationPickerCallbackRef.current = null;
               setLocationPicker(null);
             }}
-            onCancel={() => setLocationPicker(null)}
+            onCancel={() => {
+              locationPickerCallbackRef.current = null;
+              setLocationPicker(null);
+            }}
           />
         )}
 

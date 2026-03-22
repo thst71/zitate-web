@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import './MiniMap.css';
 
 interface MiniMapProps {
@@ -7,6 +7,26 @@ interface MiniMapProps {
   size?: 'small' | 'medium';
   onClick?: () => void;
   className?: string;
+}
+
+const TILE_SIZE = 256;
+
+/**
+ * Convert lat/lng to fractional tile coordinates at a given zoom level.
+ * Returns { tileX, tileY, fracX, fracY } where fracX/fracY are 0..1
+ * indicating where within the tile the point falls.
+ */
+function latLngToTile(lat: number, lng: number, zoom: number) {
+  const n = Math.pow(2, zoom);
+  const x = ((lng + 180) / 360) * n;
+  const latRad = (lat * Math.PI) / 180;
+  const y = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n;
+  return {
+    tileX: Math.floor(x),
+    tileY: Math.floor(y),
+    fracX: x - Math.floor(x),
+    fracY: y - Math.floor(y),
+  };
 }
 
 export const MiniMap = ({ 
@@ -18,32 +38,35 @@ export const MiniMap = ({
 }: MiniMapProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  
-  // Generate static map tile URL using OpenStreetMap
-  const getStaticMapUrl = () => {
-    const zoom = size === 'small' ? 13 : 15;
-    
-    // Use OpenStreetMap static tiles via a service that provides static maps
-    // For production, you might want to use a dedicated static map service
-    const centerX = longitude;
-    const centerY = latitude;
-    const z = zoom;
-    
-    // Calculate tile coordinates for the center
-    const tileX = Math.floor((centerX + 180) / 360 * Math.pow(2, z));
-    const tileY = Math.floor((1 - Math.log(Math.tan(centerY * Math.PI / 180) + 1 / Math.cos(centerY * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z));
-    
-    // Use OpenStreetMap tile server
-    return `https://tile.openstreetmap.org/${z}/${tileX}/${tileY}.png`;
-  };
 
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-  };
+  const zoom = size === 'small' ? 13 : 15;
 
-  const handleImageError = () => {
-    setImageError(true);
-  };
+  // Build a 3x3 grid of tiles centered on the tile that contains the pin.
+  // Then shift the whole grid so the pin ends up at the container center.
+  const tileData = useMemo(() => {
+    const { tileX, tileY, fracX, fracY } = latLngToTile(latitude, longitude, zoom);
+    const n = Math.pow(2, zoom);
+
+    // Pin position within the center tile (row=1, col=1 in the 3x3 grid)
+    // In the 3x3 grid the center tile starts at (TILE_SIZE, TILE_SIZE),
+    // so the pin's absolute position in the grid is:
+    const pinX = TILE_SIZE + fracX * TILE_SIZE;
+    const pinY = TILE_SIZE + fracY * TILE_SIZE;
+
+    const tiles: { x: number; y: number; col: number; row: number }[] = [];
+    for (let row = -1; row <= 1; row++) {
+      for (let col = -1; col <= 1; col++) {
+        tiles.push({
+          x: (tileX + col + n) % n,
+          y: tileY + row,
+          col: col + 1,  // 0, 1, 2
+          row: row + 1,  // 0, 1, 2
+        });
+      }
+    }
+
+    return { tiles, pinX, pinY };
+  }, [latitude, longitude, zoom]);
 
   const handleClick = () => {
     if (onClick) {
@@ -87,16 +110,37 @@ export const MiniMap = ({
       role={onClick ? 'button' : undefined}
       aria-label={onClick ? 'Open location on map' : 'Location map'}
     >
-      <img
-        src={getStaticMapUrl()}
-        alt={`Map showing location at ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
-        className="mini-map-image"
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-        loading="lazy"
-      />
-      
-      {/* Map marker overlay */}
+      {/* 3x3 tile grid, shifted so the pin is at the container center */}
+      <div
+        className="mini-map-tiles"
+        style={{
+          position: 'absolute',
+          width: TILE_SIZE * 3,
+          height: TILE_SIZE * 3,
+          left: `calc(50% - ${tileData.pinX}px)`,
+          top: `calc(50% - ${tileData.pinY}px)`,
+        }}
+      >
+        {tileData.tiles.map((tile) => (
+          <img
+            key={`${tile.x}-${tile.y}`}
+            src={`https://tile.openstreetmap.org/${zoom}/${tile.x}/${tile.y}.png`}
+            alt=""
+            style={{
+              position: 'absolute',
+              left: tile.col * TILE_SIZE,
+              top: tile.row * TILE_SIZE,
+              width: TILE_SIZE,
+              height: TILE_SIZE,
+            }}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+            loading="lazy"
+          />
+        ))}
+      </div>
+
+      {/* Map marker overlay - centered in the visible area */}
       <div className="mini-map-marker">
         <span className="marker-icon">📍</span>
       </div>

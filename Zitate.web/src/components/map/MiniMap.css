@@ -39,6 +39,10 @@
   display: block;
 }
 
+.mini-map-tiles {
+  pointer-events: none;
+}
+
 .mini-map-marker {
   position: absolute;
   top: 50%;

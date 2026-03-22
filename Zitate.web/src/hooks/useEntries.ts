@@ -156,7 +156,9 @@ export function useEntries() {
       id: string,
       text: string,
       authorId?: string,
-      labelIds: string[] = []
+      labelIds: string[] = [],
+      latitude?: number,
+      longitude?: number
     ): Promise<Entry> => {
       // Find the existing entry
       const existingEntry = entries.find((e) => e.id === id);
@@ -169,6 +171,8 @@ export function useEntries() {
         text,
         authorId,
         labelIds,
+        latitude,
+        longitude,
         updatedAt: Date.now(),
       };
 

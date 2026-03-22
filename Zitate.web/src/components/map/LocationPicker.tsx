@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Map as LeafletMap, TileLayer, Marker } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { locationService, AddressResult } from '../../services/location.service';
@@ -80,6 +80,12 @@ export const LocationPicker = ({
     leafletMapRef.current = map;
     markerRef.current = marker;
 
+    // Fix tile positioning after container has its final size
+    requestAnimationFrame(() => {
+      map.invalidateSize();
+      map.setView([defaultLat, defaultLng], 13);
+    });
+
     // Get initial address if coordinates provided
     if (initialLatitude && initialLongitude) {
       geocodePosition(initialLatitude, initialLongitude);
@@ -106,15 +112,34 @@ export const LocationPicker = ({
     }
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const debouncedSearch = useCallback((query: string) => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
     if (query.length > 2) {
-      searchAddresses(query);
+      searchTimeoutRef.current = setTimeout(() => {
+        searchAddresses(query);
+      }, 500);
     } else {
       setSearchResults([]);
     }
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    debouncedSearch(query);
   };
 
   const searchAddresses = async (query: string) => {
@@ -189,55 +214,57 @@ export const LocationPicker = ({
           </button>
         </div>
 
-        <div className="location-picker-search">
-          <input
-            type="text"
-            placeholder="Search for an address..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="search-input"
-            aria-label="Search for address"
-          />
-          
-          <button 
-            className="current-location-btn"
-            onClick={getCurrentLocation}
-            aria-label="Use current location"
-          >
-            📍 Current Location
-          </button>
+        <div className="location-picker-body">
+          <div className="location-picker-search">
+            <input
+              type="text"
+              placeholder="Search for an address..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="search-input"
+              aria-label="Search for address"
+            />
+            
+            <button 
+              className="current-location-btn"
+              onClick={getCurrentLocation}
+              aria-label="Use current location"
+            >
+              📍 Current Location
+            </button>
 
-          {searchResults.length > 0 && (
-            <div className="search-results">
-              {searchResults.map((result, index) => (
-                <button
-                  key={index}
-                  className="search-result-item"
-                  onClick={() => handleSearchResultClick(result)}
-                >
-                  {result.display_name}
-                </button>
-              ))}
-            </div>
-          )}
+            {searchResults.length > 0 && (
+              <div className="search-results">
+                {searchResults.map((result, index) => (
+                  <button
+                    key={index}
+                    className="search-result-item"
+                    onClick={() => handleSearchResultClick(result)}
+                  >
+                    {result.display_name}
+                  </button>
+                ))}
+              </div>
+            )}
 
-          {isSearching && (
-            <div className="search-loading">Searching...</div>
-          )}
-        </div>
-
-        <div className="map-container" ref={mapRef}></div>
-
-        <div className="location-picker-info">
-          <div className="coordinates">
-            <strong>Coordinates:</strong> {selectedLat.toFixed(6)}, {selectedLng.toFixed(6)}
+            {isSearching && (
+              <div className="search-loading">Searching...</div>
+            )}
           </div>
-          {address && (
-            <div className="address">
-              <strong>Address:</strong> 
-              {isGeocodingAddress ? ' Loading...' : ` ${address}`}
+
+          <div className="map-container" ref={mapRef}></div>
+
+          <div className="location-picker-info">
+            <div className="coordinates">
+              <strong>Coordinates:</strong> {selectedLat.toFixed(6)}, {selectedLng.toFixed(6)}
             </div>
-          )}
+            {address && (
+              <div className="address">
+                <strong>Address:</strong> 
+                {isGeocodingAddress ? ' Loading...' : ` ${address}`}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="location-picker-actions">
