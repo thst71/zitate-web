@@ -104,15 +104,6 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
           </div>
         )}
 
-        {labels.length > 0 && (
-          <div className="entry-labels">
-            {labels.map((label) => (
-              <span key={label.id} className="entry-label">
-                {formatLabelForDisplay(label.name)}
-              </span>
-            ))}
-          </div>
-        )}
 
         {images.length > 0 && (
           <ImageGrid
@@ -165,6 +156,16 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
             </div>
           )}
         </div>
+
+        {labels.length > 0 && (
+          <div className="entry-labels">
+            {labels.map((label) => (
+              <span key={label.id} className="entry-label">
+                {formatLabelForDisplay(label.name)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="entry-actions">
