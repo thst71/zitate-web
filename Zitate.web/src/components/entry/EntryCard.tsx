@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Entry, ImageAttachment } from '../../models';
-import { formatCoordinates, locationService } from '../../services/location.service';
+import { formatCoordinates, locationService, type ReverseGeocodeResult } from '../../services/location.service';
 import { useAuthors } from '../../hooks/useAuthors';
 import { useLabels } from '../../hooks/useLabels';
 import { useEntries } from '../../hooks/useEntries';
@@ -11,7 +11,7 @@ import { LocationPopover } from '../map/LocationPopover';
 import './EntryCard.css';
 
 // Simple in-memory cache for reverse geocoded addresses
-const addressCache = new Map<string, string | null>();
+const addressCache = new Map<string, ReverseGeocodeResult | null>();
 
 interface EntryCardProps {
   entry: Entry;
@@ -27,7 +27,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
-  const [address, setAddress] = useState<string | null | undefined>(undefined); // undefined = loading
+  const [geoResult, setGeoResult] = useState<ReverseGeocodeResult | null | undefined>(undefined); // undefined = loading
 
   const author = entry.authorId ? getAuthorById(entry.authorId) : undefined;
   const labels = getLabelsByIds(entry.labelIds);
@@ -46,16 +46,16 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
 
     const cacheKey = `${entry.latitude!.toFixed(6)},${entry.longitude!.toFixed(6)}`;
     if (addressCache.has(cacheKey)) {
-      setAddress(addressCache.get(cacheKey)!);
+      setGeoResult(addressCache.get(cacheKey)!);
       return;
     }
 
     let cancelled = false;
     locationService.reverseGeocode(entry.latitude!, entry.longitude!).then((result) => {
       if (!cancelled) {
-        const addr = result ?? null;
-        addressCache.set(cacheKey, addr);
-        setAddress(addr);
+        const geo = result ?? null;
+        addressCache.set(cacheKey, geo);
+        setGeoResult(geo);
       }
     });
 
@@ -125,7 +125,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
                 onClick={onLocationClick ? () => onLocationClick(
                   entry.latitude!,
                   entry.longitude!,
-                  address ?? undefined,
+                  geoResult?.full,
                   `Quote from ${formatDate(entry.createdAt)}`
                 ) : undefined}
               >
@@ -144,10 +144,10 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
                 <span className="location-text-content">
-                  {address === undefined ? (
+                  {geoResult === undefined ? (
                     <span className="location-loading-text">Loading location…</span>
-                  ) : address ? (
-                    <>{address} ({formatCoordinates(entry.latitude!, entry.longitude!)})</>
+                  ) : geoResult ? (
+                    <>{geoResult.short} ({formatCoordinates(entry.latitude!, entry.longitude!)})</>
                   ) : (
                     formatCoordinates(entry.latitude!, entry.longitude!)
                   )}

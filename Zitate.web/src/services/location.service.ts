@@ -19,6 +19,13 @@ export interface AddressResult {
   lon: string;
 }
 
+export interface ReverseGeocodeResult {
+  /** Short label for card display, e.g. "Alexanderplatz, Berlin" */
+  short: string;
+  /** Full address from Nominatim display_name */
+  full: string;
+}
+
 class LocationService {
   private readonly NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
 
@@ -77,17 +84,17 @@ class LocationService {
     const coords = await this.getCurrentPosition();
 
     try {
-      const address = await this.reverseGeocode(coords.latitude, coords.longitude);
-      return { coords, address };
+      const result = await this.reverseGeocode(coords.latitude, coords.longitude);
+      return { coords, address: result?.full };
     } catch {
       return { coords };
     }
   }
 
   /**
-   * Reverse geocode coordinates to address
+   * Reverse geocode coordinates to address (short + full)
    */
-  async reverseGeocode(latitude: number, longitude: number): Promise<string | undefined> {
+  async reverseGeocode(latitude: number, longitude: number): Promise<ReverseGeocodeResult | undefined> {
     try {
       const response = await fetch(
         `${this.NOMINATIM_BASE_URL}/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
@@ -103,11 +110,41 @@ class LocationService {
       }
 
       const data = await response.json();
-      return data.display_name;
+      const full: string = data.display_name ?? '';
+      const short = this.buildShortName(data.address, data.name);
+
+      return { short: short || full, full };
     } catch (error) {
       console.warn('Reverse geocoding failed:', error);
       return undefined;
     }
+  }
+
+  /**
+   * Build a short location name from Nominatim address parts.
+   * Picks the most specific name + city/town, e.g. "Alexanderplatz, Berlin"
+   */
+  private buildShortName(address?: Record<string, string>, name?: string): string {
+    if (!address) return name ?? '';
+
+    // Most specific name: use explicit name, or road, or neighbourhood/suburb
+    const specific = name
+      || address.road
+      || address.neighbourhood
+      || address.suburb
+      || address.hamlet;
+
+    // City-level
+    const city = address.city
+      || address.town
+      || address.village
+      || address.municipality
+      || address.county;
+
+    if (specific && city && specific !== city) {
+      return `${specific}, ${city}`;
+    }
+    return specific || city || '';
   }
 
   /**

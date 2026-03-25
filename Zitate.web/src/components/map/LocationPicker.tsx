@@ -103,7 +103,7 @@ export const LocationPicker = ({
     setIsGeocodingAddress(true);
     try {
       const addressResult = await locationService.reverseGeocode(lat, lng);
-      setAddress(addressResult || '');
+      setAddress(addressResult?.full || '');
     } catch (error) {
       console.warn('Failed to geocode position:', error);
       setAddress('');
