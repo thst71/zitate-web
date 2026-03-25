@@ -12,7 +12,10 @@ export function Header({ onCreateClick, onDataManagementClick }: HeaderProps) {
   return (
     <header className="header">
       <div className="header-container">
-        <h1 className="header-title">Zitate</h1>
+        <h1 className="header-title">
+          Zitate
+          <span className="header-version">{__APP_VERSION__}</span>
+        </h1>
         <div className="header-actions">
           {onDataManagementClick && (
             <button
