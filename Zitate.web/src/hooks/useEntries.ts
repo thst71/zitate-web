@@ -4,9 +4,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { dbService, STORES } from '../services/db.service';
+import { onStoreChange, emitStoreChange } from '../services/storeSync';
 import { compressImage } from '../services/image.service';
 import type { Entry, ImageAttachment } from '../models';
 import type { SelectedImage } from '../components/image/ImageUpload';
+
+const ENTRY_STORE = STORES.ENTRIES;
 
 export function useEntries() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -138,6 +141,7 @@ export function useEntries() {
       try {
         await dbService.add(STORES.ENTRIES, entry);
         setEntries((prev) => [entry, ...prev]); // Add to beginning (newest first)
+        emitStoreChange(ENTRY_STORE, loadEntries);
         return entry;
       } catch (err) {
         throw new Error(
@@ -145,7 +149,7 @@ export function useEntries() {
         );
       }
     },
-    [saveImages]
+    [saveImages, loadEntries]
   );
 
   /**
@@ -239,6 +243,7 @@ export function useEntries() {
         setEntries((prev) =>
           prev.map((entry) => (entry.id === id ? updatedEntry : entry))
         );
+        emitStoreChange(ENTRY_STORE, loadEntries);
         return updatedEntry;
       } catch (err) {
         throw new Error(
@@ -246,7 +251,7 @@ export function useEntries() {
         );
       }
     },
-    [entries, saveImages]
+    [entries, saveImages, loadEntries]
   );
 
   /**
@@ -271,16 +276,18 @@ export function useEntries() {
       // Delete entry
       await dbService.delete(STORES.ENTRIES, id);
       setEntries((prev) => prev.filter((entry) => entry.id !== id));
+      emitStoreChange(ENTRY_STORE, loadEntries);
     } catch (err) {
       throw new Error(
         err instanceof Error ? err.message : 'Failed to delete entry'
       );
     }
-  }, [entries]);
+  }, [entries, loadEntries]);
 
-  // Load entries on mount
+  // Load entries on mount and subscribe to changes from other hook instances
   useEffect(() => {
     loadEntries();
+    return onStoreChange(ENTRY_STORE, loadEntries);
   }, [loadEntries]);
 
   return {
