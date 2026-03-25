@@ -21,7 +21,7 @@ L.Icon.Default.mergeOptions({
 interface LocationPickerProps {
   initialLatitude?: number;
   initialLongitude?: number;
-  onLocationSelect: (latitude: number, longitude: number, address?: string) => void;
+  onLocationSelect: (latitude: number, longitude: number, addressShort?: string, addressFull?: string) => void;
   onCancel: () => void;
 }
 
@@ -38,6 +38,7 @@ export const LocationPicker = ({
   const [selectedLat, setSelectedLat] = useState(initialLatitude || 0);
   const [selectedLng, setSelectedLng] = useState(initialLongitude || 0);
   const [address, setAddress] = useState<string>('');
+  const [addressShort, setAddressShort] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<AddressResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -103,10 +104,12 @@ export const LocationPicker = ({
     setIsGeocodingAddress(true);
     try {
       const addressResult = await locationService.reverseGeocode(lat, lng);
-      setAddress(addressResult || '');
+      setAddress(addressResult?.full || '');
+      setAddressShort(addressResult?.short || '');
     } catch (error) {
       console.warn('Failed to geocode position:', error);
       setAddress('');
+      setAddressShort('');
     } finally {
       setIsGeocodingAddress(false);
     }
@@ -191,7 +194,7 @@ export const LocationPicker = ({
   };
 
   const handleConfirm = () => {
-    onLocationSelect(selectedLat, selectedLng, address);
+    onLocationSelect(selectedLat, selectedLng, addressShort || undefined, address || undefined);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

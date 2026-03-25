@@ -6,6 +6,8 @@ export interface Entry {
   text: string;                  // 1-10,000 characters
   latitude?: number;             // WGS84 coordinates
   longitude?: number;            // WGS84 coordinates
+  addressShort?: string;         // Short geocoded name, e.g. "Alexanderplatz, Berlin"
+  addressFull?: string;          // Full geocoded address from Nominatim
   authorId?: string;             // Foreign key to Author
   labelIds: string[];            // Foreign keys to Labels
   imageIds: string[];            // Foreign keys to Images

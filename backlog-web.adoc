@@ -775,6 +775,88 @@ NFR-5
 
 ---
 
+== Epic 8: UI Cleanup
+
+=== Story 8.1: Location Text with Reverse Geocoding
+*As a* user +
+*I want to* see a human-readable place name for each entry's location +
+*So that* I can understand where a quote was captured without reading raw coordinates
+
+.*Acceptance Criteria:*
+- Location displayed as: `<place name> (lat, lng)` in the entry card
+- Place name resolved via Nominatim reverse geocoding
+- Cached per entry to avoid repeated API calls
+- Graceful fallback to coordinates-only if geocoding fails
+- Location icon (📍) shown before the text
+
+.*Reference:*
+FR-1.2
+
+.*Technical Tasks:*
+1. Add reverse geocoding call in EntryCard for entries with location
+2. Cache resolved addresses in component state
+3. Display template: `<address> (<coords>)` or just `<coords>` on failure
+4. Show a loading placeholder while geocoding
+
+.*Estimated Effort:*
+3 hours
+
+---
+
+=== Story 8.2: MiniMap as Hover Popup
+*As a* user +
+*I want to* see a map preview when I hover over the location text +
+*So that* I get visual context without cluttering the entry card
+
+.*Acceptance Criteria:*
+- MiniMap is no longer rendered inline in the entry card
+- Hovering over the location text shows a floating MiniMap popup
+- Popup appears after a short delay (~300ms) to avoid flicker
+- Popup disappears when mouse leaves the location area
+- Touch devices: tap toggles popup
+
+.*Reference:*
+FR-1.2
+
+.*Technical Tasks:*
+1. Create LocationPopover wrapper component
+2. Manage hover state with enter/leave + delay
+3. Render MiniMap inside an absolutely-positioned popup container
+4. Add CSS for popup positioning, shadow, animation
+5. Remove inline MiniMap from EntryCard
+6. Wrap location text in LocationPopover
+
+.*Estimated Effort:*
+4 hours
+
+---
+
+=== Story 8.3: Click Location to Open Map Viewer
+*As a* user +
+*I want to* click the location text to open the full map view +
+*So that* I can explore the location in detail
+
+.*Acceptance Criteria:*
+- Clicking the location text opens the LocationViewer modal
+- Same behavior as the current MiniMap click
+- Cursor changes to pointer on the location text
+- Visual affordance (hover underline) indicating clickability
+- Keyboard accessible (Enter/Space)
+
+.*Reference:*
+FR-1.2
+
+.*Technical Tasks:*
+1. Make location text element clickable with button semantics
+2. Wire onClick to existing onLocationClick prop
+3. Add CSS for clickable appearance
+4. Ensure keyboard accessibility
+
+.*Estimated Effort:*
+2 hours
+
+---
+
 == Implementation Phases
 
 === Phase 1: Foundation (Weeks 1-2)

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Entry, ImageAttachment } from '../../models';
-import { formatCoordinates } from '../../services/location.service';
+import { formatCoordinates, locationService, type ReverseGeocodeResult } from '../../services/location.service';
 import { useAuthors } from '../../hooks/useAuthors';
 import { useLabels } from '../../hooks/useLabels';
 import { useEntries } from '../../hooks/useEntries';
 import { formatLabelForDisplay } from '../../utils/validators';
 import { ImageGrid } from '../image/ImageGrid';
 import { ImageViewer } from '../image/ImageViewer';
-import { MiniMap } from '../map/MiniMap';
+import { LocationPopover } from '../map/LocationPopover';
 import './EntryCard.css';
 
 interface EntryCardProps {
@@ -24,6 +24,10 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  // Fallback geocoding only for legacy entries without persisted address
+  const [fallbackGeo, setFallbackGeo] = useState<ReverseGeocodeResult | null | undefined>(
+    entry.addressShort ? undefined : undefined // will be set by effect
+  );
 
   const author = entry.authorId ? getAuthorById(entry.authorId) : undefined;
   const labels = getLabelsByIds(entry.labelIds);
@@ -33,6 +37,30 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
       getImagesForEntry(entry.id).then(setImages);
     }
   }, [entry.id, entry.imageIds, getImagesForEntry]);
+
+  const hasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
+
+  // Use persisted address if available; otherwise fallback-geocode for legacy entries
+  const addressShort = entry.addressShort ?? fallbackGeo?.short;
+  const addressFull = entry.addressFull ?? fallbackGeo?.full;
+  const addressLoading = hasLocation && !entry.addressShort && fallbackGeo === undefined;
+
+  useEffect(() => {
+    // Only geocode if entry has location but no persisted address (legacy data)
+    if (!hasLocation || entry.addressShort) {
+      setFallbackGeo(null); // not loading
+      return;
+    }
+
+    let cancelled = false;
+    setFallbackGeo(undefined); // loading
+    locationService.reverseGeocode(entry.latitude!, entry.longitude!).then((result) => {
+      if (!cancelled) {
+        setFallbackGeo(result ?? null);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [hasLocation, entry.latitude, entry.longitude, entry.addressShort]);
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -65,8 +93,6 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
     setViewerOpen(true);
   };
 
-  const hasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
-
   return (
     <div className="entry-card">
       <div className="entry-card-content">
@@ -78,15 +104,6 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
           </div>
         )}
 
-        {labels.length > 0 && (
-          <div className="entry-labels">
-            {labels.map((label) => (
-              <span key={label.id} className="entry-label">
-                {formatLabelForDisplay(label.name)}
-              </span>
-            ))}
-          </div>
-        )}
 
         {images.length > 0 && (
           <ImageGrid
@@ -102,19 +119,16 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
 
           {hasLocation && (
             <div className="entry-location">
-              <MiniMap
+              <LocationPopover
                 latitude={entry.latitude!}
                 longitude={entry.longitude!}
-                size="small"
                 onClick={onLocationClick ? () => onLocationClick(
-                  entry.latitude!, 
-                  entry.longitude!, 
-                  undefined, 
+                  entry.latitude!,
+                  entry.longitude!,
+                  addressFull,
                   `Quote from ${formatDate(entry.createdAt)}`
                 ) : undefined}
-                className="entry-mini-map"
-              />
-              <span className="location-coords">
+              >
                 <svg
                   className="location-icon"
                   width="14"
@@ -129,11 +143,29 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                {formatCoordinates(entry.latitude!, entry.longitude!)}
-              </span>
+                <span className="location-text-content">
+                  {addressLoading ? (
+                    <span className="location-loading-text">Loading location…</span>
+                  ) : addressShort ? (
+                    <>{addressShort} ({formatCoordinates(entry.latitude!, entry.longitude!)})</>
+                  ) : (
+                    formatCoordinates(entry.latitude!, entry.longitude!)
+                  )}
+                </span>
+              </LocationPopover>
             </div>
           )}
         </div>
+
+        {labels.length > 0 && (
+          <div className="entry-labels">
+            {labels.map((label) => (
+              <span key={label.id} className="entry-label">
+                {formatLabelForDisplay(label.name)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="entry-actions">

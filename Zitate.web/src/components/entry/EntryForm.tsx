@@ -22,11 +22,13 @@ interface EntryFormProps {
     selectedImages?: SelectedImage[],
     imagesToDelete?: string[],
     imageIdsOrder?: string[],
-    imageReplacements?: Map<string, SelectedImage>
+    imageReplacements?: Map<string, SelectedImage>,
+    addressShort?: string,
+    addressFull?: string
   ) => Promise<void>;
   onCancel: () => void;
   initialEntry?: Entry;
-  onLocationEdit?: (lat: number, lng: number, onSelect: (lat: number, lng: number, address?: string) => void) => void;
+  onLocationEdit?: (lat: number, lng: number, onSelect: (lat: number, lng: number, addressShort?: string, addressFull?: string) => void) => void;
 }
 
 export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: EntryFormProps) {
@@ -41,7 +43,8 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   const [editedLocation, setEditedLocation] = useState<{
     latitude: number;
     longitude: number;
-    address?: string;
+    address?: string;       // full address from LocationPicker
+    addressShort?: string;  // short address (will be geocoded if not set)
   } | null>(null);
 
   const isEditing = !!initialEntry;
@@ -81,16 +84,23 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
     setError(null);
 
     try {
+      // If location was edited via LocationPicker, pass the full address for persistence
+      const addrShort = editedLocation?.addressShort;
+      const addrFull = editedLocation?.address;
+
       if (isEditing && imageChanges) {
         await onSave(
           text, latitude, longitude, authorId, labelIds,
           imageChanges.imagesToAdd,
           imageChanges.imagesToDelete,
           imageChanges.imageIdsOrder,
-          imageChanges.imageReplacements
+          imageChanges.imageReplacements,
+          addrShort,
+          addrFull
         );
       } else {
-        await onSave(text, latitude, longitude, authorId, labelIds, selectedImages);
+        await onSave(text, latitude, longitude, authorId, labelIds, selectedImages,
+          undefined, undefined, undefined, addrShort, addrFull);
       }
       // Form will be closed by parent
     } catch (err) {
@@ -143,7 +153,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
             {editedLocation ? (
               // Show edited location
               <span className="location-coords">
-                {editedLocation.address || `${editedLocation.latitude.toFixed(6)}, ${editedLocation.longitude.toFixed(6)}`}
+                {editedLocation.addressShort || editedLocation.address || `${editedLocation.latitude.toFixed(6)}, ${editedLocation.longitude.toFixed(6)}`}
               </span>
             ) : isEditing ? (
               // Show existing location when editing
@@ -183,8 +193,8 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
               type="button"
               className="location-edit"
               onClick={() => {
-                onLocationEdit(latitude, longitude, (newLat, newLng, address) => {
-                  setEditedLocation({ latitude: newLat, longitude: newLng, address });
+                onLocationEdit(latitude, longitude, (newLat, newLng, addrShort, addrFull) => {
+                  setEditedLocation({ latitude: newLat, longitude: newLng, address: addrFull, addressShort: addrShort });
                 });
               }}
             >

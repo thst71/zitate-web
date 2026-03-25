@@ -32,7 +32,7 @@ const App: React.FC = () => {
     latitude?: number;
     longitude?: number;
   } | null>(null);
-  const locationPickerCallbackRef = useRef<((lat: number, lng: number, address?: string) => void) | null>(null);
+  const locationPickerCallbackRef = useRef<((lat: number, lng: number, addressShort?: string, addressFull?: string) => void) | null>(null);
   const [locationViewer, setLocationViewer] = useState<{
     latitude: number;
     longitude: number;
@@ -75,15 +75,19 @@ const App: React.FC = () => {
     selectedImages?: SelectedImage[],
     imagesToDelete?: string[],
     imageIdsOrder?: string[],
-    imageReplacements?: Map<string, SelectedImage>
+    imageReplacements?: Map<string, SelectedImage>,
+    addressShort?: string,
+    addressFull?: string
   ) => {
     if (editingEntry) {
       await updateEntry(
         editingEntry.id, text, authorId, labelIds, latitude, longitude,
-        selectedImages, imagesToDelete, imageIdsOrder, imageReplacements
+        selectedImages, imagesToDelete, imageIdsOrder, imageReplacements,
+        addressShort, addressFull
       );
     } else {
-      await addEntry(text, latitude, longitude, authorId, labelIds, selectedImages);
+      await addEntry(text, latitude, longitude, authorId, labelIds, selectedImages,
+        addressShort, addressFull);
     }
     setIsEntryModalOpen(false);
     setEditingEntry(null);
@@ -269,8 +273,8 @@ const App: React.FC = () => {
           <LocationPicker
             initialLatitude={locationPicker.latitude}
             initialLongitude={locationPicker.longitude}
-            onLocationSelect={(lat, lng, address) => {
-              locationPickerCallbackRef.current?.(lat, lng, address);
+            onLocationSelect={(lat, lng, addrShort, addrFull) => {
+              locationPickerCallbackRef.current?.(lat, lng, addrShort, addrFull);
               locationPickerCallbackRef.current = null;
               setLocationPicker(null);
             }}

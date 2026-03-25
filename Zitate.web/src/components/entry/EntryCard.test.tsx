@@ -1,8 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { EntryCard } from './EntryCard';
 import { Entry } from '../../models';
+
+// Mock fetch for reverse geocoding – return minimal Nominatim response
+globalThis.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  json: () => Promise.resolve({ display_name: 'Berlin, Germany', address: { city: 'Berlin' } }),
+});
 
 describe('EntryCard', () => {
   const mockEntry: Entry = {
@@ -22,10 +28,13 @@ describe('EntryCard', () => {
     expect(screen.getByText('This is a test entry')).toBeInTheDocument();
   });
 
-  it('should render location when coordinates are present', () => {
+  it('should render location when coordinates are present', async () => {
     render(<EntryCard entry={mockEntry} />);
 
-    expect(screen.getByText(/52.520000, 13.405000/i)).toBeInTheDocument();
+    // Initially shows loading, then falls back to coordinates after geocoding fails
+    await waitFor(() => {
+      expect(screen.getByText(/52.520000, 13.405000/i)).toBeInTheDocument();
+    });
   });
 
   it('should not render location when coordinates are missing', () => {
