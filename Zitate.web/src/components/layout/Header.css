@@ -21,6 +21,16 @@
   font-size: var(--font-size-2xl);
   font-weight: 700;
   color: var(--color-primary);
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+}
+
+.header-version {
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
 }
 
 .header-actions {

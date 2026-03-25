@@ -1,6 +1,9 @@
 # Stage 1: Build the application
 FROM node:24-alpine AS build
 
+# Version injected at build time – defaults to SNAPSHOT for local builds
+ARG APP_VERSION=SNAPSHOT
+
 # Create non-root user for build
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S reactjs -u 1001
@@ -21,7 +24,8 @@ RUN npm ci && npm cache clean --force
 # Copy source code
 COPY --chown=reactjs:nodejs . .
 
-# Build the application
+# Build the application – APP_VERSION is baked in via vite define
+ENV APP_VERSION=${APP_VERSION}
 RUN npm run build
 
 # Stage 2: Serve the application with nginx

@@ -5,6 +5,8 @@ services:
     build:
       context: ./Zitate.web
       dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-SNAPSHOT}
     container_name: zitate-web
     ports:
       - "8080:8080"
