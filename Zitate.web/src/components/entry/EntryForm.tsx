@@ -1,17 +1,29 @@
 /**
  * EntryForm Component - Form for creating/editing entries
  */
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useLocation } from '../../hooks/useLocation';
+import { useEntries } from '../../hooks/useEntries';
 import { validateEntryText } from '../../utils/validators';
 import { AuthorSelect } from '../author/AuthorSelect';
 import { LabelInput } from '../label/LabelInput';
 import { ImageUpload, type SelectedImage } from '../image/ImageUpload';
-import type { Entry } from '../../models';
+import { ImageEditor, type ImageChanges } from '../image/ImageEditor';
+import type { Entry, ImageAttachment } from '../../models';
 import './EntryForm.css';
 
 interface EntryFormProps {
-  onSave: (text: string, latitude?: number, longitude?: number, authorId?: string, labelIds?: string[], selectedImages?: SelectedImage[]) => Promise<void>;
+  onSave: (
+    text: string,
+    latitude?: number,
+    longitude?: number,
+    authorId?: string,
+    labelIds?: string[],
+    selectedImages?: SelectedImage[],
+    imagesToDelete?: string[],
+    imageIdsOrder?: string[],
+    imageReplacements?: Map<string, SelectedImage>
+  ) => Promise<void>;
   onCancel: () => void;
   initialEntry?: Entry;
   onLocationEdit?: (lat: number, lng: number, onSelect: (lat: number, lng: number, address?: string) => void) => void;
@@ -22,6 +34,8 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   const [authorId, setAuthorId] = useState<string | undefined>(initialEntry?.authorId);
   const [labelIds, setLabelIds] = useState<string[]>(initialEntry?.labelIds || []);
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
+  const [existingImages, setExistingImages] = useState<ImageAttachment[]>([]);
+  const [imageChanges, setImageChanges] = useState<ImageChanges | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editedLocation, setEditedLocation] = useState<{
@@ -31,7 +45,14 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   } | null>(null);
 
   const isEditing = !!initialEntry;
-  const existingImageCount = initialEntry?.imageIds.length || 0;
+  const { getImagesForEntry } = useEntries();
+
+  // Load existing images when editing
+  useEffect(() => {
+    if (isEditing && initialEntry.imageIds.length > 0) {
+      getImagesForEntry(initialEntry.id).then(setExistingImages);
+    }
+  }, [isEditing, initialEntry?.id, initialEntry?.imageIds, getImagesForEntry]);
 
   const {
     coords,
@@ -60,7 +81,17 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
     setError(null);
 
     try {
-      await onSave(text, latitude, longitude, authorId, labelIds, selectedImages);
+      if (isEditing && imageChanges) {
+        await onSave(
+          text, latitude, longitude, authorId, labelIds,
+          imageChanges.imagesToAdd,
+          imageChanges.imagesToDelete,
+          imageChanges.imageIdsOrder,
+          imageChanges.imageReplacements
+        );
+      } else {
+        await onSave(text, latitude, longitude, authorId, labelIds, selectedImages);
+      }
       // Form will be closed by parent
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save entry');
@@ -172,11 +203,17 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
 
       <LabelInput selectedLabelIds={labelIds} onLabelsChange={setLabelIds} />
 
-      {!isEditing && (
+      {isEditing ? (
+        <ImageEditor
+          existingImages={existingImages}
+          maxImages={10}
+          onChange={setImageChanges}
+        />
+      ) : (
         <ImageUpload
           onImagesSelected={setSelectedImages}
           maxImages={10}
-          currentImageCount={existingImageCount}
+          currentImageCount={0}
         />
       )}
 
