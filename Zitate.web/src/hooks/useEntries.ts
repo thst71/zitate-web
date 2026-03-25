@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { dbService, STORES } from '../services/db.service';
 import { onStoreChange, emitStoreChange } from '../services/storeSync';
 import { compressImage } from '../services/image.service';
+import { locationService } from '../services/location.service';
 import type { Entry, ImageAttachment } from '../models';
 import type { SelectedImage } from '../components/image/ImageUpload';
 
@@ -109,6 +110,34 @@ export function useEntries() {
   );
 
   /**
+   * Reverse-geocode coordinates and persist address fields on the entry.
+   * Runs asynchronously – does not block the caller.
+   */
+  const geocodeAndPersist = useCallback(
+    async (entry: Entry) => {
+      if (entry.latitude == null || entry.longitude == null) return;
+      try {
+        const result = await locationService.reverseGeocode(entry.latitude, entry.longitude);
+        if (result) {
+          const updated: Entry = {
+            ...entry,
+            addressShort: result.short,
+            addressFull: result.full,
+          };
+          await dbService.update(STORES.ENTRIES, updated);
+          setEntries((prev) =>
+            prev.map((e) => (e.id === updated.id ? updated : e))
+          );
+          emitStoreChange(ENTRY_STORE, loadEntries);
+        }
+      } catch (err) {
+        console.warn('Background geocoding failed:', err);
+      }
+    },
+    [loadEntries]
+  );
+
+  /**
    * Add a new entry
    */
   const addEntry = useCallback(
@@ -118,7 +147,9 @@ export function useEntries() {
       longitude?: number,
       authorId?: string,
       labelIds: string[] = [],
-      selectedImages: SelectedImage[] = []
+      selectedImages: SelectedImage[] = [],
+      addressShort?: string,
+      addressFull?: string
     ): Promise<Entry> => {
       const now = Date.now();
       const entryId = uuidv4();
@@ -131,6 +162,8 @@ export function useEntries() {
         text,
         latitude,
         longitude,
+        addressShort,
+        addressFull,
         authorId,
         labelIds,
         imageIds,
@@ -140,8 +173,14 @@ export function useEntries() {
 
       try {
         await dbService.add(STORES.ENTRIES, entry);
-        setEntries((prev) => [entry, ...prev]); // Add to beginning (newest first)
+        setEntries((prev) => [entry, ...prev]);
         emitStoreChange(ENTRY_STORE, loadEntries);
+
+        // Background geocoding if address not already provided
+        if (latitude != null && longitude != null && !addressShort) {
+          geocodeAndPersist(entry);
+        }
+
         return entry;
       } catch (err) {
         throw new Error(
@@ -149,7 +188,7 @@ export function useEntries() {
         );
       }
     },
-    [saveImages, loadEntries]
+    [saveImages, loadEntries, geocodeAndPersist]
   );
 
   /**
@@ -166,13 +205,20 @@ export function useEntries() {
       imagesToAdd: SelectedImage[] = [],
       imagesToDelete: string[] = [],
       imageIdsOrder?: string[],
-      imageReplacements: Map<string, SelectedImage> = new Map()
+      imageReplacements: Map<string, SelectedImage> = new Map(),
+      addressShort?: string,
+      addressFull?: string
     ): Promise<Entry> => {
       // Find the existing entry
       const existingEntry = entries.find((e) => e.id === id);
       if (!existingEntry) {
         throw new Error('Entry not found');
       }
+
+      // Detect if location changed
+      const locationChanged =
+        latitude !== existingEntry.latitude ||
+        longitude !== existingEntry.longitude;
 
       let updatedImageIds = imageIdsOrder
         ? [...imageIdsOrder]
@@ -234,6 +280,11 @@ export function useEntries() {
         labelIds,
         latitude,
         longitude,
+        // If address explicitly provided (e.g. from LocationPicker), use it.
+        // If location changed but no address given, clear old address (will be geocoded).
+        // If location unchanged, keep existing address.
+        addressShort: addressShort ?? (locationChanged ? undefined : existingEntry.addressShort),
+        addressFull: addressFull ?? (locationChanged ? undefined : existingEntry.addressFull),
         imageIds: updatedImageIds,
         updatedAt: Date.now(),
       };
@@ -244,6 +295,12 @@ export function useEntries() {
           prev.map((entry) => (entry.id === id ? updatedEntry : entry))
         );
         emitStoreChange(ENTRY_STORE, loadEntries);
+
+        // Background geocoding if location changed and no address provided
+        if (locationChanged && latitude != null && longitude != null && !addressShort) {
+          geocodeAndPersist(updatedEntry);
+        }
+
         return updatedEntry;
       } catch (err) {
         throw new Error(
@@ -251,7 +308,7 @@ export function useEntries() {
         );
       }
     },
-    [entries, saveImages, loadEntries]
+    [entries, saveImages, loadEntries, geocodeAndPersist]
   );
 
   /**

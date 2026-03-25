@@ -10,9 +10,6 @@ import { ImageViewer } from '../image/ImageViewer';
 import { LocationPopover } from '../map/LocationPopover';
 import './EntryCard.css';
 
-// Simple in-memory cache for reverse geocoded addresses
-const addressCache = new Map<string, ReverseGeocodeResult | null>();
-
 interface EntryCardProps {
   entry: Entry;
   onEdit?: (entry: Entry) => void;
@@ -27,7 +24,10 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
-  const [geoResult, setGeoResult] = useState<ReverseGeocodeResult | null | undefined>(undefined); // undefined = loading
+  // Fallback geocoding only for legacy entries without persisted address
+  const [fallbackGeo, setFallbackGeo] = useState<ReverseGeocodeResult | null | undefined>(
+    entry.addressShort ? undefined : undefined // will be set by effect
+  );
 
   const author = entry.authorId ? getAuthorById(entry.authorId) : undefined;
   const labels = getLabelsByIds(entry.labelIds);
@@ -38,29 +38,29 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
     }
   }, [entry.id, entry.imageIds, getImagesForEntry]);
 
-  // Reverse geocode the location
   const hasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
 
-  useEffect(() => {
-    if (!hasLocation) return;
+  // Use persisted address if available; otherwise fallback-geocode for legacy entries
+  const addressShort = entry.addressShort ?? fallbackGeo?.short;
+  const addressFull = entry.addressFull ?? fallbackGeo?.full;
+  const addressLoading = hasLocation && !entry.addressShort && fallbackGeo === undefined;
 
-    const cacheKey = `${entry.latitude!.toFixed(6)},${entry.longitude!.toFixed(6)}`;
-    if (addressCache.has(cacheKey)) {
-      setGeoResult(addressCache.get(cacheKey)!);
+  useEffect(() => {
+    // Only geocode if entry has location but no persisted address (legacy data)
+    if (!hasLocation || entry.addressShort) {
+      setFallbackGeo(null); // not loading
       return;
     }
 
     let cancelled = false;
+    setFallbackGeo(undefined); // loading
     locationService.reverseGeocode(entry.latitude!, entry.longitude!).then((result) => {
       if (!cancelled) {
-        const geo = result ?? null;
-        addressCache.set(cacheKey, geo);
-        setGeoResult(geo);
+        setFallbackGeo(result ?? null);
       }
     });
-
     return () => { cancelled = true; };
-  }, [hasLocation, entry.latitude, entry.longitude]);
+  }, [hasLocation, entry.latitude, entry.longitude, entry.addressShort]);
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -125,7 +125,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
                 onClick={onLocationClick ? () => onLocationClick(
                   entry.latitude!,
                   entry.longitude!,
-                  geoResult?.full,
+                  addressFull,
                   `Quote from ${formatDate(entry.createdAt)}`
                 ) : undefined}
               >
@@ -144,10 +144,10 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
                 <span className="location-text-content">
-                  {geoResult === undefined ? (
+                  {addressLoading ? (
                     <span className="location-loading-text">Loading location…</span>
-                  ) : geoResult ? (
-                    <>{geoResult.short} ({formatCoordinates(entry.latitude!, entry.longitude!)})</>
+                  ) : addressShort ? (
+                    <>{addressShort} ({formatCoordinates(entry.latitude!, entry.longitude!)})</>
                   ) : (
                     formatCoordinates(entry.latitude!, entry.longitude!)
                   )}

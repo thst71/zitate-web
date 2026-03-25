@@ -75,15 +75,19 @@ const App: React.FC = () => {
     selectedImages?: SelectedImage[],
     imagesToDelete?: string[],
     imageIdsOrder?: string[],
-    imageReplacements?: Map<string, SelectedImage>
+    imageReplacements?: Map<string, SelectedImage>,
+    addressShort?: string,
+    addressFull?: string
   ) => {
     if (editingEntry) {
       await updateEntry(
         editingEntry.id, text, authorId, labelIds, latitude, longitude,
-        selectedImages, imagesToDelete, imageIdsOrder, imageReplacements
+        selectedImages, imagesToDelete, imageIdsOrder, imageReplacements,
+        addressShort, addressFull
       );
     } else {
-      await addEntry(text, latitude, longitude, authorId, labelIds, selectedImages);
+      await addEntry(text, latitude, longitude, authorId, labelIds, selectedImages,
+        addressShort, addressFull);
     }
     setIsEntryModalOpen(false);
     setEditingEntry(null);

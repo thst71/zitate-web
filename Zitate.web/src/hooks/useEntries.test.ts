@@ -1,8 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useEntries } from './useEntries';
 import { dbService } from '../services/db.service';
 import { STORES } from '../db/schema';
+
+// Mock fetch to prevent background geocoding from causing side effects in tests
+globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
 
 describe('useEntries', () => {
   beforeEach(async () => {
