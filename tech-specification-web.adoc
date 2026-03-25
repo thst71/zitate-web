@@ -270,6 +270,50 @@ class MediaService {
 }
 ```
 
+=== Image Editing in Entry Edit Mode
+When editing an existing entry, the user must be able to manage attached images with the following operations:
+
+==== Add Images
+- Same upload flow as entry creation (file picker, validation, compression)
+- New images are compressed and stored in IndexedDB `images` store
+- Entry's `imageIds` array is updated with the new image IDs
+- Respects the max 10 images per entry limit (existing + new)
+
+==== Delete Images
+- Each existing image thumbnail shows a delete button (×)
+- Deleting removes the image from IndexedDB `images` store
+- Entry's `imageIds` array is updated to remove the deleted ID
+- Immediate UI feedback
+
+==== Reorder Images (Sort)
+- Drag-and-drop or move-up/move-down buttons on thumbnails
+- Updates the `order` field on each `ImageAttachment` in IndexedDB
+- Updates the `imageIds` array order on the `Entry`
+
+==== Update Images (Replace)
+- User can click a "replace" action on an existing thumbnail
+- Opens file picker for a single image
+- Old image is deleted from IndexedDB, new one is stored
+- Entry's `imageIds` array is updated (same position)
+
+==== Technical Approach
+```typescript
+// Extended updateEntry signature
+async updateEntry(
+  id: string,
+  text: string,
+  authorId?: string,
+  labelIds?: string[],
+  latitude?: number,
+  longitude?: number,
+  imagesToAdd?: SelectedImage[],
+  imagesToDelete?: string[],
+  imageIdsOrder?: string[]
+): Promise<Entry>;
+```
+
+The EntryForm component shows an `ImageEditor` section when `initialEntry` has images or when the user adds new images during editing. The `ImageEditor` combines the existing `ImageGrid` (for display) with edit controls (delete, reorder, replace, add).
+
 === Export/Import Service
 ```typescript
 interface ExportData {

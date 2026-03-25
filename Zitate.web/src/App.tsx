@@ -72,10 +72,16 @@ const App: React.FC = () => {
     longitude?: number,
     authorId?: string,
     labelIds?: string[],
-    selectedImages?: SelectedImage[]
+    selectedImages?: SelectedImage[],
+    imagesToDelete?: string[],
+    imageIdsOrder?: string[],
+    imageReplacements?: Map<string, SelectedImage>
   ) => {
     if (editingEntry) {
-      await updateEntry(editingEntry.id, text, authorId, labelIds, latitude, longitude);
+      await updateEntry(
+        editingEntry.id, text, authorId, labelIds, latitude, longitude,
+        selectedImages, imagesToDelete, imageIdsOrder, imageReplacements
+      );
     } else {
       await addEntry(text, latitude, longitude, authorId, labelIds, selectedImages);
     }

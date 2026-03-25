@@ -215,5 +215,27 @@ describe('ImageEditor', () => {
     const editorCount = container.querySelector('.image-editor-count')!;
     expect(editorCount.textContent).toMatch(/1\s*\/\s*10/);
   });
+
+  it('should display images when existingImages load asynchronously (initially empty)', async () => {
+    // Simulate the real scenario: EntryForm renders ImageEditor with [] first,
+    // then useEffect loads images and re-renders with actual images.
+    const { container, rerender } = render(
+      <ImageEditor existingImages={[]} onChange={onChange} />
+    );
+
+    // Initially no images visible
+    expect(screen.queryAllByLabelText(/delete image/i)).toHaveLength(0);
+
+    // Simulate async load completing - parent re-renders with images
+    rerender(
+      <ImageEditor existingImages={mockImages} onChange={onChange} />
+    );
+
+    // Now images should be visible
+    expect(screen.getAllByLabelText(/delete image/i)).toHaveLength(3);
+
+    const editorCount = container.querySelector('.image-editor-count')!;
+    expect(editorCount.textContent).toMatch(/3\s*\/\s*10/);
+  });
 });
 
