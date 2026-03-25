@@ -1,0 +1,129 @@
+= Phase UI Cleanup: Location Display Rework (Web)
+:toc:
+:toclevels: 3
+
+== Phase Overview
+
+*Goal:* Replace the inline MiniMap with a cleaner location text display. Show the named location from reverse geocoding with coordinates in parentheses. The MiniMap becomes a hover popup; clicking opens the full map viewer.
+
+*Duration:* 1 day
+
+*Deliverable:* Location displayed as text with hover-preview MiniMap and click-to-open map viewer
+
+== Stories in this Phase
+
+=== Epic 8: UI Cleanup
+
+==== Story 8.1: Location Text with Reverse Geocoding
+*As a* user +
+*I want to* see a human-readable place name for each entry's location +
+*So that* I can understand where a quote was captured without reading raw coordinates
+
+*Acceptance Criteria:*
+- Location displayed as: `<place name> (lat, lng)` in the entry card
+- Place name resolved via Nominatim reverse geocoding (existing service)
+- Cached per entry to avoid repeated API calls
+- Graceful fallback to coordinates-only if geocoding fails
+- Location icon (📍) shown before the text
+
+*Reference:* FR-1.2
+
+*Technical Tasks:*
+1. Add `useReverseGeocode` hook or inline effect in EntryCard to resolve address
+2. Call `locationService.reverseGeocode(lat, lng)` for entries with location
+3. Cache resolved addresses in component state (per entry ID)
+4. Display template: `<address> (<coords>)` or just `<coords>` on failure
+5. Show a loading placeholder while geocoding
+
+*Status:* ✅ Done
+
+---
+
+==== Story 8.2: MiniMap as Hover Popup
+*As a* user +
+*I want to* see a map preview when I hover over the location text +
+*So that* I get visual context without cluttering the entry card
+
+*Acceptance Criteria:*
+- MiniMap is no longer rendered inline in the entry card
+- Hovering over the location text shows a floating MiniMap popup
+- Popup appears after a short delay (~300ms) to avoid flicker
+- Popup disappears when mouse leaves the location area
+- Popup positioned above or below the location text (avoid clipping)
+- Touch devices: popup shown on first tap, second tap opens map viewer
+
+*Reference:* FR-1.2
+
+*Technical Tasks:*
+1. Create `LocationPopover` wrapper component
+2. Manage hover state with enter/leave + delay
+3. Render MiniMap inside an absolutely-positioned popup container
+4. Add CSS for popup positioning, shadow, arrow
+5. Remove inline MiniMap from EntryCard
+6. Wrap location text in LocationPopover
+
+*Status:* ✅ Done
+
+---
+
+==== Story 8.3: Click Location to Open Map Viewer
+*As a* user +
+*I want to* click the location text to open the full map view +
+*So that* I can explore the location in detail
+
+*Acceptance Criteria:*
+- Clicking the location text opens the LocationViewer (existing modal)
+- Same behavior as the current MiniMap click
+- Cursor changes to pointer on the location text
+- Location text has visual affordance (underline or color) indicating it's clickable
+
+*Reference:* FR-1.2
+
+*Technical Tasks:*
+1. Make location text element clickable (button or anchor semantics)
+2. Wire onClick to existing `onLocationClick` prop
+3. Add CSS for clickable appearance (pointer cursor, hover underline)
+4. Ensure keyboard accessibility (Enter/Space to activate)
+
+*Status:* ✅ Done
+
+---
+
+== Implementation Details
+
+=== Modified Components
+- `EntryCard.tsx` – Remove inline MiniMap, add reverse geocoding, wrap location in LocationPopover
+- `EntryCard.css` – New styles for clickable location text, remove `.entry-mini-map` layout
+
+=== New Components
+- `LocationPopover.tsx` – Hover popup wrapper that shows MiniMap on mouse enter
+- `LocationPopover.css` – Popup positioning, shadow, animation
+
+=== Unchanged Components
+- `MiniMap.tsx` – Reused inside LocationPopover (no changes)
+- `LocationViewer.tsx` – Reused for click-to-open (no changes)
+
+== Files Changed
+
+|===
+| File | Change
+
+| `Zitate.web/src/components/entry/EntryCard.tsx`
+| Modified – Location text with geocoding, LocationPopover, click handler
+
+| `Zitate.web/src/components/entry/EntryCard.css`
+| Modified – Clickable location styles, removed inline map layout
+
+| `Zitate.web/src/components/map/LocationPopover.tsx`
+| New – Hover popup for MiniMap
+
+| `Zitate.web/src/components/map/LocationPopover.css`
+| New – Popup styles
+
+| `backlog-web.adoc`
+| Modified – Stories 8.1–8.3 added
+
+| `phase-ui-cleanup.adoc`
+| New – This phase document
+|===
+

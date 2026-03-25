@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Entry, ImageAttachment } from '../../models';
-import { formatCoordinates } from '../../services/location.service';
+import { formatCoordinates, locationService } from '../../services/location.service';
 import { useAuthors } from '../../hooks/useAuthors';
 import { useLabels } from '../../hooks/useLabels';
 import { useEntries } from '../../hooks/useEntries';
 import { formatLabelForDisplay } from '../../utils/validators';
 import { ImageGrid } from '../image/ImageGrid';
 import { ImageViewer } from '../image/ImageViewer';
-import { MiniMap } from '../map/MiniMap';
+import { LocationPopover } from '../map/LocationPopover';
 import './EntryCard.css';
+
+// Simple in-memory cache for reverse geocoded addresses
+const addressCache = new Map<string, string | null>();
 
 interface EntryCardProps {
   entry: Entry;
@@ -24,6 +27,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [address, setAddress] = useState<string | null | undefined>(undefined); // undefined = loading
 
   const author = entry.authorId ? getAuthorById(entry.authorId) : undefined;
   const labels = getLabelsByIds(entry.labelIds);
@@ -33,6 +37,30 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
       getImagesForEntry(entry.id).then(setImages);
     }
   }, [entry.id, entry.imageIds, getImagesForEntry]);
+
+  // Reverse geocode the location
+  const hasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
+
+  useEffect(() => {
+    if (!hasLocation) return;
+
+    const cacheKey = `${entry.latitude!.toFixed(6)},${entry.longitude!.toFixed(6)}`;
+    if (addressCache.has(cacheKey)) {
+      setAddress(addressCache.get(cacheKey)!);
+      return;
+    }
+
+    let cancelled = false;
+    locationService.reverseGeocode(entry.latitude!, entry.longitude!).then((result) => {
+      if (!cancelled) {
+        const addr = result ?? null;
+        addressCache.set(cacheKey, addr);
+        setAddress(addr);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [hasLocation, entry.latitude, entry.longitude]);
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -64,8 +92,6 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
     setViewerIndex(index);
     setViewerOpen(true);
   };
-
-  const hasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
 
   return (
     <div className="entry-card">
@@ -102,19 +128,16 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
 
           {hasLocation && (
             <div className="entry-location">
-              <MiniMap
+              <LocationPopover
                 latitude={entry.latitude!}
                 longitude={entry.longitude!}
-                size="small"
                 onClick={onLocationClick ? () => onLocationClick(
-                  entry.latitude!, 
-                  entry.longitude!, 
-                  undefined, 
+                  entry.latitude!,
+                  entry.longitude!,
+                  address ?? undefined,
                   `Quote from ${formatDate(entry.createdAt)}`
                 ) : undefined}
-                className="entry-mini-map"
-              />
-              <span className="location-coords">
+              >
                 <svg
                   className="location-icon"
                   width="14"
@@ -129,8 +152,16 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                {formatCoordinates(entry.latitude!, entry.longitude!)}
-              </span>
+                <span className="location-text-content">
+                  {address === undefined ? (
+                    <span className="location-loading-text">Loading location…</span>
+                  ) : address ? (
+                    <>{address} ({formatCoordinates(entry.latitude!, entry.longitude!)})</>
+                  ) : (
+                    formatCoordinates(entry.latitude!, entry.longitude!)
+                  )}
+                </span>
+              </LocationPopover>
             </div>
           )}
         </div>

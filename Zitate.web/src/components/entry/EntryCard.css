@@ -64,25 +64,25 @@
 }
 
 .entry-location {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  align-items: flex-start;
-}
-
-.entry-mini-map {
-  flex-shrink: 0;
-}
-
-.location-coords {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
 }
 
-.location-coords .location-icon {
+.location-text-content {
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.location-loading-text {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.location-icon {
   flex-shrink: 0;
   color: var(--color-primary);
 }

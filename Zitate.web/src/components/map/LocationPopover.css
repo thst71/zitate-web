@@ -1,0 +1,93 @@
+.location-popover-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.location-popover-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs, 4px);
+}
+
+.location-popover-trigger.clickable {
+  cursor: pointer;
+  color: var(--color-primary, #3b82f6);
+  text-decoration: none;
+  transition: color var(--transition-fast, 0.15s);
+}
+
+.location-popover-trigger.clickable:hover {
+  text-decoration: underline;
+}
+
+.location-popover-trigger.clickable:focus {
+  outline: 2px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.location-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1);
+  animation: popover-fade-in 0.15s ease-out;
+  pointer-events: auto;
+}
+
+/* Arrow pointing down */
+.location-popover::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--color-border, #e5e7eb);
+}
+
+@keyframes popover-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Ensure popover doesn't clip at screen edges */
+@media (max-width: 480px) {
+  .location-popover {
+    left: 0;
+    transform: none;
+    right: auto;
+  }
+
+  .location-popover::after {
+    left: 24px;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .location-popover {
+    animation: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .location-popover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .location-popover::after {
+    border-top-color: var(--color-border, #374151);
+  }
+}
+
