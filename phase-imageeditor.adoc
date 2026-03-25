@@ -1,0 +1,183 @@
+= Phase Image Editor: Image Management in Edit Mode (Web)
+:toc:
+:toclevels: 3
+
+== Phase Overview
+
+*Goal:* Enable full image management (add, delete, reorder, replace) when editing existing entries
+
+*Duration:* 1 day
+
+*Deliverable:* ImageEditor component integrated into EntryForm edit mode with full CRUD support for images
+
+== Stories in this Phase
+
+=== Epic 4: Media Features (Extended)
+
+==== Story 4.4: Image Management in Edit Mode – Add Images
+*As a* user +
+*I want to* add new images when editing an existing entry +
+*So that* I can attach additional visual context later
+
+*Acceptance Criteria:*
+- ImageUpload component is shown in edit mode (not only on creation)
+- New images are compressed, stored in IndexedDB, and linked to the entry
+- Entry's imageIds array is updated with the new IDs
+- Max 10 images per entry limit is enforced (existing + new)
+- Existing images remain visible alongside newly added ones
+
+*Reference:* FR-1.3
+
+*Technical Tasks:*
+1. Remove `!isEditing` guard on ImageUpload in EntryForm
+2. Create ImageEditor component combining existing images + upload
+3. Extend updateEntry in useEntries to accept new images (SelectedImage[])
+4. Save new images via saveImages, append IDs to entry.imageIds
+5. Pass existing image count to ImageUpload for limit enforcement
+6. Update App.tsx handleSaveEntry to forward selectedImages on edit
+
+*Status:* ✅ Done
+
+---
+
+==== Story 4.5: Image Management in Edit Mode – Delete Images
+*As a* user +
+*I want to* remove existing images when editing an entry +
+*So that* I can clean up unwanted attachments
+
+*Acceptance Criteria:*
+- Each existing image thumbnail shows a delete (×) button in edit mode
+- Deleting marks the image for removal (applied on save)
+- Deleted images are removed from IndexedDB and entry.imageIds on save
+- Visual feedback: deleted thumbnails removed immediately from the grid
+
+*Reference:* FR-1.3
+
+*Technical Tasks:*
+1. Track imagesToDelete state in ImageEditor
+2. Show existing images in ImageEditor with delete buttons
+3. Extend updateEntry to accept imagesToDelete: string[]
+4. On save: delete images from IndexedDB, remove IDs from entry.imageIds
+5. Update remaining image order fields
+
+*Status:* ✅ Done
+
+---
+
+==== Story 4.6: Image Management in Edit Mode – Reorder Images
+*As a* user +
+*I want to* reorder images when editing an entry +
+*So that* the most important image appears first
+
+*Acceptance Criteria:*
+- Move-up / move-down buttons on each image thumbnail in edit mode
+- Reordering updates the display immediately
+- On save, the new order is persisted (imageIds order + ImageAttachment.order)
+
+*Reference:* FR-1.3
+
+*Technical Tasks:*
+1. Add move-up/move-down buttons to ImageEditor thumbnails
+2. Track imageIdsOrder state in ImageEditor
+3. Extend updateEntry to accept imageIdsOrder: string[]
+4. On save: update entry.imageIds order and ImageAttachment.order fields in IndexedDB
+
+*Status:* ✅ Done
+
+---
+
+==== Story 4.7: Image Management in Edit Mode – Replace Image
+*As a* user +
+*I want to* replace an existing image with a new one +
+*So that* I can update a photo without changing the entry structure
+
+*Acceptance Criteria:*
+- Replace button on each existing image thumbnail in edit mode
+- Opens file picker for a single image
+- Old image is deleted from IndexedDB, new image is compressed and stored
+- Entry's imageIds is updated: old ID replaced with new ID at the same position
+- Preview updates immediately
+
+*Reference:* FR-1.3
+
+*Technical Tasks:*
+1. Add replace button to ImageEditor thumbnails
+2. Open file picker (single file mode) on click
+3. Validate and compress replacement image
+4. Track replacements as map (oldId → SelectedImage) in ImageEditor state
+5. Extend updateEntry to accept imageReplacements
+6. On save: delete old image, store new image, update entry.imageIds
+
+*Status:* ✅ Done
+
+---
+
+== Implementation Details
+
+=== New Components
+- `ImageEditor.tsx` – Main editing component with delete, move-up/move-down, replace buttons per image + ImageUpload for adding new images
+- `ImageEditor.css` – Styles for the image editor grid and action buttons
+
+=== Modified Components
+- `EntryForm.tsx` – Shows ImageEditor in edit mode, ImageUpload in create mode; tracks ImageChanges state
+- `App.tsx` – `handleSaveEntry` forwards image changes (add/delete/reorder/replace) to updateEntry
+
+=== Modified Hooks
+- `useEntries.ts` – `updateEntry` extended with parameters: `imagesToAdd`, `imagesToDelete`, `imageIdsOrder`, `imageReplacements`
+
+=== Modified Specifications
+- `tech-specification-web.adoc` – New section "Image Editing in Entry Edit Mode"
+- `backlog-web.adoc` – Stories 4.4–4.7 added under Epic 4
+
+== Testing
+
+=== Unit Tests
+- `ImageEditor.test.tsx` – Component rendering, delete, reorder, replace interactions
+- `useEntries.test.ts` – Extended with updateEntry image management tests (add, delete, reorder, replace)
+
+=== Manual Testing Checklist
+- [ ] Open entry editor with existing images → images visible
+- [ ] Click × on image → image disappears from grid
+- [ ] Click ↑/↓ → images swap positions
+- [ ] Click ↻ → file picker opens, replacement preview shown with "Replaced" badge
+- [ ] Add new images via upload in edit mode
+- [ ] Save → verify all changes persisted in IndexedDB
+- [ ] Image count enforced (max 10)
+- [ ] Cancel → no changes persisted
+
+== Files Changed
+
+|===
+| File | Change
+
+| `Zitate.web/src/components/image/ImageEditor.tsx`
+| New – Image editing component
+
+| `Zitate.web/src/components/image/ImageEditor.css`
+| New – ImageEditor styles
+
+| `Zitate.web/src/components/image/ImageEditor.test.tsx`
+| New – ImageEditor unit tests
+
+| `Zitate.web/src/components/entry/EntryForm.tsx`
+| Modified – ImageEditor in edit mode, extended onSave signature
+
+| `Zitate.web/src/hooks/useEntries.ts`
+| Modified – updateEntry with image management
+
+| `Zitate.web/src/hooks/useEntries.test.ts`
+| Modified – updateEntry image tests added
+
+| `Zitate.web/src/App.tsx`
+| Modified – handleSaveEntry forwards image changes
+
+| `tech-specification-web.adoc`
+| Modified – Image Editing section added
+
+| `backlog-web.adoc`
+| Modified – Stories 4.4–4.7 added
+
+| `phase-imageeditor.adoc`
+| New – This phase document
+|===
+
