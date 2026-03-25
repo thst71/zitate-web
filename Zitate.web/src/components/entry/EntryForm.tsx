@@ -28,7 +28,7 @@ interface EntryFormProps {
   ) => Promise<void>;
   onCancel: () => void;
   initialEntry?: Entry;
-  onLocationEdit?: (lat: number, lng: number, onSelect: (lat: number, lng: number, address?: string) => void) => void;
+  onLocationEdit?: (lat: number, lng: number, onSelect: (lat: number, lng: number, addressShort?: string, addressFull?: string) => void) => void;
 }
 
 export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: EntryFormProps) {
@@ -153,7 +153,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
             {editedLocation ? (
               // Show edited location
               <span className="location-coords">
-                {editedLocation.address || `${editedLocation.latitude.toFixed(6)}, ${editedLocation.longitude.toFixed(6)}`}
+                {editedLocation.addressShort || editedLocation.address || `${editedLocation.latitude.toFixed(6)}, ${editedLocation.longitude.toFixed(6)}`}
               </span>
             ) : isEditing ? (
               // Show existing location when editing
@@ -193,8 +193,8 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
               type="button"
               className="location-edit"
               onClick={() => {
-                onLocationEdit(latitude, longitude, (newLat, newLng, address) => {
-                  setEditedLocation({ latitude: newLat, longitude: newLng, address });
+                onLocationEdit(latitude, longitude, (newLat, newLng, addrShort, addrFull) => {
+                  setEditedLocation({ latitude: newLat, longitude: newLng, address: addrFull, addressShort: addrShort });
                 });
               }}
             >
