@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Map as LeafletMap, TileLayer, Marker } from 'leaflet';
+import { locationService } from '../../services/location.service';
 import 'leaflet/dist/leaflet.css';
 import './LocationViewer.css';
 
@@ -34,6 +35,22 @@ export const LocationViewer = ({
 }: LocationViewerProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<LeafletMap | null>(null);
+  const [resolvedAddress, setResolvedAddress] = useState<string | undefined>(address);
+
+  // If no address was passed, fetch it ourselves
+  useEffect(() => {
+    if (address) {
+      setResolvedAddress(address);
+      return;
+    }
+    let cancelled = false;
+    locationService.reverseGeocode(latitude, longitude).then((result) => {
+      if (!cancelled && result) {
+        setResolvedAddress(result.full);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [latitude, longitude, address]);
 
   useEffect(() => {
     if (!mapRef.current || leafletMapRef.current) return;
@@ -106,9 +123,9 @@ export const LocationViewer = ({
             <div className="coordinates">
               <strong>Coordinates:</strong> {latitude.toFixed(6)}, {longitude.toFixed(6)}
             </div>
-            {address && (
+            {resolvedAddress && (
               <div className="address">
-                <strong>Address:</strong> {address}
+                <strong>Address:</strong> {resolvedAddress}
               </div>
             )}
           </div>

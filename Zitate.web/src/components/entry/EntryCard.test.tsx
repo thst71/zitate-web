@@ -4,8 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { EntryCard } from './EntryCard';
 import { Entry } from '../../models';
 
-// Mock fetch for reverse geocoding (returns empty to trigger fallback)
-globalThis.fetch = vi.fn().mockRejectedValue(new Error('no network'));
+// Mock fetch for reverse geocoding – return minimal Nominatim response
+globalThis.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  json: () => Promise.resolve({ display_name: 'Berlin, Germany', address: { city: 'Berlin' } }),
+});
 
 describe('EntryCard', () => {
   const mockEntry: Entry = {
