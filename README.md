@@ -1,13 +1,6 @@
 # Zitate - Quote Collection
 
-A multi-platform application for collecting and managing quotes, citations, and "bon mots" with rich metadata including location, images, and intelligent organization.
-
-## Platforms
-
-| Platform | Stack | Status |
-|---|---|---|
-| **Web (PWA)** | React, TypeScript, Vite, IndexedDB | ✅ Phase 6 complete |
-| **iOS** | SwiftUI, Core Data, CloudKit | ✅ Phase 1 complete |
+A web application for collecting and managing quotes, citations, and "bon mots" with rich metadata including location, images, and intelligent organization.
 
 ## Web Application
 
@@ -36,7 +29,6 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | `npm run test` | Run tests in watch mode |
 | `npm run test -- --coverage` | Run tests with coverage report |
 | `npm run lint` | Run ESLint |
-| `npm run format` | Format code with Prettier |
 
 ### Docker
 
@@ -90,7 +82,7 @@ Zitate.web/src/
 ### Features
 
 - Create, edit, and delete quotes with rich text
-- Assign authors and labels
+- Assign authors and labels with autocomplete
 - Automatic and manual location tagging with map view
 - Image attachments with compression
 - Smart folders with dynamic filter criteria
@@ -98,20 +90,6 @@ Zitate.web/src/
 - Import/Export functionality
 - Offline-first PWA with service worker caching
 - Responsive design for mobile and desktop
-
-## iOS Application
-
-### Prerequisites
-
-- macOS with Xcode 15.0+
-- iOS 17.0+ Simulator or device
-
-### Setup
-
-1. Open `Zitate/Zitate.xcodeproj` in Xcode
-2. Set deployment target to iOS 17.0
-3. Add capabilities: iCloud → CloudKit, Background Modes → Remote notifications
-4. Build (⌘B) and Run (⌘R)
 
 ## CI/CD
 
@@ -124,11 +102,10 @@ The project uses GitHub Actions for continuous integration:
 
 | File | Description |
 |---|---|
-| `specification-web.adoc` | Web functional requirements |
-| `tech-specification-web.adoc` | Web technical architecture |
-| `phase1-web.adoc` – `phase6-web.adoc` | Web implementation phases |
-| `specification.adoc` | iOS functional requirements |
-| `tech-specification.adoc` | iOS technical architecture |
+| `specification-web.adoc` | Functional requirements |
+| `tech-specification-web.adoc` | Technical architecture |
+| `backlog-web.adoc` | User stories and implementation backlog |
+| `DOCKER.md` | Docker deployment guide |
 
 ## License
 

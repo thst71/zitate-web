@@ -9,10 +9,10 @@ This document defines the technical architecture, tools, frameworks, and depende
 
 === Primary Technologies
 - *Platform:* Web (Desktop and Mobile Browsers)
-- *Language:* JavaScript/TypeScript ES6+
-- *UI Framework:* React 18+ or Vue 3+ or Vanilla JS
-- *Build Tool:* Vite or Webpack 5
-- *Package Manager:* npm or pnpm
+- *Language:* TypeScript ES2020+
+- *UI Framework:* React 18
+- *Build Tool:* Vite 7
+- *Package Manager:* npm
 
 === Core Browser APIs
 - *IndexedDB:* Local database and persistence
@@ -101,16 +101,16 @@ zitate-web/
 == Architecture Pattern
 
 === Component-Based Architecture
-- *Components:* Reusable UI components (React/Vue/Web Components)
-- *Hooks/Composables:* Shared logic and state management
-- *Services:* Singleton business logic services
+- *Components:* Reusable React UI components
+- *Hooks:* Custom React hooks for shared logic and state management
+- *Services:* Singleton business logic services (db.service, location.service)
 - *Models:* TypeScript interfaces for type safety
 
 === State Management
-- *Local State:* Component state (useState/ref)
-- *Global State:* Context API / Pinia / Zustand (lightweight)
-- *Persistent State:* IndexedDB via custom hooks
-- *Derived State:* Computed values from IndexedDB queries
+- *Local State:* Component state (useState)
+- *Persistent State:* IndexedDB via custom hooks (useEntries, useAuthors, useLabels, useFolders)
+- *Cross-instance sync:* Custom event emitter (storeSync) to keep multiple hook instances in sync
+- *Derived State:* Computed values from IndexedDB queries (useCallback, useMemo)
 
 === Data Flow
 ```
@@ -139,6 +139,8 @@ interface Entry {
   labelIds: string[];            // FK array to labels
   imageIds: string[];            // FK array to images
   audioId?: string;              // FK to audio
+  addressShort?: string;         // Reverse-geocoded short address (city)
+  addressFull?: string;          // Reverse-geocoded full address
   createdAt: number;             // Unix timestamp
   updatedAt: number;             // Unix timestamp
 }
@@ -251,10 +253,17 @@ class DBService {
 ```typescript
 class LocationService {
   async getCurrentPosition(): Promise<GeolocationPosition>;
-  async reverseGeocode(lat: number, lon: number): Promise<string>;
+  async reverseGeocode(lat: number, lon: number): Promise<ReverseGeocodeResult>;
   calculateDistance(from: Coords, to: Coords): number;
 }
+
+interface ReverseGeocodeResult {
+  short: string;   // e.g. "Berlin"
+  full: string;    // e.g. "Berlin, Germany"
+}
 ```
+
+Reverse geocoding uses OpenStreetMap Nominatim API. Results are persisted on the Entry (`addressShort`, `addressFull`) to avoid repeated API calls. Legacy entries without persisted addresses fall back to on-demand geocoding with caching in component state.
 
 === Media Service
 ```typescript
@@ -538,23 +547,21 @@ export default defineConfig({
 ```
 
 === Deployment Options
-- Static hosting (Netlify, Vercel, GitHub Pages)
-- No server required
-- CDN recommended for global distribution
+- Docker container (multi-stage build: Node.js build + nginx serve)
+- Multi-arch images (linux/amd64, linux/arm64) published to GitHub Container Registry (GHCR)
+- docker-compose for local/self-hosted deployment
 - HTTPS required for Service Worker and Geolocation
 
-=== CI/CD
-- Automated builds on git push
-- Lighthouse CI for performance monitoring
-- Automated accessibility tests
-- Bundle size monitoring
+=== CI/CD (GitHub Actions)
+- Pull requests: lint, test with coverage, security audit (`npm audit`), Docker build (without push)
+- Tag push (`v*.*.*`): parallel native Docker builds per architecture, multi-arch manifest merge, push to GHCR, Trivy vulnerability scan with SARIF upload to GitHub Security tab
 
 == Development Environment
 
 === Requirements
-- Node.js 18+
-- npm 9+ or pnpm 8+
-- Modern code editor (VS Code recommended)
+- Node.js 24+
+- npm 10+
+- Modern code editor (VS Code, WebStorm)
 
 === Recommended VS Code Extensions
 - ESLint
@@ -584,16 +591,13 @@ export default defineConfig({
 - Utility functions
 - IndexedDB operations (with fake-indexeddb)
 - Validation logic
+- Custom hook logic (renderHook)
 
 === Component Tests (React Testing Library)
 - Component rendering
-- User interactions
-- Accessibility
-
-=== E2E Tests (Playwright)
-- Critical user flows
-- Cross-browser testing
-- Mobile viewport testing
+- User interactions (keyboard, mouse, touch)
+- ARIA accessibility attributes
+- Async state updates
 
 === Performance Tests
 - Lighthouse CI (target score >90)
@@ -606,12 +610,11 @@ export default defineConfig({
 ```json
 {
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "idb": "^7.1.1",              // IndexedDB wrapper
-    "uuid": "^9.0.0",              // UUID generation
-    "date-fns": "^2.30.0",         // Date utilities
-    "browser-image-compression": "^2.0.2"  // Image compression
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "uuid": "^11.0.0",
+    "leaflet": "^1.9.0",
+    "react-leaflet": "^5.0.0"
   }
 }
 ```
@@ -620,17 +623,16 @@ export default defineConfig({
 ```json
 {
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.0.0",
-    "typescript": "^5.0.0",
-    "vite": "^4.3.0",
-    "vite-plugin-pwa": "^0.16.0",
-    "vitest": "^0.32.0",
-    "@testing-library/react": "^14.0.0",
-    "playwright": "^1.35.0",
-    "eslint": "^8.42.0",
-    "prettier": "^2.8.8"
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "typescript": "^5.8.0",
+    "vite": "^7.0.0",
+    "vite-plugin-pwa": "^1.0.0",
+    "vitest": "^3.0.0",
+    "@testing-library/react": "^16.0.0",
+    "eslint": "^9.0.0",
+    "fake-indexeddb": "^6.0.0"
   }
 }
 ```
