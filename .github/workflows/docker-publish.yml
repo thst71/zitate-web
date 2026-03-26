@@ -108,6 +108,8 @@ jobs:
           file: ./Zitate.web/Dockerfile
           platforms: ${{ matrix.platform }}
           labels: ${{ needs.metadata.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ needs.metadata.outputs.version }}
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,scope=${{ matrix.platform }},mode=max
