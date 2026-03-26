@@ -145,6 +145,23 @@ export function useAuthors() {
     [authors]
   );
 
+  /**
+   * Search authors by prefix
+   */
+  const searchAuthors = useCallback(
+    (query: string): Author[] => {
+      if (!query.trim()) {
+        return authors.slice(0, 10); // Return first 10 if empty query
+      }
+
+      const normalizedQuery = query.toLowerCase().trim();
+      return authors
+        .filter((a) => a.name.toLowerCase().startsWith(normalizedQuery))
+        .slice(0, 10); // Return top 10 matches
+    },
+    [authors]
+  );
+
   // Load authors on mount and subscribe to changes from other hook instances
   useEffect(() => {
     loadAuthors();
@@ -159,6 +176,7 @@ export function useAuthors() {
     updateAuthor,
     deleteAuthor,
     getAuthorById,
+    searchAuthors,
     reload: loadAuthors,
   };
 }
