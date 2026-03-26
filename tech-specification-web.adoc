@@ -26,7 +26,9 @@ This document defines the technical architecture, tools, frameworks, and depende
 == Project Structure
 
 === Directory Layout (React/TypeScript Example)
-```
+
+[source]
+----
 zitate-web/
 ├── public/
 │   ├── index.html
@@ -96,7 +98,7 @@ zitate-web/
 ├── tsconfig.json                  # TypeScript config
 ├── vite.config.ts                 # Vite config
 └── README.md
-```
+----
 
 == Architecture Pattern
 
@@ -113,11 +115,13 @@ zitate-web/
 - *Derived State:* Computed values from IndexedDB queries (useCallback, useMemo)
 
 === Data Flow
-```
+
+[source]
+----
 User Interaction → Component → Hook → Service → IndexedDB
                     ↑                              ↓
                     └────── State Update ←─────────┘
-```
+----
 
 == IndexedDB Schema
 
@@ -129,7 +133,9 @@ User Interaction → Component → Hook → Service → IndexedDB
 === Object Stores
 
 ==== entries
-```typescript
+
+[source,typescript]
+----
 interface Entry {
   id: string;                    // UUID v4
   text: string;                  // 1-10,000 chars
@@ -146,10 +152,12 @@ interface Entry {
 }
 
 // Indexes: createdAt, latitude, longitude, text (fulltext)
-```
+----
 
 ==== authors
-```typescript
+
+[source,typescript]
+----
 interface Author {
   id: string;                    // UUID v4
   name: string;                  // Required, unique, max 200 chars
@@ -160,20 +168,24 @@ interface Author {
 }
 
 // Indexes: name (unique)
-```
+----
 
 ==== labels
-```typescript
+
+[source,typescript]
+----
 interface Label {
   id: string;                    // UUID v4
   name: string;                  // Required, unique, lowercase, max 50 chars
 }
 
 // Indexes: name (unique)
-```
+----
 
 ==== images
-```typescript
+
+[source,typescript]
+----
 interface ImageAttachment {
   id: string;                    // UUID v4
   entryId: string;               // FK to entries
@@ -185,10 +197,12 @@ interface ImageAttachment {
 }
 
 // Indexes: entryId
-```
+----
 
 ==== audio
-```typescript
+
+[source,typescript]
+----
 interface AudioAttachment {
   id: string;                    // UUID v4
   entryId: string;               // FK to entries
@@ -199,10 +213,12 @@ interface AudioAttachment {
 }
 
 // Indexes: entryId
-```
+----
 
 ==== folders
-```typescript
+
+[source,typescript]
+----
 interface SmartFolder {
   id: string;                    // UUID v4
   name: string;                  // Max 100 chars
@@ -230,12 +246,14 @@ interface FolderCriteria {
 }
 
 // Indexes: order
-```
+----
 
 == Browser APIs Integration
 
 === IndexedDB Wrapper
-```typescript
+
+[source,typescript]
+----
 class DBService {
   private db: IDBDatabase;
 
@@ -247,10 +265,12 @@ class DBService {
   async delete(store: string, id: string): Promise<void>;
   async query<T>(store: string, index: string, value: any): Promise<T[]>;
 }
-```
+----
 
 === Geolocation Service
-```typescript
+
+[source,typescript]
+----
 class LocationService {
   async getCurrentPosition(): Promise<GeolocationPosition>;
   async reverseGeocode(lat: number, lon: number): Promise<ReverseGeocodeResult>;
@@ -261,12 +281,14 @@ interface ReverseGeocodeResult {
   short: string;   // e.g. "Berlin"
   full: string;    // e.g. "Berlin, Germany"
 }
-```
+----
 
 Reverse geocoding uses OpenStreetMap Nominatim API. Results are persisted on the Entry (`addressShort`, `addressFull`) to avoid repeated API calls. Legacy entries without persisted addresses fall back to on-demand geocoding with caching in component state.
 
 === Media Service
-```typescript
+
+[source,typescript]
+----
 class MediaService {
   // Camera
   async captureImage(): Promise<Blob>;
@@ -277,7 +299,7 @@ class MediaService {
   async startRecording(): Promise<MediaRecorder>;
   async stopRecording(recorder: MediaRecorder): Promise<Blob>;
 }
-```
+----
 
 === Image Editing in Entry Edit Mode
 When editing an existing entry, the user must be able to manage attached images with the following operations:
@@ -306,9 +328,11 @@ When editing an existing entry, the user must be able to manage attached images 
 - Entry's `imageIds` array is updated (same position)
 
 ==== Technical Approach
-```typescript
+
+[source,typescript]
+----
 // Extended updateEntry signature
-async updateEntry(
+import number = CSS.number; async updateEntry(
   id: string,
   text: string,
   authorId?: string,
@@ -319,7 +343,7 @@ async updateEntry(
   imagesToDelete?: string[],
   imageIdsOrder?: string[]
 ): Promise<Entry>;
-```
+----
 
 The EntryForm component shows an `ImageEditor` section when `initialEntry` has images or when the user adds new images during editing. The `ImageEditor` combines the existing `ImageGrid` (for display) with edit controls (delete, reorder, replace, add).
 
