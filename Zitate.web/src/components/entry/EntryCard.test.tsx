@@ -10,6 +10,47 @@ globalThis.fetch = vi.fn().mockResolvedValue({
   json: () => Promise.resolve({ display_name: 'Berlin, Germany', address: { city: 'Berlin' } }),
 });
 
+// Mock hooks so EntryCard tests don't trigger async IndexedDB operations
+vi.mock('../../hooks/useAuthors', () => ({
+  useAuthors: () => ({
+    authors: [],
+    loading: false,
+    error: null,
+    getAuthorById: () => undefined,
+    searchAuthors: () => [],
+    addAuthor: vi.fn(),
+    updateAuthor: vi.fn(),
+    deleteAuthor: vi.fn(),
+    reload: vi.fn(),
+  }),
+}));
+
+vi.mock('../../hooks/useLabels', () => ({
+  useLabels: () => ({
+    labels: [],
+    loading: false,
+    error: null,
+    getLabelsByIds: () => [],
+    searchLabels: () => [],
+    addLabel: vi.fn(),
+    deleteLabel: vi.fn(),
+    reload: vi.fn(),
+  }),
+}));
+
+vi.mock('../../hooks/useEntries', () => ({
+  useEntries: () => ({
+    entries: [],
+    loading: false,
+    error: null,
+    getImagesForEntry: vi.fn().mockResolvedValue([]),
+    addEntry: vi.fn(),
+    updateEntry: vi.fn(),
+    deleteEntry: vi.fn(),
+    reload: vi.fn(),
+  }),
+}));
+
 describe('EntryCard', () => {
   const mockEntry: Entry = {
     id: 'entry-1',
