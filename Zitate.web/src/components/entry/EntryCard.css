@@ -1,6 +1,4 @@
 .entry-card {
-  display: flex;
-  gap: var(--spacing-md);
   padding: var(--spacing-lg);
   background-color: var(--color-bg);
   border: 1px solid var(--color-border);
@@ -14,12 +12,11 @@
 }
 
 .entry-card-content {
-  flex: 1;
   min-width: 0;
 }
 
 .entry-text {
-  margin: 0 0 var(--spacing-sm) 0;
+  margin: 0 0 var(--spacing-xs) 0;
   color: var(--color-text);
   font-size: var(--font-size-base);
   line-height: 1.6;
@@ -28,39 +25,19 @@
 }
 
 .entry-author {
-  margin: 0 0 var(--spacing-sm) 0;
+  margin: 0 0 var(--spacing-xs) 0;
   font-style: italic;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-}
-
-.entry-labels {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  margin-top: var(--spacing-md);
-}
-
-.entry-label {
-  padding: 2px var(--spacing-xs);
-  background-color: var(--color-primary);
-  color: white;
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
 }
 
 .entry-meta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
-}
-
-.entry-date {
-  display: flex;
-  align-items: center;
 }
 
 .entry-location {
@@ -87,16 +64,42 @@
   color: var(--color-primary);
 }
 
+/* Footer: labels on the left, action icons on the right */
+.entry-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.entry-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-label {
+  padding: 2px var(--spacing-xs);
+  background-color: var(--color-primary);
+  color: white;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
 .entry-actions {
   display: flex;
-  gap: var(--spacing-xs);
+  gap: 2px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .entry-edit,
 .entry-delete {
   flex-shrink: 0;
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xs);
   background: transparent;
   border: none;
   color: var(--color-text-secondary);

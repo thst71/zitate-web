@@ -52,7 +52,7 @@ describe('EntryCard', () => {
   it('should render "Yesterday" for entry from 1 day ago', () => {
     render(<EntryCard entry={mockEntry} />);
 
-    expect(screen.getByText('Yesterday')).toBeInTheDocument();
+    expect(screen.getByText(/Yesterday/)).toBeInTheDocument();
   });
 
   it('should render "Today" for entry from today', () => {
@@ -64,7 +64,7 @@ describe('EntryCard', () => {
 
     render(<EntryCard entry={todayEntry} />);
 
-    expect(screen.getByText('Today')).toBeInTheDocument();
+    expect(screen.getByText(/Today/)).toBeInTheDocument();
   });
 
   it('should render "X days ago" for recent entries', () => {
@@ -76,7 +76,7 @@ describe('EntryCard', () => {
 
     render(<EntryCard entry={threeDaysAgo} />);
 
-    expect(screen.getByText('3 days ago')).toBeInTheDocument();
+    expect(screen.getByText(/3 days ago/)).toBeInTheDocument();
   });
 
   it('should render formatted date for older entries', () => {
