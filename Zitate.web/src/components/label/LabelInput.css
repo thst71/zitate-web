@@ -49,6 +49,9 @@
   z-index: 10;
   max-height: 200px;
   overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   background-color: var(--color-bg);
   border: 1px solid var(--color-border);
   border-top: none;
@@ -57,25 +60,38 @@
 }
 
 .label-suggestion {
-  width: 100%;
   padding: var(--spacing-sm) var(--spacing-md);
-  background: none;
-  border: none;
   color: var(--color-text);
-  text-align: left;
   cursor: pointer;
   transition: background-color var(--transition-fast);
   font-size: var(--font-size-base);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.label-suggestion:hover {
+.label-suggestion:hover,
+.label-suggestion.highlighted {
   background-color: rgba(59, 130, 246, 0.1);
+}
+
+.label-suggestion.already-selected {
+  color: var(--color-text-secondary);
+}
+
+.label-check {
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 .label-suggestion.create {
   color: var(--color-primary);
   font-weight: 500;
   border-top: 1px solid var(--color-border);
+}
+
+.label-suggestion.create:hover,
+.label-suggestion.create.highlighted {
+  background-color: rgba(59, 130, 246, 0.15);
 }
 
 .form-hint {

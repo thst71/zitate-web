@@ -21,3 +21,7 @@ Object.defineProperty(globalThis.navigator, 'geolocation', {
   value: mockGeolocation,
   writable: true,
 });
+
+// jsdom does not implement scrollIntoView
+Element.prototype.scrollIntoView = vi.fn();
+
