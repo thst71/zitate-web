@@ -68,6 +68,7 @@ const App: React.FC = () => {
 
   const handleSaveEntry = async (
     text: string,
+    citationDate: number,
     latitude?: number,
     longitude?: number,
     authorId?: string,
@@ -82,12 +83,12 @@ const App: React.FC = () => {
   ) => {
     if (editingEntry) {
       await updateEntry(
-        editingEntry.id, text, authorId, labelIds, latitude, longitude,
+        editingEntry.id, text, citationDate, authorId, labelIds, latitude, longitude,
         selectedImages, imagesToDelete, imageIdsOrder, imageReplacements,
         addressShort, addressFull, links
       );
     } else {
-      await addEntry(text, latitude, longitude, authorId, labelIds, selectedImages,
+      await addEntry(text, citationDate, latitude, longitude, authorId, labelIds, selectedImages,
         addressShort, addressFull, links);
     }
     setIsEntryModalOpen(false);
