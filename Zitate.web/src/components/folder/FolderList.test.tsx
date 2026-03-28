@@ -42,7 +42,7 @@ describe('FolderList', () => {
     },
   ];
 
-  const mockGetFolderCount = (entries: Entry[], folder: SmartFolder): number => {
+  const mockGetFolderCount = (_entries: Entry[], folder: SmartFolder): number => {
     if (folder.id === '1') return 1;
     if (folder.id === '2') return 2;
     return 0;

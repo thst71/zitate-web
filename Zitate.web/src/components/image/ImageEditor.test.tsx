@@ -49,7 +49,7 @@ describe('ImageEditor', () => {
 
   it('should render existing images', () => {
     const { container } = render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     const editorCount = container.querySelector('.image-editor-count');
@@ -62,7 +62,7 @@ describe('ImageEditor', () => {
 
   it('should render empty state with upload only', () => {
     const { container } = render(
-      <ImageEditor existingImages={[]} onChange={onChange} />
+      <ImageEditor existingImages={[]} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     const editorCount = container.querySelector('.image-editor-count');
@@ -73,7 +73,7 @@ describe('ImageEditor', () => {
   it('should call onChange with imagesToDelete when delete button clicked', async () => {
     const user = userEvent.setup();
     render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     const deleteButtons = screen.getAllByLabelText(/delete image/i);
@@ -87,7 +87,7 @@ describe('ImageEditor', () => {
   it('should remove deleted image from the grid', async () => {
     const user = userEvent.setup();
     render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     // Initially 3 delete buttons
@@ -103,7 +103,7 @@ describe('ImageEditor', () => {
   it('should update count when image is deleted', async () => {
     const user = userEvent.setup();
     const { container } = render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     const editorCount = container.querySelector('.image-editor-count')!;
@@ -118,7 +118,7 @@ describe('ImageEditor', () => {
   it('should call onChange with updated order when move-up clicked', async () => {
     const user = userEvent.setup();
     render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     // Click move-up on the second image (img-2)
@@ -135,7 +135,7 @@ describe('ImageEditor', () => {
   it('should call onChange with updated order when move-down clicked', async () => {
     const user = userEvent.setup();
     render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     // Click move-down on the first image (img-1)
@@ -151,7 +151,7 @@ describe('ImageEditor', () => {
 
   it('should disable move-up for the first image', () => {
     render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     const moveUpButtons = screen.getAllByLabelText(/move image up/i);
@@ -161,7 +161,7 @@ describe('ImageEditor', () => {
 
   it('should disable move-down for the last image', () => {
     render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     const moveDownButtons = screen.getAllByLabelText(/move image down/i);
@@ -171,7 +171,7 @@ describe('ImageEditor', () => {
 
   it('should report empty changes initially', () => {
     render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     // The initial onChange call should have no deletions/additions/replacements
@@ -188,7 +188,7 @@ describe('ImageEditor', () => {
     );
 
     render(
-      <ImageEditor existingImages={tenImages} maxImages={10} onChange={onChange} />
+      <ImageEditor existingImages={tenImages} maxImages={10} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     expect(screen.getByText(/maximum number of images reached/i)).toBeInTheDocument();
@@ -197,7 +197,7 @@ describe('ImageEditor', () => {
   it('should handle multiple deletes correctly', async () => {
     const user = userEvent.setup();
     const { container } = render(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     // Delete first image
@@ -220,7 +220,7 @@ describe('ImageEditor', () => {
     // Simulate the real scenario: EntryForm renders ImageEditor with [] first,
     // then useEffect loads images and re-renders with actual images.
     const { container, rerender } = render(
-      <ImageEditor existingImages={[]} onChange={onChange} />
+      <ImageEditor existingImages={[]} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     // Initially no images visible
@@ -228,7 +228,7 @@ describe('ImageEditor', () => {
 
     // Simulate async load completing - parent re-renders with images
     rerender(
-      <ImageEditor existingImages={mockImages} onChange={onChange} />
+      <ImageEditor existingImages={mockImages} onChange={onChange as unknown as (changes: ImageChanges) => void} />
     );
 
     // Now images should be visible

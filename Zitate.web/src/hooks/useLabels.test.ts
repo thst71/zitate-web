@@ -46,18 +46,18 @@ describe('useLabels', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    let label1;
+    let label1: { id: string } | undefined;
     await act(async () => {
       label1 = await result.current.addLabel('test');
     });
 
-    let label2;
+    let label2: { id: string } | undefined;
     await act(async () => {
       label2 = await result.current.addLabel('TEST'); // Different case
     });
 
     expect(result.current.labels).toHaveLength(1);
-    expect(label1.id).toBe(label2.id);
+    expect(label1?.id).toBe(label2?.id);
   });
 
   it('should delete a label', async () => {

@@ -38,7 +38,6 @@ describe('DBService', () => {
       const author: Author = {
         id: 'author-1',
         name: 'John Doe',
-        createdAt: Date.now(),
       };
 
       await dbService.add(STORES.AUTHORS, author);
@@ -120,7 +119,6 @@ describe('DBService', () => {
       const label: Label = {
         id: 'label-1',
         name: 'Important',
-        createdAt: Date.now(),
       };
 
       await dbService.add(STORES.LABELS, label);
@@ -214,9 +212,9 @@ describe('DBService', () => {
       const sorted = await dbService.getAllEntriesSorted();
 
       expect(sorted).toHaveLength(3);
-      expect(sorted[0].id).toBe('entry-3');
-      expect(sorted[1].id).toBe('entry-2');
-      expect(sorted[2].id).toBe('entry-1');
+      expect((sorted[0] as Entry).id).toBe('entry-3');
+      expect((sorted[1] as Entry).id).toBe('entry-2');
+      expect((sorted[2] as Entry).id).toBe('entry-1');
     });
 
     it('should return empty array when no entries exist', async () => {
