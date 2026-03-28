@@ -153,6 +153,7 @@ export function useEntries() {
   const addEntry = useCallback(
     async (
       text: string,
+      citationDate: number,
       latitude?: number,
       longitude?: number,
       authorId?: string,
@@ -171,6 +172,7 @@ export function useEntries() {
       const entry: Entry = {
         id: entryId,
         text,
+        citationDate,
         latitude,
         longitude,
         addressShort,
@@ -210,6 +212,7 @@ export function useEntries() {
     async (
       id: string,
       text: string,
+      citationDate: number,
       authorId?: string,
       labelIds: string[] = [],
       latitude?: number,
@@ -289,6 +292,7 @@ export function useEntries() {
       const updatedEntry: Entry = {
         ...existingEntry,
         text,
+        citationDate,
         authorId,
         labelIds,
         links: links ?? existingEntry.links ?? [],

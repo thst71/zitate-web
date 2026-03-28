@@ -15,6 +15,7 @@ import './EntryForm.css';
 interface EntryFormProps {
   onSave: (
     text: string,
+    citationDate: number,
     latitude?: number,
     longitude?: number,
     authorId?: string,
@@ -40,6 +41,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   });
 
   const [text, setText] = useState(initialEntry?.text || '');
+  const [citationDate, setCitationDate] = useState(initialEntry?.citationDate || Date.now());
   const [authorId, setAuthorId] = useState<string | undefined>(initialEntry?.authorId);
   const [labelIds, setLabelIds] = useState<string[]>(initialEntry?.labelIds || []);
   const [links, setLinks] = useState<EntryLink[]>(initialEntry?.links ?? []);
@@ -109,7 +111,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
 
       if (isEditing && imageChanges) {
         await onSave(
-          text, latitude, longitude, authorId, labelIds,
+          text, citationDate, latitude, longitude, authorId, labelIds,
           imageChanges.imagesToAdd,
           imageChanges.imagesToDelete,
           imageChanges.imageIdsOrder,
@@ -119,7 +121,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
           normalizedLinks
         );
       } else {
-        await onSave(text, latitude, longitude, authorId, labelIds, selectedImages,
+        await onSave(text, citationDate, latitude, longitude, authorId, labelIds, selectedImages,
           undefined, undefined, undefined, addrShort, addrFull, normalizedLinks);
       }
       // Form will be closed by parent
@@ -178,6 +180,17 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
             <span className="error-message">{validation.error}</span>
           )}
         </div>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="citation-date" className="form-label">Citation Date</label>
+        <input
+          id="citation-date"
+          type="date"
+          className="form-input"
+          value={new Date(citationDate).toISOString().split('T')[0]}
+          onChange={(e) => setCitationDate(new Date(e.target.value).getTime())}
+        />
       </div>
 
       <div className="form-group">

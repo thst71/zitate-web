@@ -10,6 +10,7 @@ export interface EntryLink {
 export interface Entry {
   id: string;                    // UUID v4
   text: string;                  // 1-10,000 characters
+  citationDate?: number;         // Unix timestamp (ms) for when the quote was said/published
   latitude?: number;             // WGS84 coordinates
   longitude?: number;            // WGS84 coordinates
   addressShort?: string;         // Short geocoded name, e.g. "Alexanderplatz, Berlin"
@@ -29,6 +30,7 @@ export interface Entry {
 export function createEntry(text: string, latitude?: number, longitude?: number): Omit<Entry, 'id' | 'createdAt' | 'updatedAt'> {
   return {
     text,
+    citationDate: Date.now(), // Default to creation time
     latitude,
     longitude,
     labelIds: [],

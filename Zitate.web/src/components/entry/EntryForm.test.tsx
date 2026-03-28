@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { EntryForm } from './EntryForm';
 
@@ -12,6 +12,7 @@ describe('EntryForm', () => {
     render(<EntryForm onSave={vi.fn()} onCancel={vi.fn()} />);
 
     expect(screen.getByLabelText(/quote text/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/citation date/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
   });
@@ -62,9 +63,11 @@ describe('EntryForm', () => {
     expect(saveButton).not.toBeDisabled();
   });
 
-  it('should call onSave with text when save button is clicked', async () => {
+  it('should call onSave with text and default citation date when save is clicked', async () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(undefined);
+    const fixedDate = new Date(2024, 5, 15);
+    vi.spyOn(globalThis.Date, 'now').mockReturnValue(fixedDate.getTime());
 
     render(<EntryForm onSave={onSave} onCancel={vi.fn()} />);
 
@@ -75,8 +78,58 @@ describe('EntryForm', () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(onSave).toHaveBeenCalledWith('Test entry', undefined, undefined, undefined, [], [],
-        undefined, undefined, undefined, undefined, undefined, []);
+      expect(onSave).toHaveBeenCalledWith(
+        'Test entry',          // text
+        fixedDate.getTime(),   // citationDate
+        undefined,             // latitude
+        undefined,             // longitude
+        undefined,             // authorId
+        [],                    // labelIds
+        [],                    // selectedImages
+        undefined,             // imagesToDelete
+        undefined,             // imageIdsOrder
+        undefined,             // imageReplacements
+        undefined,             // addressShort
+        undefined,             // addressFull
+        []                     // links
+      );
+    });
+  });
+
+  it('should allow changing the citation date and pass it on save', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+
+    render(<EntryForm onSave={onSave} onCancel={vi.fn()} />);
+
+    await user.type(screen.getByLabelText(/quote text/i), 'Test entry');
+    const dateInput = screen.getByLabelText(/citation date/i);
+    
+    // Use fireEvent for date inputs
+    fireEvent.change(dateInput, { target: { value: '2023-01-01' } });
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      // The getTime() for a date string like '2023-01-01' can be timezone-dependent.
+      // It's safer to create the date object in the same way the component does.
+      const expectedDate = new Date('2023-01-01').getTime();
+      expect(onSave).toHaveBeenCalledWith(
+        'Test entry',          // text
+        expectedDate,          // citationDate
+        undefined,             // latitude
+        undefined,             // longitude
+        undefined,             // authorId
+        [],                    // labelIds
+        [],                    // selectedImages
+        undefined,             // imagesToDelete
+        undefined,             // imageIdsOrder
+        undefined,             // imageReplacements
+        undefined,             // addressShort
+        undefined,             // addressFull
+        []                     // links
+      );
     });
   });
 
@@ -154,8 +207,21 @@ describe('EntryForm', () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(onSave).toHaveBeenCalledWith('Entry with location', 52.52, 13.405, undefined, [], [],
-        undefined, undefined, undefined, undefined, undefined, []);
+      expect(onSave).toHaveBeenCalledWith(
+        'Entry with location', // text
+        expect.any(Number),    // citationDate
+        52.52,                 // latitude
+        13.405,                // longitude
+        undefined,             // authorId
+        [],                    // labelIds
+        [],                    // selectedImages
+        undefined,             // imagesToDelete
+        undefined,             // imageIdsOrder
+        undefined,             // imageReplacements
+        undefined,             // addressShort
+        undefined,             // addressFull
+        []                     // links
+      );
     });
   });
 
@@ -174,7 +240,7 @@ describe('EntryForm', () => {
       expect(onSave).toHaveBeenCalled();
     });
 
-    const links = onSave.mock.calls[0][11];
+    const links = onSave.mock.calls[0][12];
     expect(links).toHaveLength(1);
     expect(links[0].url).toBe('https://example.com/source');
     expect(typeof links[0].id).toBe('string');

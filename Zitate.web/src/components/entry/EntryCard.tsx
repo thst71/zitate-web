@@ -63,7 +63,10 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
     });
     return () => { cancelled = true; };
   }, [hasLocation, entry.latitude, entry.longitude, entry.addressShort]);
-  const formatDate = (timestamp: number): string => {
+  const formatDate = (timestamp: number | undefined): string => {
+    if (timestamp === undefined) {
+      return '';
+    }
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -109,6 +112,26 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
     } catch {
       return '/favicon.ico';
     }
+  };
+
+  const renderAuthorLine = () => {
+    const citationStr = formatDate(entry.citationDate);
+    const creationStr = formatDate(entry.createdAt);
+
+    // Case 1: Author, Citation Date, Creation Date
+    if (author && citationStr) {
+      return <>{author.name}, {citationStr} <span className="added-date">(added {creationStr})</span></>;
+    }
+    // Case 2: No Author, Citation Date, Creation Date
+    if (!author && citationStr) {
+      return <>{citationStr} <span className="added-date">(added {creationStr})</span></>;
+    }
+    // Case 4: Author, No Citation Date, Creation Date
+    if (author && !citationStr) {
+      return <>{author.name} <span className="added-date">(added {creationStr})</span></>;
+    }
+    // Case 3: No Author, No Citation Date, Creation Date
+    return <><span className="added-date">added {creationStr}</span></>;
   };
 
   return (
@@ -177,7 +200,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
         </div>
 
         <div className="entry-author">
-          — {author ? <>{author.name}, {formatDate(entry.createdAt)}</> : formatDate(entry.createdAt)}
+          — {renderAuthorLine()}
         </div>
 
         {images.length > 0 && (
