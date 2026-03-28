@@ -27,3 +27,4 @@ coverage/
 
 # Docker
 docker-compose.override.yml
+/Zitate.web/Zitate.web/test_output.txt
