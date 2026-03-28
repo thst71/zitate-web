@@ -5,6 +5,7 @@ dist/
 
 # Build output
 build/
+*.tsbuildinfo
 
 # Mac OS
 .DS_Store
