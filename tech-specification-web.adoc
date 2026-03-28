@@ -678,7 +678,7 @@ export default defineConfig({
 - Bundle size limits
 - IndexedDB query performance
 
-## Dependencies
+== Dependencies
 
 === Production Dependencies
 
@@ -733,7 +733,7 @@ export default defineConfig({
 - Storage: ~10MB per 100 entries (excluding media)
 - IndexedDB: Monitor quota, warn at 80%
 
-## Localization (Future)
+== Localization (Future)
 
 *Not in v1.0 scope*, but architecture should support:
 - i18n library (react-i18n, vue-i18n)
