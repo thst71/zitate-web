@@ -215,4 +215,35 @@ describe('EntryCard', () => {
       screen.getByText('Text with émojis 🎉 and symbols @#$%')
     ).toBeInTheDocument();
   });
+
+  it('should render URL toggle when entry has attached links', () => {
+    render(
+      <EntryCard
+        entry={{
+          ...mockEntry,
+          links: [{ id: 'link-1', url: 'https://example.com', addedAt: Date.now() }],
+        }}
+      />
+    );
+
+    expect(screen.getByLabelText(/show attached urls/i)).toBeInTheDocument();
+  });
+
+  it('should open URL dropdown with links and dates', async () => {
+    const user = userEvent.setup();
+    render(
+      <EntryCard
+        entry={{
+          ...mockEntry,
+          links: [{ id: 'link-1', url: 'https://example.com/source', addedAt: new Date('2026-03-27').getTime() }],
+        }}
+      />
+    );
+
+    await user.click(screen.getByLabelText(/show attached urls/i));
+
+    expect(screen.getByRole('menu', { name: /attached urls/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /https:\/\/example.com\/source/i })).toHaveAttribute('href', 'https://example.com/source');
+    expect(screen.getByText(/Added/)).toBeInTheDocument();
+  });
 });

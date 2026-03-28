@@ -17,7 +17,7 @@ import { FolderForm } from './components/folder/FolderForm';
 import { useEntries } from './hooks/useEntries';
 import { useSearch } from './hooks/useSearch';
 import { useFolders } from './hooks/useFolders';
-import type { SmartFolder, Entry } from './models';
+import type { SmartFolder, Entry, EntryLink } from './models';
 import type { SelectedImage } from './components/image/ImageUpload';
 
 const App: React.FC = () => {
@@ -77,17 +77,18 @@ const App: React.FC = () => {
     imageIdsOrder?: string[],
     imageReplacements?: Map<string, SelectedImage>,
     addressShort?: string,
-    addressFull?: string
+    addressFull?: string,
+    links?: EntryLink[]
   ) => {
     if (editingEntry) {
       await updateEntry(
         editingEntry.id, text, authorId, labelIds, latitude, longitude,
         selectedImages, imagesToDelete, imageIdsOrder, imageReplacements,
-        addressShort, addressFull
+        addressShort, addressFull, links
       );
     } else {
       await addEntry(text, latitude, longitude, authorId, labelIds, selectedImages,
-        addressShort, addressFull);
+        addressShort, addressFull, links);
     }
     setIsEntryModalOpen(false);
     setEditingEntry(null);

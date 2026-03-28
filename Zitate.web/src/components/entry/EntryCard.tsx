@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Entry, ImageAttachment } from '../../models';
+import { Entry, EntryLink, ImageAttachment } from '../../models';
 import { formatCoordinates, locationService, type ReverseGeocodeResult } from '../../services/location.service';
 import { useAuthors } from '../../hooks/useAuthors';
 import { useLabels } from '../../hooks/useLabels';
@@ -24,6 +24,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [linksOpen, setLinksOpen] = useState(false);
   // Fallback geocoding only for legacy entries without persisted address
   const [fallbackGeo, setFallbackGeo] = useState<ReverseGeocodeResult | null | undefined>(
     entry.addressShort ? undefined : undefined // will be set by effect
@@ -31,6 +32,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
 
   const author = entry.authorId ? getAuthorById(entry.authorId) : undefined;
   const labels = getLabelsByIds(entry.labelIds);
+  const links = entry.links ?? [];
 
   useEffect(() => {
     if (entry.imageIds.length > 0) {
@@ -93,10 +95,86 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
     setViewerOpen(true);
   };
 
+  const formatLinkDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const getFaviconSrc = (link: EntryLink) => {
+    try {
+      return `${new URL(link.url).origin}/favicon.ico`;
+    } catch {
+      return '/favicon.ico';
+    }
+  };
+
   return (
     <div className="entry-card">
       <div className="entry-card-content">
-        <p className="entry-text">{entry.text}</p>
+        <div className="entry-text-wrapper">
+          <p className="entry-text">{entry.text}</p>
+          {links.length > 0 && (
+            <div className="entry-links-menu-wrapper">
+              <button
+                type="button"
+                className="entry-links-toggle"
+                onClick={() => setLinksOpen((prev) => !prev)}
+                aria-label="Show attached URLs"
+                aria-expanded={linksOpen}
+                title="Show attached URLs"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+              </button>
+
+              {linksOpen && (
+                <div className="entry-links-dropdown" role="menu" aria-label="Attached URLs">
+                  {links.map((link) => (
+                    <a
+                      key={link.id}
+                      className="entry-link-item"
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        className="entry-link-favicon"
+                        src={getFaviconSrc(link)}
+                        alt=""
+                        aria-hidden="true"
+                        onError={(e) => {
+                          if (e.currentTarget.dataset.fallbackApplied === 'true') {
+                            return;
+                          }
+                          e.currentTarget.dataset.fallbackApplied = 'true';
+                          e.currentTarget.src = '/favicon.ico';
+                        }}
+                      />
+                      <span className="entry-link-content">
+                        <span className="entry-link-url">{link.url}</span>
+                        <span className="entry-link-date">Added {formatLinkDate(link.addedAt)}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="entry-author">
           — {author ? <>{author.name}, {formatDate(entry.createdAt)}</> : formatDate(entry.createdAt)}

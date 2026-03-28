@@ -4,12 +4,12 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useLocation } from '../../hooks/useLocation';
 import { useEntries } from '../../hooks/useEntries';
-import { validateEntryText } from '../../utils/validators';
+import { validateEntryText, validateURL } from '../../utils/validators';
 import { AuthorSelect } from '../author/AuthorSelect';
 import { LabelInput } from '../label/LabelInput';
 import { ImageUpload, type SelectedImage } from '../image/ImageUpload';
 import { ImageEditor, type ImageChanges } from '../image/ImageEditor';
-import type { Entry, ImageAttachment } from '../../models';
+import type { Entry, EntryLink, ImageAttachment } from '../../models';
 import './EntryForm.css';
 
 interface EntryFormProps {
@@ -24,7 +24,8 @@ interface EntryFormProps {
     imageIdsOrder?: string[],
     imageReplacements?: Map<string, SelectedImage>,
     addressShort?: string,
-    addressFull?: string
+    addressFull?: string,
+    links?: EntryLink[]
   ) => Promise<void>;
   onCancel: () => void;
   initialEntry?: Entry;
@@ -32,9 +33,16 @@ interface EntryFormProps {
 }
 
 export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: EntryFormProps) {
+  const createLink = (url = ''): EntryLink => ({
+    id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    url,
+    addedAt: Date.now(),
+  });
+
   const [text, setText] = useState(initialEntry?.text || '');
   const [authorId, setAuthorId] = useState<string | undefined>(initialEntry?.authorId);
   const [labelIds, setLabelIds] = useState<string[]>(initialEntry?.labelIds || []);
+  const [links, setLinks] = useState<EntryLink[]>(initialEntry?.links ?? []);
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [existingImages, setExistingImages] = useState<ImageAttachment[]>([]);
   const [imageChanges, setImageChanges] = useState<ImageChanges | null>(null);
@@ -68,6 +76,10 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   const validation = validateEntryText(text);
   const characterCount = text.length;
   const isValid = validation.isValid;
+  const activeLinks = links.filter((link) => link.url.trim().length > 0);
+  const linkValidationErrors = activeLinks.map((link) => validateURL(link.url.trim()));
+  const invalidLinkError = linkValidationErrors.find((result) => !result.isValid);
+  const hasInvalidLinks = Boolean(invalidLinkError);
 
   // Use edited location if available, then existing location when editing, or new location when creating
   const latitude = editedLocation?.latitude ?? (isEditing ? initialEntry.latitude : coords?.latitude);
@@ -76,7 +88,10 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!isValid) {
+    if (!isValid || hasInvalidLinks) {
+      if (hasInvalidLinks) {
+        setError(invalidLinkError?.isValid === false ? invalidLinkError.error : 'Invalid URL format');
+      }
       return;
     }
 
@@ -87,6 +102,10 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
       // If location was edited via LocationPicker, pass the full address for persistence
       const addrShort = editedLocation?.addressShort;
       const addrFull = editedLocation?.address;
+      const normalizedLinks = activeLinks.map((link) => ({
+        ...link,
+        url: link.url.trim(),
+      }));
 
       if (isEditing && imageChanges) {
         await onSave(
@@ -96,17 +115,44 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
           imageChanges.imageIdsOrder,
           imageChanges.imageReplacements,
           addrShort,
-          addrFull
+          addrFull,
+          normalizedLinks
         );
       } else {
         await onSave(text, latitude, longitude, authorId, labelIds, selectedImages,
-          undefined, undefined, undefined, addrShort, addrFull);
+          undefined, undefined, undefined, addrShort, addrFull, normalizedLinks);
       }
       // Form will be closed by parent
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save entry');
       setSaving(false);
     }
+  };
+
+  const handleAddLink = () => {
+    setLinks((prev) => [...prev, createLink()]);
+  };
+
+  const handleChangeLink = (id: string, url: string) => {
+    setLinks((prev) => prev.map((link) => (link.id === id ? { ...link, url } : link)));
+    if (error) {
+      setError(null);
+    }
+  };
+
+  const handleRemoveLink = (id: string) => {
+    setLinks((prev) => prev.filter((link) => link.id !== id));
+    if (error) {
+      setError(null);
+    }
+  };
+
+  const formatLinkAddedAt = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   return (
@@ -213,6 +259,57 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
 
       <LabelInput selectedLabelIds={labelIds} onLabelsChange={setLabelIds} />
 
+      <div className="form-group">
+        <div className="form-group-header">
+          <label className="form-label">URLs (Optional)</label>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleAddLink}
+          >
+            Add URL
+          </button>
+        </div>
+
+        {links.length === 0 ? (
+          <p className="form-hint">Add source or reference links for this quote.</p>
+        ) : (
+          <div className="entry-links-editor">
+            {links.map((link) => {
+              const trimmedUrl = link.url.trim();
+              const validationResult = trimmedUrl.length > 0 ? validateURL(trimmedUrl) : { isValid: true as const };
+
+              return (
+                <div key={link.id} className="entry-link-row">
+                  <div className="entry-link-input-group">
+                    <input
+                      type="url"
+                      className={`form-input ${!validationResult.isValid ? 'invalid' : ''}`}
+                      value={link.url}
+                      onChange={(e) => handleChangeLink(link.id, e.target.value)}
+                      placeholder="https://example.com/source"
+                      aria-label="Attached URL"
+                    />
+                    <span className="entry-link-date">Added {formatLinkAddedAt(link.addedAt)}</span>
+                    {!validationResult.isValid && (
+                      <span className="error-message">{validationResult.error}</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => handleRemoveLink(link.id)}
+                    aria-label="Remove URL"
+                  >
+                    Remove
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {isEditing ? (
         <ImageEditor
           existingImages={existingImages}
@@ -245,7 +342,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={!isValid || saving}
+          disabled={!isValid || hasInvalidLinks || saving}
         >
           {saving ? 'Saving...' : isEditing ? 'Update Quote' : 'Save Quote'}
         </button>

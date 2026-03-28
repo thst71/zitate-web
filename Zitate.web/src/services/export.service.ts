@@ -257,6 +257,27 @@ class ExportService {
       }
     }
 
+      const entries = record.entries as Array<Record<string, unknown>>;
+      for (const entry of entries) {
+        if (entry.links !== undefined) {
+          if (!Array.isArray(entry.links)) {
+            return { isValid: false, error: 'Invalid entry link metadata' };
+          }
+
+          for (const link of entry.links as Array<Record<string, unknown>>) {
+            if (
+              !link ||
+              typeof link !== 'object' ||
+              typeof link.id !== 'string' ||
+              typeof link.url !== 'string' ||
+              typeof link.addedAt !== 'number'
+            ) {
+              return { isValid: false, error: 'Malformed URL attachment metadata' };
+            }
+          }
+        }
+      }
+
     return { isValid: true };
   }
 

@@ -76,7 +76,7 @@ describe('EntryForm', () => {
 
     await waitFor(() => {
       expect(onSave).toHaveBeenCalledWith('Test entry', undefined, undefined, undefined, [], [],
-        undefined, undefined, undefined, undefined, undefined);
+        undefined, undefined, undefined, undefined, undefined, []);
     });
   });
 
@@ -155,8 +155,43 @@ describe('EntryForm', () => {
 
     await waitFor(() => {
       expect(onSave).toHaveBeenCalledWith('Entry with location', 52.52, 13.405, undefined, [], [],
-        undefined, undefined, undefined, undefined, undefined);
+        undefined, undefined, undefined, undefined, undefined, []);
     });
+  });
+
+  it('should allow adding URLs and pass them on save', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+
+    render(<EntryForm onSave={onSave} onCancel={vi.fn()} />);
+
+    await user.type(screen.getByLabelText(/quote text/i), 'Entry with source');
+    await user.click(screen.getByRole('button', { name: /add url/i }));
+    await user.type(screen.getByLabelText('Attached URL'), 'https://example.com/source');
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalled();
+    });
+
+    const links = onSave.mock.calls[0][11];
+    expect(links).toHaveLength(1);
+    expect(links[0].url).toBe('https://example.com/source');
+    expect(typeof links[0].id).toBe('string');
+    expect(typeof links[0].addedAt).toBe('number');
+  });
+
+  it('should disable save when an entered URL is invalid', async () => {
+    const user = userEvent.setup();
+
+    render(<EntryForm onSave={vi.fn()} onCancel={vi.fn()} />);
+
+    await user.type(screen.getByLabelText(/quote text/i), 'Entry with invalid url');
+    await user.click(screen.getByRole('button', { name: /add url/i }));
+    await user.type(screen.getByLabelText('Attached URL'), 'not-a-url');
+
+    expect(screen.getByText(/invalid url format/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
   });
 
   it('should show loading state when saving', async () => {
