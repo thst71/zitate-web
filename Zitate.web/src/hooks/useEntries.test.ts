@@ -76,7 +76,7 @@ describe('useEntries', () => {
     });
 
     await act(async () => {
-      await result.current.addEntry('New entry text');
+      await result.current.addEntry('New entry text', Date.now());
     });
 
     expect(result.current.entries).toHaveLength(1);
@@ -93,7 +93,7 @@ describe('useEntries', () => {
     });
 
     await act(async () => {
-      await result.current.addEntry('Entry with location', 52.52, 13.405);
+      await result.current.addEntry('Entry with location', Date.now(), 52.52, 13.405);
     });
 
     expect(result.current.entries).toHaveLength(1);
@@ -112,10 +112,26 @@ describe('useEntries', () => {
     const links = [{ id: 'link-1', url: 'https://example.com', addedAt: Date.now() }];
 
     await act(async () => {
-      await result.current.addEntry('Entry with link', undefined, undefined, undefined, [], [], undefined, undefined, links);
+      await result.current.addEntry('Entry with link', Date.now(), undefined, undefined, undefined, [], [], undefined, undefined, links);
     });
 
     expect(result.current.entries[0].links).toEqual(links);
+  });
+
+  it('should add a new entry with a specific citation date', async () => {
+    const { result } = renderHook(() => useEntries());
+    const citationDate = new Date('2023-05-10').getTime();
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.addEntry('Entry with citation date', citationDate);
+    });
+
+    expect(result.current.entries).toHaveLength(1);
+    expect(result.current.entries[0].citationDate).toBe(citationDate);
   });
 
   it('should delete an entry', async () => {
@@ -126,7 +142,7 @@ describe('useEntries', () => {
     });
 
     await act(async () => {
-      await result.current.addEntry('Entry to delete');
+      await result.current.addEntry('Entry to delete', Date.now());
     });
 
     const entryId = result.current.entries[0].id;
@@ -147,7 +163,7 @@ describe('useEntries', () => {
 
     // Hook allows any text - validation is done at form level
     await act(async () => {
-      await result.current.addEntry('Valid text');
+      await result.current.addEntry('Valid text', Date.now());
     });
 
     expect(result.current.entries).toHaveLength(1);
@@ -188,15 +204,15 @@ describe('useEntries', () => {
     });
 
     await act(async () => {
-      await result.current.addEntry('First entry');
+      await result.current.addEntry('First entry', Date.now());
     });
 
     await act(async () => {
-      await result.current.addEntry('Second entry');
+      await result.current.addEntry('Second entry', Date.now());
     });
 
     await act(async () => {
-      await result.current.addEntry('Third entry');
+      await result.current.addEntry('Third entry', Date.now());
     });
 
     expect(result.current.entries).toHaveLength(3);
@@ -214,7 +230,7 @@ describe('useEntries', () => {
 
     // Add with only latitude (should treat as no location)
     await act(async () => {
-      await result.current.addEntry('Entry', 52.52, undefined);
+      await result.current.addEntry('Entry', Date.now(), 52.52, undefined);
     });
 
     const entry = result.current.entries[0];
@@ -231,13 +247,13 @@ describe('useEntries', () => {
       });
 
       await act(async () => {
-        await result.current.addEntry('Original text', 52.52, 13.405, 'author-1', ['label-1']);
+        await result.current.addEntry('Original text', Date.now(), 52.52, 13.405, 'author-1', ['label-1']);
       });
 
       const entryId = result.current.entries[0].id;
 
       await act(async () => {
-        await result.current.updateEntry(entryId, 'Updated text', 'author-2', ['label-2'], 48.85, 2.35);
+        await result.current.updateEntry(entryId, 'Updated text', Date.now(), 'author-2', ['label-2'], 48.85, 2.35);
       });
 
       const updated = result.current.entries[0];
@@ -249,6 +265,30 @@ describe('useEntries', () => {
       expect(updated.updatedAt).toBeGreaterThan(updated.createdAt);
     });
 
+    it('should update the citation date', async () => {
+      const { result } = renderHook(() => useEntries());
+      const initialDate = new Date('2023-01-01').getTime();
+      const updatedDate = new Date('2023-02-02').getTime();
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.addEntry('Original text', initialDate);
+      });
+
+      const entryId = result.current.entries[0].id;
+      expect(result.current.entries[0].citationDate).toBe(initialDate);
+
+      await act(async () => {
+        await result.current.updateEntry(entryId, 'Updated text', updatedDate);
+      });
+
+      const updated = result.current.entries[0];
+      expect(updated.citationDate).toBe(updatedDate);
+    });
+
     it('should update attached links', async () => {
       const { result } = renderHook(() => useEntries());
 
@@ -257,14 +297,14 @@ describe('useEntries', () => {
       });
 
       await act(async () => {
-        await result.current.addEntry('Original text');
+        await result.current.addEntry('Original text', Date.now());
       });
 
       const entryId = result.current.entries[0].id;
       const links = [{ id: 'link-1', url: 'https://example.com/updated', addedAt: Date.now() }];
 
       await act(async () => {
-        await result.current.updateEntry(entryId, 'Original text', undefined, [], undefined, undefined, [], [], undefined, new Map(), undefined, undefined, links);
+        await result.current.updateEntry(entryId, 'Original text', Date.now(), undefined, [], undefined, undefined, [], [], undefined, new Map(), undefined, undefined, links);
       });
 
       expect(result.current.entries[0].links).toEqual(links);
@@ -279,7 +319,7 @@ describe('useEntries', () => {
 
       await expect(
         act(async () => {
-          await result.current.updateEntry('non-existent-id', 'text');
+          await result.current.updateEntry('non-existent-id', 'text', Date.now());
         })
       ).rejects.toThrow('Entry not found');
     });
@@ -338,7 +378,7 @@ describe('useEntries', () => {
       // Delete img-1 via updateEntry
       await act(async () => {
         await result.current.updateEntry(
-          entryId, 'Entry with images', undefined, [],
+          entryId, 'Entry with images', Date.now(), undefined, [],
           undefined, undefined,
           [], // imagesToAdd
           [imageId1], // imagesToDelete
@@ -396,7 +436,7 @@ describe('useEntries', () => {
       // Reorder: move img-2 to front
       await act(async () => {
         await result.current.updateEntry(
-          entryId, 'Reorder test', undefined, [],
+          entryId, 'Reorder test', Date.now(), undefined, [],
           undefined, undefined,
           [], // imagesToAdd
           [], // imagesToDelete
@@ -441,7 +481,7 @@ describe('useEntries', () => {
 
       // Update text only, no image changes
       await act(async () => {
-        await result.current.updateEntry(entryId, 'Updated text');
+        await result.current.updateEntry(entryId, 'Updated text', Date.now());
       });
 
       const updated = result.current.entries[0];
