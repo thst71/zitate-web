@@ -33,7 +33,7 @@ FR-1.1, FR-1.2, NFR-2
 .*Estimated Effort:*
 6 hours
 
----
+'''
 
 === Story 1.2: TypeScript Interfaces
 *As a* developer +
@@ -61,7 +61,7 @@ All FR requirements
 .*Estimated Effort:*
 3 hours
 
----
+'''
 
 === Story 1.3: IndexedDB CRUD Service
 *As a* developer +
@@ -90,7 +90,7 @@ NFR-2
 .*Estimated Effort:*
 8 hours
 
----
+'''
 
 === Story 1.4: Data Validation Utilities
 *As a* developer +
@@ -119,7 +119,7 @@ FR-1.1, FR-2.2, FR-3.3
 .*Estimated Effort:*
 3 hours
 
----
+'''
 
 == Epic 2: Entry Management (Basic)
 
@@ -150,7 +150,7 @@ FR-1.5
 .*Estimated Effort:*
 6 hours
 
----
+'''
 
 === Story 2.2: Text Input with Validation
 *As a* user +
@@ -179,7 +179,7 @@ FR-1.1
 .*Estimated Effort:*
 3 hours
 
----
+'''
 
 === Story 2.3: Geolocation Integration
 *As a* user +
@@ -209,7 +209,7 @@ FR-1.2
 .*Estimated Effort:*
 6 hours
 
----
+'''
 
 === Story 2.4: Entry Save to IndexedDB
 *As a* user +
@@ -240,7 +240,7 @@ FR-1.5
 .*Estimated Effort:*
 4 hours
 
----
+'''
 
 === Story 2.5: Entry List Display
 *As a* user +
@@ -269,7 +269,7 @@ FR-5.2, FR-5.5
 .*Estimated Effort:*
 5 hours
 
----
+'''
 
 === Story 2.6: Entry Deletion
 *As a* user +
@@ -299,7 +299,89 @@ FR-1.6
 .*Estimated Effort:*
 4 hours
 
----
+'''
+
+=== Story 2.7: Citation Date Input
+*As a* user +
+*I want to* set the date of the quote independently from the entry creation timestamp +
+*So that* I can capture when the quote was originally said or published
+
+.*Acceptance Criteria:*
+- Entry form includes a citation date input
+- Citation date defaults to the current entry creation date for new entries
+- Citation date can be changed during entry creation
+- Citation date can be edited later without changing `createdAt`
+- Validation and save flow handle citation date correctly
+
+.*Reference:*
+FR-1.8
+
+.*Technical Tasks:*
+1. Extend `Entry` model with `citationDate`
+2. Add citation date field to `EntryForm`
+3. Default citation date to entry creation date for new entries
+4. Update `useEntries` add/update logic to persist `citationDate`
+5. Add tests for defaulting and editing behavior
+
+.*Estimated Effort:*
+4 hours
+
+'''
+
+=== Story 2.8: URL Attachment Input
+*As a* user +
+*I want to* attach one or more URLs to an entry +
+*So that* I can keep source and reference links together with the quote
+
+.*Acceptance Criteria:*
+- Entry form supports adding multiple URLs
+- Each URL is validated before save
+- Individual URLs can be removed before saving
+- Editing an entry allows adding and removing URLs
+- Each attached URL stores its own attachment timestamp
+
+.*Reference:*
+FR-1.7
+
+.*Technical Tasks:*
+1. Define `EntryLink` type for URL metadata
+2. Add URL list input UI to `EntryForm`
+3. Reuse or extend URL validation utilities
+4. Implement add/remove URL interactions
+5. Generate metadata (`id`, attachment timestamp) for each URL
+6. Add tests for valid, invalid, add, and remove flows
+
+.*Estimated Effort:*
+5 hours
+
+'''
+
+=== Story 2.9: Persist Citation Date and URLs
+*As a* user +
+*I want to* have citation dates and attached URLs saved with each entry +
+*So that* this metadata is available across sessions and later edits
+
+.*Acceptance Criteria:*
+- IndexedDB entry records include `citationDate` and attached URLs
+- Existing add/update entry flows persist the new fields
+- Existing entry loading returns citation date and URLs correctly
+- Schema migration or backward-compatible defaults handle older entries
+- Older entries without the new fields remain readable
+
+.*Reference:*
+FR-1.7, FR-1.8
+
+.*Technical Tasks:*
+1. Extend IndexedDB `entries` schema with backward-compatible handling
+2. Update `createEntry` defaults
+3. Update `useEntries` serialization/deserialization
+4. Add fallback logic for legacy entries missing the new fields
+5. Add tests for persistence and backward compatibility
+
+.*Estimated Effort:*
+5 hours
+
+'''
 
 == Epic 3: UI Foundation and Responsive Design
 
@@ -330,7 +412,7 @@ FR-5.1
 .*Estimated Effort:*
 5 hours
 
----
+'''
 
 === Story 3.2: Dark Mode Support
 *As a* user +
@@ -357,7 +439,7 @@ FR-5.1
 .*Estimated Effort:*
 4 hours
 
----
+'''
 
 === Story 3.3: Keyboard Navigation
 *As a* user +
@@ -385,7 +467,7 @@ FR-5.1 (WCAG 2.1 AA)
 .*Estimated Effort:*
 3 hours
 
----
+'''
 
 == Epic 4: Media Features
 
@@ -416,7 +498,7 @@ FR-1.3
 .*Estimated Effort:*
 6 hours
 
----
+'''
 
 === Story 4.2: Image Deletion
 *As a* user +
@@ -441,7 +523,7 @@ FR-1.3
 .*Estimated Effort:*
 2 hours
 
----
+'''
 
 === Story 4.4: Image Management in Edit Mode – Add Images
 *As a* user +
@@ -469,7 +551,7 @@ FR-1.3
 .*Estimated Effort:*
 4 hours
 
----
+'''
 
 === Story 4.5: Image Management in Edit Mode – Delete Images
 *As a* user +
@@ -495,7 +577,7 @@ FR-1.3
 .*Estimated Effort:*
 3 hours
 
----
+'''
 
 === Story 4.6: Image Management in Edit Mode – Reorder Images
 *As a* user +
@@ -519,7 +601,7 @@ FR-1.3
 .*Estimated Effort:*
 3 hours
 
----
+'''
 
 === Story 4.7: Image Management in Edit Mode – Replace Image
 *As a* user +
@@ -547,7 +629,7 @@ FR-1.3
 .*Estimated Effort:*
 3 hours
 
----
+'''
 
 === Story 4.3: Audio Recording
 *As a* user +
@@ -578,7 +660,7 @@ FR-1.4
 .*Estimated Effort:*
 8 hours
 
----
+'''
 
 == Epic 5: Author and Label Management
 
@@ -607,7 +689,7 @@ FR-2.1, FR-2.2
 .*Estimated Effort:*
 5 hours
 
----
+'''
 
 === Story 5.2: Label Autocomplete
 *As a* user +
@@ -633,7 +715,7 @@ FR-3.2, FR-3.3
 .*Estimated Effort:*
 5 hours
 
----
+'''
 
 == Epic 6: Search and Folders
 
@@ -662,7 +744,7 @@ FR-4.1
 .*Estimated Effort:*
 6 hours
 
----
+'''
 
 === Story 6.2: Smart Folder Creation
 *As a* user +
@@ -690,7 +772,7 @@ FR-4.2, FR-4.3
 .*Estimated Effort:*
 10 hours
 
----
+'''
 
 == Epic 7: PWA and Offline
 
@@ -719,7 +801,7 @@ NFR-6
 .*Estimated Effort:*
 6 hours
 
----
+'''
 
 === Story 7.2: Data Export
 *As a* user +
@@ -746,7 +828,7 @@ NFR-5
 .*Estimated Effort:*
 5 hours
 
----
+'''
 
 === Story 7.3: Data Import
 *As a* user +
@@ -773,7 +855,32 @@ NFR-5
 .*Estimated Effort:*
 5 hours
 
----
+'''
+
+=== Story 7.4: Export and Import Preserve URL and Citation Metadata
+*As a* user +
+*I want to* keep citation dates and attached URLs when exporting and importing data +
+*So that* backups fully preserve the meaning and provenance of my entries
+
+.*Acceptance Criteria:*
+- Exported entry data includes `citationDate` and attached URL metadata
+- Imported data restores `citationDate` and attached URL metadata correctly
+- Per-URL attachment dates are preserved through export/import
+- Import validation rejects malformed URL metadata structures
+
+.*Reference:*
+FR-1.7, FR-1.8, NFR-5
+
+.*Technical Tasks:*
+1. Extend export schema for enriched `Entry` records
+2. Update import validation rules
+3. Restore URL metadata and citation dates during import
+4. Add regression tests for round-trip export/import
+
+.*Estimated Effort:*
+3 hours
+
+'''
 
 == Epic 8: UI Cleanup
 
@@ -801,7 +908,7 @@ FR-1.2
 .*Estimated Effort:*
 3 hours
 
----
+'''
 
 === Story 8.2: MiniMap as Hover Popup
 *As a* user +
@@ -829,7 +936,7 @@ FR-1.2
 .*Estimated Effort:*
 4 hours
 
----
+'''
 
 === Story 8.3: Click Location to Open Map Viewer
 *As a* user +
@@ -855,7 +962,7 @@ FR-1.2
 .*Estimated Effort:*
 2 hours
 
----
+'''
 
 === Story 8.4: Keyboard, Mouse and Touch Selection for Autocomplete Lists
 *As a* user +
@@ -893,7 +1000,61 @@ FR-2.1, FR-2.2
 .*Estimated Effort:*
 6 hours
 
----
+'''
+
+=== Story 8.5: URL Dropdown with Favicons on Entry Cards
+*As a* user +
+*I want to* access attached URLs from a compact icon on the entry card +
+*So that* I can open source links without cluttering the quote text
+
+.*Acceptance Criteria:*
+- Entry cards with attached URLs show a dedicated link icon in the top-right area of the text block
+- Activating the icon opens a dropdown or popover with all attached URLs
+- Each URL row shows the resolved favicon when available
+- A default favicon is shown when favicon loading fails
+- Selecting a URL opens it in the browser
+- The dropdown or popover is accessible by mouse, keyboard, and touch
+
+.*Reference:*
+FR-5.6
+
+.*Technical Tasks:*
+1. Add link icon button to `EntryCard`
+2. Create URL dropdown/popover component
+3. Resolve favicon from URL origin (`/favicon.ico`)
+4. Add fallback favicon asset and loading failure handling
+5. Open selected URL with safe browser navigation (`noopener`, `noreferrer`)
+6. Add accessibility semantics and tests
+
+.*Estimated Effort:*
+5 hours
+
+'''
+
+=== Story 8.6: Citation Date Display in Entry Lists and Cards
+*As a* user +
+*I want to* see the citation date instead of only the entry creation date +
+*So that* the UI reflects when the quote belongs historically
+
+.*Acceptance Criteria:*
+- Entry cards display `citationDate` where the quote date is shown
+- Search and folder result cards display `citationDate` consistently
+- Legacy entries without an explicit citation date fall back to their creation date
+- Existing compact author/date line formatting remains intact
+
+.*Reference:*
+FR-1.8
+
+.*Technical Tasks:*
+1. Update entry date formatting helpers to prefer `citationDate`
+2. Update `EntryCard` and related list views
+3. Add fallback behavior for legacy entries
+4. Add tests for display and fallback behavior
+
+.*Estimated Effort:*
+3 hours
+
+'''
 
 == Implementation Phases
 
@@ -909,7 +1070,7 @@ Core data layer and basic entry management
 .*Deliverable:*
 Can create and save basic entries with text and location
 
----
+'''
 
 === Phase 2: Media and Authors (Weeks 3-4)
 .*Goal:*
@@ -924,7 +1085,7 @@ Complete entry creation with media and authors
 .*Deliverable:*
 Full-featured entry creation with images, audio, authors, labels
 
----
+'''
 
 === Phase 3: Search and Organization (Weeks 5-6)
 .*Goal:*
@@ -936,7 +1097,7 @@ Search and smart folders
 .*Deliverable:*
 Working search and smart folder system
 
----
+'''
 
 === Phase 4: PWA and Polish (Week 7)
 .*Goal:*
@@ -949,7 +1110,7 @@ Offline capability and data portability
 .*Deliverable:*
 Production-ready PWA with offline support and export/import
 
----
+'''
 
 == Definition of Done
 
@@ -966,7 +1127,7 @@ A story is considered "Done" when:
 9. Code reviewed
 10. Merged to main branch
 
----
+'''
 
 == Technical Debt Tracking
 
@@ -980,7 +1141,7 @@ A story is considered "Done" when:
 
 These will be prioritized based on user feedback after v1.0 launch.
 
----
+'''
 
 *Total Estimated Effort:* ~120 hours (7 weeks part-time)
 *Target Completion:* 7 weeks from start

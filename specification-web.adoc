@@ -67,7 +67,7 @@ Single-page web application (SPA) for collecting and managing sayings, citations
 
 - Plus button visible and accessible on home screen
 - Clicking plus button opens entry creation form (modal or route)
-- Form includes all entry fields: text, location, images, audio, author, labels
+- Form includes all entry fields: text, citation date, location, images, audio, author, labels, URLs
 - Text field is required; all other fields optional
 - Location auto-requested on form open (if permission previously granted)
 - User can save entry or cancel without saving
@@ -86,6 +86,31 @@ Single-page web application (SPA) for collecting and managing sayings, citations
 - Deletion removes associated images and audio blobs
 - No undo after confirmation
 - Optional: Swipe gesture on touch devices reveals delete action
+
+==== FR-1.7: URL Attachment
+*Requirement:* The system shall allow users to attach one or more URLs to each entry and store them as part of the entry data.
+
+.*Acceptance Criteria:*
+
+- User can add multiple URLs to an entry during creation and editing
+- URL fields are optional
+- Each entered URL is validated as a syntactically valid URL before saving
+- Attached URLs are stored with the entry in IndexedDB
+- User can remove individual URLs before saving or while editing an existing entry
+- Export and import preserve attached URLs together with their entries
+- The date associated with each attached URL is preserved and displayed in the user interface
+
+==== FR-1.8: Citation Date
+*Requirement:* The system shall allow users to set the date of the quote/citation independently from the creation timestamp of the entry.
+
+.*Acceptance Criteria:*
+
+- Each entry stores a citation date independently from `createdAt` and `updatedAt`
+- Citation date defaults to the entry creation date when a new entry is created
+- User can change the citation date during entry creation
+- User can edit the citation date later without changing the entry creation timestamp
+- If no explicit citation date is set by the user, the stored citation date remains equal to the creation date
+- The citation date is used for display where the quote/citation date is shown in the UI
 
 === FR-2: Author Management
 
@@ -265,6 +290,20 @@ Single-page web application (SPA) for collecting and managing sayings, citations
 - Empty folder displays "No matching entries" message
 - Empty search results show "No matches found" with search term
 - Empty author list shows "No authors yet" message
+
+==== FR-5.6: URL Display on Entry Cards
+*Requirement:* The system shall display URLs attached to an entry via a compact drop-down list behind a dedicated icon in the top-right area of the entry text block, so that the text display is not cluttered by visible URLs.
+
+.*Acceptance Criteria:*
+
+- If an entry has attached URLs, a dedicated link/icon button is shown in the top-right area of the entry text block
+- If an entry has no attached URLs, the link/icon button is not shown
+- Activating the icon by mouse click, keyboard, or touch opens a drop-down list of the attached URLs
+- The drop-down list shows all URLs attached to the entry
+- Each URL in the list shows its corresponding `favicon.ico` where available
+- If no favicon can be resolved for a URL, a default favicon is shown instead
+- The URL list presentation avoids cluttering the visible quote/citation text area
+- Selecting a URL in the list opens the selected URL in the browser
 
 == Non-Functional Requirements
 

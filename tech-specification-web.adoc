@@ -21,7 +21,6 @@ This document defines the technical architecture, tools, frameworks, and depende
 - *MediaRecorder API:* Audio recording
 - *MediaDevices API:* Camera access
 - *File API:* Image upload
-- *Notification API:* Optional notifications (future)
 
 == Project Structure
 
@@ -136,6 +135,12 @@ User Interaction → Component → Hook → Service → IndexedDB
 
 [source,typescript]
 ----
+interface EntryLink {
+  id: string;                    // UUID v4
+  url: string;                   // Absolute URL
+  addedAt: number;               // Unix timestamp when the URL was attached
+}
+
 interface Entry {
   id: string;                    // UUID v4
   text: string;                  // 1-10,000 chars
@@ -145,13 +150,15 @@ interface Entry {
   labelIds: string[];            // FK array to labels
   imageIds: string[];            // FK array to images
   audioId?: string;              // FK to audio
+  citationDate: number;          // Quote/citation date
+  links: EntryLink[];            // Attached URLs with per-link metadata
   addressShort?: string;         // Reverse-geocoded short address (city)
   addressFull?: string;          // Reverse-geocoded full address
   createdAt: number;             // Unix timestamp
   updatedAt: number;             // Unix timestamp
 }
 
-// Indexes: createdAt, latitude, longitude, text (fulltext)
+// Indexes: createdAt, updatedAt, latitude, longitude, text (fulltext)
 ----
 
 ==== authors
@@ -267,6 +274,8 @@ class DBService {
 }
 ----
 
+The `entries` object store keeps URLs and citation dates embedded on the `Entry` record. No dedicated object store is required for URLs because they are always owned by a single entry and are loaded together with the entry payload.
+
 === Geolocation Service
 
 [source,typescript]
@@ -301,6 +310,29 @@ class MediaService {
 }
 ----
 
+=== URL Attachment and Favicon Handling
+
+Attached URLs are managed as embedded `EntryLink` objects on the `Entry` record.
+
+==== Entry Form Behavior
+- Entry form provides add/remove controls for multiple URLs
+- Each URL is validated using the browser `URL` constructor before save
+- Each newly added URL receives a generated `id` and `addedAt` timestamp
+- `citationDate` is initialized to the entry creation date and may be edited independently
+
+==== Favicon Resolution Strategy
+- Favicon is derived at render time from the URL origin, typically `<origin>/favicon.ico`
+- Favicon URLs are not persisted in IndexedDB because they are derivable from the attached URL
+- If favicon loading fails, the UI falls back to a bundled default favicon asset
+- Favicon loading failure must not block rendering of the attached URL list
+
+==== Entry Card URL UI
+- Entry cards render a dedicated link icon in the top-right area of the text block when `links.length > 0`
+- Activating the icon opens a compact dropdown or popover containing all attached URLs
+- Each row shows favicon, URL label/text, and the stored per-link attachment date
+- The URL list must be keyboard accessible and support mouse and touch interaction
+- Selecting a URL opens it in a new browser tab/window using standard browser navigation
+
 === Image Editing in Entry Edit Mode
 When editing an existing entry, the user must be able to manage attached images with the following operations:
 
@@ -332,13 +364,15 @@ When editing an existing entry, the user must be able to manage attached images 
 [source,typescript]
 ----
 // Extended updateEntry signature
-import number = CSS.number; async updateEntry(
+async updateEntry(
   id: string,
   text: string,
+  citationDate: number,
   authorId?: string,
   labelIds?: string[],
   latitude?: number,
   longitude?: number,
+  links?: EntryLink[],
   imagesToAdd?: SelectedImage[],
   imagesToDelete?: string[],
   imageIdsOrder?: string[]
@@ -348,7 +382,9 @@ import number = CSS.number; async updateEntry(
 The EntryForm component shows an `ImageEditor` section when `initialEntry` has images or when the user adds new images during editing. The `ImageEditor` combines the existing `ImageGrid` (for display) with edit controls (delete, reorder, replace, add).
 
 === Export/Import Service
-```typescript
+
+[source,typescript]
+----
 interface ExportData {
   version: number;
   exportedAt: number;
@@ -367,7 +403,9 @@ class ExportService {
   async importData(file: File): Promise<void>;
   async validateImport(data: any): boolean;
 }
-```
+----
+
+Because URLs and citation dates are stored directly on `Entry`, export/import preserves them automatically as part of the serialized `entries` array. Derived favicon URLs are not exported.
 
 == Performance Optimization
 
@@ -391,7 +429,9 @@ class ExportService {
 - Target: <500KB initial bundle (gzipped)
 
 === Caching Strategy (Service Worker)
-```javascript
+
+[source,javascript]
+----
 // Cache-first for static assets
 self.addEventListener('fetch', (event) => {
   if (isStaticAsset(event.request.url)) {
@@ -400,7 +440,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(networkFirst(event.request));
   }
 });
-```
+----
 
 == Security and Privacy
 
@@ -424,7 +464,9 @@ self.addEventListener('fetch', (event) => {
 == Offline Capability (PWA)
 
 === Service Worker Strategy
-```javascript
+
+[source,javascript]
+----
 // Cache static assets on install
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -442,10 +484,12 @@ self.addEventListener('install', (event) => {
 
 // Network first, cache fallback for data
 // Cache first for static assets
-```
+----
 
 === PWA Manifest
-```json
+
+[source,json]
+----
 {
   "name": "Zitate - Quote Collection",
   "short_name": "Zitate",
@@ -466,7 +510,7 @@ self.addEventListener('install', (event) => {
     }
   ]
 }
-```
+----
 
 == Responsive Design
 
@@ -482,7 +526,9 @@ self.addEventListener('install', (event) => {
 - Touch targets min 44px on mobile
 
 === CSS Architecture
-```css
+
+[source,css]
+----
 /* CSS Custom Properties for theming */
 :root {
   --color-primary: #3b82f6;
@@ -498,7 +544,7 @@ self.addEventListener('install', (event) => {
     --color-text: #f9fafb;
   }
 }
-```
+----
 
 == Accessibility (WCAG 2.1 AA)
 
@@ -541,7 +587,9 @@ self.addEventListener('install', (event) => {
 == Build and Deployment
 
 === Build Configuration (Vite)
-```typescript
+
+[source,typescript]
+----
 // vite.config.ts
 export default defineConfig({
   build: {
@@ -568,7 +616,7 @@ export default defineConfig({
     })
   ]
 });
-```
+----
 
 === Deployment Options
 - Docker container (multi-stage build: Node.js build + nginx serve)
@@ -594,7 +642,9 @@ export default defineConfig({
 - ES7+ React/Redux/React-Native snippets
 
 === Scripts
-```json
+
+[source,json]
+----
 {
   "scripts": {
     "dev": "vite",
@@ -606,7 +656,7 @@ export default defineConfig({
     "test:e2e": "playwright test"
   }
 }
-```
+----
 
 == Testing Strategy
 
@@ -628,10 +678,12 @@ export default defineConfig({
 - Bundle size limits
 - IndexedDB query performance
 
-## Dependencies
+== Dependencies
 
 === Production Dependencies
-```json
+
+[source,json]
+----
 {
   "dependencies": {
     "react": "^18.3.0",
@@ -641,10 +693,12 @@ export default defineConfig({
     "react-leaflet": "^5.0.0"
   }
 }
-```
+----
 
 === Development Dependencies
-```json
+
+[source,json]
+----
 {
   "devDependencies": {
     "@types/react": "^18.3.0",
@@ -659,7 +713,7 @@ export default defineConfig({
     "fake-indexeddb": "^6.0.0"
   }
 }
-```
+----
 
 == Performance Targets
 
@@ -679,7 +733,7 @@ export default defineConfig({
 - Storage: ~10MB per 100 entries (excluding media)
 - IndexedDB: Monitor quota, warn at 80%
 
-## Localization (Future)
+== Localization (Future)
 
 *Not in v1.0 scope*, but architecture should support:
 - i18n library (react-i18n, vue-i18n)
@@ -712,4 +766,8 @@ export default defineConfig({
 | 1.0.0
 | TBD
 | Initial web release - all Phase 1-6 features
+
+| 1.1.0
+| 2026-03-28
+| Improved Release with URL and entry date
 |===
