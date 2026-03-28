@@ -58,11 +58,11 @@ describe('AuthorSelect', () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'Al');
 
     await waitFor(() => {
@@ -82,11 +82,11 @@ describe('AuthorSelect', () => {
     const onSelect = vi.fn();
     render(<AuthorSelect onSelect={onSelect} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'Al');
 
     await waitFor(() => {
@@ -103,11 +103,11 @@ describe('AuthorSelect', () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'Nikola');
 
     await waitFor(() => {
@@ -121,11 +121,11 @@ describe('AuthorSelect', () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'A');
 
     // Wait for suggestions to appear
@@ -161,11 +161,11 @@ describe('AuthorSelect', () => {
     const onSelect = vi.fn();
     render(<AuthorSelect onSelect={onSelect} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'Al');
 
     await waitFor(() => {
@@ -183,11 +183,11 @@ describe('AuthorSelect', () => {
     const onSelect = vi.fn();
     render(<AuthorSelect onSelect={onSelect} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'Al');
 
     await waitFor(() => {
@@ -204,11 +204,11 @@ describe('AuthorSelect', () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'Al');
 
     await waitFor(() => {
@@ -224,11 +224,11 @@ describe('AuthorSelect', () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'Bert');
 
     await waitFor(() => {
@@ -269,11 +269,11 @@ describe('AuthorSelect', () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     expect(input).toHaveAttribute('aria-expanded', 'false');
     expect(input).toHaveAttribute('aria-autocomplete', 'list');
 
@@ -288,11 +288,11 @@ describe('AuthorSelect', () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'A');
 
     await waitFor(() => {
@@ -314,11 +314,11 @@ describe('AuthorSelect', () => {
     const onSelect = vi.fn();
     render(<AuthorSelect onSelect={onSelect} />);
 
+    const input = screen.getByRole('combobox');
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
+      expect(input).not.toBeDisabled();
     });
 
-    const input = screen.getByRole('combobox');
     await user.type(input, 'Nikola Tesla');
     await user.keyboard('{Enter}');
 

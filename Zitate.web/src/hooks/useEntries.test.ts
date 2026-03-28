@@ -102,6 +102,22 @@ describe('useEntries', () => {
     expect(result.current.entries[0].longitude).toBe(13.405);
   });
 
+  it('should add a new entry with attached links', async () => {
+    const { result } = renderHook(() => useEntries());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    const links = [{ id: 'link-1', url: 'https://example.com', addedAt: Date.now() }];
+
+    await act(async () => {
+      await result.current.addEntry('Entry with link', undefined, undefined, undefined, [], [], undefined, undefined, links);
+    });
+
+    expect(result.current.entries[0].links).toEqual(links);
+  });
+
   it('should delete an entry', async () => {
     const { result } = renderHook(() => useEntries());
 
@@ -231,6 +247,27 @@ describe('useEntries', () => {
       expect(updated.latitude).toBe(48.85);
       expect(updated.longitude).toBe(2.35);
       expect(updated.updatedAt).toBeGreaterThan(updated.createdAt);
+    });
+
+    it('should update attached links', async () => {
+      const { result } = renderHook(() => useEntries());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.addEntry('Original text');
+      });
+
+      const entryId = result.current.entries[0].id;
+      const links = [{ id: 'link-1', url: 'https://example.com/updated', addedAt: Date.now() }];
+
+      await act(async () => {
+        await result.current.updateEntry(entryId, 'Original text', undefined, [], undefined, undefined, [], [], undefined, new Map(), undefined, undefined, links);
+      });
+
+      expect(result.current.entries[0].links).toEqual(links);
     });
 
     it('should throw when updating non-existent entry', async () => {

@@ -1,6 +1,12 @@
 /**
  * Entry interface - represents a quote/citation with metadata
  */
+export interface EntryLink {
+  id: string;                    // UUID v4
+  url: string;                   // Absolute URL
+  addedAt: number;               // Unix timestamp (ms)
+}
+
 export interface Entry {
   id: string;                    // UUID v4
   text: string;                  // 1-10,000 characters
@@ -10,6 +16,7 @@ export interface Entry {
   addressFull?: string;          // Full geocoded address from Nominatim
   authorId?: string;             // Foreign key to Author
   labelIds: string[];            // Foreign keys to Labels
+  links?: EntryLink[];           // Attached URLs with metadata
   imageIds: string[];            // Foreign keys to Images
   audioId?: string;              // Foreign key to Audio
   createdAt: number;             // Unix timestamp (ms)
@@ -25,6 +32,7 @@ export function createEntry(text: string, latitude?: number, longitude?: number)
     latitude,
     longitude,
     labelIds: [],
+    links: [],
     imageIds: [],
   };
 }

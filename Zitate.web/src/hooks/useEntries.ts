@@ -7,12 +7,22 @@ import { dbService, STORES } from '../services/db.service';
 import { onStoreChange, emitStoreChange } from '../services/storeSync';
 import { compressImage } from '../services/image.service';
 import { locationService } from '../services/location.service';
-import type { Entry, ImageAttachment } from '../models';
+import type { Entry, EntryLink, ImageAttachment } from '../models';
 import type { SelectedImage } from '../components/image/ImageUpload';
 
 const ENTRY_STORE = STORES.ENTRIES;
 
 export function useEntries() {
+      const normalizeEntry = useCallback(
+        (entry: Entry): Entry => ({
+          ...entry,
+          labelIds: entry.labelIds ?? [],
+          links: entry.links ?? [],
+          imageIds: entry.imageIds ?? [],
+        }),
+        []
+      );
+
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,13 +36,13 @@ export function useEntries() {
 
     try {
       const allEntries = await dbService.getAllEntriesSorted<Entry>();
-      setEntries(allEntries);
+      setEntries(allEntries.map(normalizeEntry));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load entries');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [normalizeEntry]);
 
   /**
    * Save images to IndexedDB
@@ -149,7 +159,8 @@ export function useEntries() {
       labelIds: string[] = [],
       selectedImages: SelectedImage[] = [],
       addressShort?: string,
-      addressFull?: string
+      addressFull?: string,
+      links: EntryLink[] = []
     ): Promise<Entry> => {
       const now = Date.now();
       const entryId = uuidv4();
@@ -166,6 +177,7 @@ export function useEntries() {
         addressFull,
         authorId,
         labelIds,
+        links,
         imageIds,
         createdAt: now,
         updatedAt: now,
@@ -173,7 +185,7 @@ export function useEntries() {
 
       try {
         await dbService.add(STORES.ENTRIES, entry);
-        setEntries((prev) => [entry, ...prev]);
+        setEntries((prev) => [normalizeEntry(entry), ...prev]);
         emitStoreChange(ENTRY_STORE, loadEntries);
 
         // Background geocoding if address not already provided
@@ -188,7 +200,7 @@ export function useEntries() {
         );
       }
     },
-    [saveImages, loadEntries, geocodeAndPersist]
+    [saveImages, loadEntries, geocodeAndPersist, normalizeEntry]
   );
 
   /**
@@ -207,7 +219,8 @@ export function useEntries() {
       imageIdsOrder?: string[],
       imageReplacements: Map<string, SelectedImage> = new Map(),
       addressShort?: string,
-      addressFull?: string
+      addressFull?: string,
+      links?: EntryLink[]
     ): Promise<Entry> => {
       // Find the existing entry
       const existingEntry = entries.find((e) => e.id === id);
@@ -278,6 +291,7 @@ export function useEntries() {
         text,
         authorId,
         labelIds,
+        links: links ?? existingEntry.links ?? [],
         latitude,
         longitude,
         // If address explicitly provided (e.g. from LocationPicker), use it.
@@ -292,7 +306,7 @@ export function useEntries() {
       try {
         await dbService.update(STORES.ENTRIES, updatedEntry);
         setEntries((prev) =>
-          prev.map((entry) => (entry.id === id ? updatedEntry : entry))
+          prev.map((entry) => (entry.id === id ? normalizeEntry(updatedEntry) : entry))
         );
         emitStoreChange(ENTRY_STORE, loadEntries);
 
@@ -308,7 +322,7 @@ export function useEntries() {
         );
       }
     },
-    [entries, saveImages, loadEntries, geocodeAndPersist]
+    [entries, saveImages, loadEntries, geocodeAndPersist, normalizeEntry]
   );
 
   /**
