@@ -67,7 +67,7 @@ describe('EntryForm', () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(undefined);
     const fixedDate = new Date(2024, 5, 15);
-    vi.spyOn(global.Date, 'now').mockReturnValue(fixedDate.getTime());
+    vi.spyOn(globalThis.Date, 'now').mockReturnValue(fixedDate.getTime());
 
     render(<EntryForm onSave={onSave} onCancel={vi.fn()} />);
 
