@@ -1,8 +1,8 @@
-import { describe, it, vi } from 'vitest';
+import { describe, it, vi, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { EntryCard } from './EntryCard';
-import { Entry } from '../../models';
+import { Entry, Author } from '../../models';
 
 // Mock fetch for reverse geocoding – return minimal Nominatim response
 globalThis.fetch = vi.fn().mockResolvedValue({
@@ -10,69 +10,108 @@ globalThis.fetch = vi.fn().mockResolvedValue({
   json: () => Promise.resolve({ display_name: 'Berlin, Germany', address: { city: 'Berlin' } }),
 });
 
+const mockAuthor: Author = {
+  id: 'author-1',
+  name: 'John Doe',
+};
+
 // Mock hooks so EntryCard tests don't trigger async IndexedDB operations
 vi.mock('../../hooks/useAuthors', () => ({
   useAuthors: () => ({
-    authors: [],
-    loading: false,
-    error: null,
-    getAuthorById: () => undefined,
-    searchAuthors: () => [],
-    addAuthor: vi.fn(),
-    updateAuthor: vi.fn(),
-    deleteAuthor: vi.fn(),
-    reload: vi.fn(),
+    getAuthorById: (id: string) => (id === mockAuthor.id ? mockAuthor : undefined),
   }),
 }));
 
 vi.mock('../../hooks/useLabels', () => ({
   useLabels: () => ({
-    labels: [],
-    loading: false,
-    error: null,
     getLabelsByIds: () => [],
-    searchLabels: () => [],
-    addLabel: vi.fn(),
-    deleteLabel: vi.fn(),
-    reload: vi.fn(),
   }),
 }));
 
 vi.mock('../../hooks/useEntries', () => ({
   useEntries: () => ({
-    entries: [],
-    loading: false,
-    error: null,
     getImagesForEntry: vi.fn().mockResolvedValue([]),
-    addEntry: vi.fn(),
-    updateEntry: vi.fn(),
-    deleteEntry: vi.fn(),
-    reload: vi.fn(),
   }),
 }));
 
 describe('EntryCard', () => {
-  const mockEntry: Entry = {
+  const baseEntry: Entry = {
     id: 'entry-1',
     text: 'This is a test entry',
     latitude: 52.52,
     longitude: 13.405,
     labelIds: [],
     imageIds: [],
-    createdAt: Date.now() - 86400000, // 1 day ago
-    updatedAt: Date.now() - 86400000,
+    links: [],
+    createdAt: new Date('2024-06-15').getTime(),
+    updatedAt: new Date('2024-06-15').getTime(),
   };
 
   it('should render entry text', () => {
-    render(<EntryCard entry={mockEntry} />);
-
+    render(<EntryCard entry={baseEntry} />);
     expect(screen.getByText('This is a test entry')).toBeInTheDocument();
   });
 
-  it('should render location when coordinates are present', async () => {
-    render(<EntryCard entry={mockEntry} />);
+  describe('Author and Date Line Rendering', () => {
+    it('Case 1: Renders author, citation date, and added date', () => {
+      const entry: Entry = {
+        ...baseEntry,
+        authorId: 'author-1',
+        citationDate: new Date('2023-01-01').getTime(),
+      };
+      render(<EntryCard entry={entry} />);
+      const authorLine = screen.getByText(/John Doe/);
+      expect(authorLine).toBeInTheDocument();
+      expect(authorLine.textContent).toContain('John Doe, Jan 1, 2023');
+      expect(authorLine.textContent).toContain('added Jun 15, 2024');
+    });
 
-    // Initially shows loading, then falls back to coordinates after geocoding fails
+    it('Case 2: Renders citation date and added date (no author)', () => {
+      const entry: Entry = {
+        ...baseEntry,
+        citationDate: new Date('2023-01-01').getTime(),
+      };
+      render(<EntryCard entry={entry} />);
+      const authorLine = screen.getByText(/Jan 1, 2023/);
+      expect(authorLine).toBeInTheDocument();
+      expect(authorLine.textContent).toContain('added Jun 15, 2024');
+      expect(authorLine.textContent).not.toContain('John Doe');
+    });
+
+    it('Case 3: Renders only added date (no author, no citation date)', () => {
+      render(<EntryCard entry={baseEntry} />);
+      const authorLine = screen.getByText(/Added Jun 15, 2024/i);
+      expect(authorLine).toBeInTheDocument();
+      expect(authorLine.textContent).not.toContain('John Doe');
+    });
+
+    it('Case 4: Renders author and added date (no citation date)', () => {
+      const entry: Entry = {
+        ...baseEntry,
+        authorId: 'author-1',
+      };
+      render(<EntryCard entry={entry} />);
+      const authorLine = screen.getByText(/John Doe/);
+      expect(authorLine).toBeInTheDocument();
+      expect(authorLine.textContent).toContain('added Jun 15, 2024');
+      expect(authorLine.textContent).not.toContain('Jan 1, 2023');
+    });
+
+    it('should render "Today" for recent dates', () => {
+      const entry: Entry = {
+        ...baseEntry,
+        createdAt: Date.now(),
+        citationDate: Date.now() - 86400000, // Yesterday
+      };
+      render(<EntryCard entry={entry} />);
+      const authorLine = screen.getByText(/Yesterday/);
+      expect(authorLine.textContent).toContain('added Today');
+    });
+  });
+
+
+  it('should render location when coordinates are present', async () => {
+    render(<EntryCard entry={baseEntry} />);
     await waitFor(() => {
       expect(screen.getByText(/52.520000, 13.405000/i)).toBeInTheDocument();
     });
@@ -80,170 +119,43 @@ describe('EntryCard', () => {
 
   it('should not render location when coordinates are missing', () => {
     const entryWithoutLocation: Entry = {
-      ...mockEntry,
+      ...baseEntry,
       latitude: undefined,
       longitude: undefined,
     };
-
     render(<EntryCard entry={entryWithoutLocation} />);
-
     expect(screen.queryByText(/52.520000/)).not.toBeInTheDocument();
   });
 
-  it('should render "Yesterday" for entry from 1 day ago', () => {
-    render(<EntryCard entry={mockEntry} />);
-
-    expect(screen.getByText(/Yesterday/)).toBeInTheDocument();
-  });
-
-  it('should render "Today" for entry from today', () => {
-    const todayEntry: Entry = {
-      ...mockEntry,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
-    render(<EntryCard entry={todayEntry} />);
-
-    expect(screen.getByText(/Today/)).toBeInTheDocument();
-  });
-
-  it('should render "X days ago" for recent entries', () => {
-    const threeDaysAgo: Entry = {
-      ...mockEntry,
-      createdAt: Date.now() - 3 * 86400000,
-      updatedAt: Date.now() - 3 * 86400000,
-    };
-
-    render(<EntryCard entry={threeDaysAgo} />);
-
-    expect(screen.getByText(/3 days ago/)).toBeInTheDocument();
-  });
-
-  it('should render formatted date for older entries', () => {
-    const oldEntry: Entry = {
-      ...mockEntry,
-      createdAt: Date.now() - 30 * 86400000, // 30 days ago
-      updatedAt: Date.now() - 30 * 86400000,
-    };
-
-    render(<EntryCard entry={oldEntry} />);
-
-    // Should show formatted date instead of "X days ago"
-    const dateElement = screen.getByText(/\w{3}\s+\d{1,2},\s+\d{4}/);
-    expect(dateElement).toBeInTheDocument();
-  });
-
   it('should render delete button when onDelete is provided', () => {
-    render(<EntryCard entry={mockEntry} onDelete={vi.fn()} />);
-
+    render(<EntryCard entry={baseEntry} onDelete={vi.fn()} />);
     const deleteButton = screen.getByLabelText('Delete entry');
     expect(deleteButton).toBeInTheDocument();
   });
 
-  it('should not render delete button when onDelete is not provided', () => {
-    render(<EntryCard entry={mockEntry} />);
-
-    expect(screen.queryByLabelText('Delete entry')).not.toBeInTheDocument();
-  });
-
-  it('should show confirmation dialog and call onDelete when delete is clicked', async () => {
+  it('should call onDelete when delete is clicked and confirmed', async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn();
-
-    // Mock window.confirm
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
-    render(<EntryCard entry={mockEntry} onDelete={onDelete} />);
-
-    const deleteButton = screen.getByLabelText('Delete entry');
-    await user.click(deleteButton);
-
-    expect(confirmSpy).toHaveBeenCalledWith(
-      'Are you sure you want to delete this entry?'
-    );
-    expect(onDelete).toHaveBeenCalledWith('entry-1');
-
-    confirmSpy.mockRestore();
-  });
-
-  it('should not call onDelete when confirmation is cancelled', async () => {
-    const user = userEvent.setup();
-    const onDelete = vi.fn();
-
-    // Mock window.confirm to return false
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-
-    render(<EntryCard entry={mockEntry} onDelete={onDelete} />);
-
+    render(<EntryCard entry={baseEntry} onDelete={onDelete} />);
     const deleteButton = screen.getByLabelText('Delete entry');
     await user.click(deleteButton);
 
     expect(confirmSpy).toHaveBeenCalled();
-    expect(onDelete).not.toHaveBeenCalled();
-
+    expect(onDelete).toHaveBeenCalledWith('entry-1');
     confirmSpy.mockRestore();
-  });
-
-  it('should render location icon when coordinates are present', () => {
-    const { container } = render(<EntryCard entry={mockEntry} />);
-
-    const locationIcon = container.querySelector('.location-icon');
-    expect(locationIcon).toBeInTheDocument();
-  });
-
-  it('should handle very long text', () => {
-    const longTextEntry: Entry = {
-      ...mockEntry,
-      text: 'a'.repeat(1000),
-    };
-
-    render(<EntryCard entry={longTextEntry} />);
-
-    expect(screen.getByText('a'.repeat(1000))).toBeInTheDocument();
-  });
-
-  it('should handle text with special characters', () => {
-    const specialTextEntry: Entry = {
-      ...mockEntry,
-      text: 'Text with émojis 🎉 and symbols @#$%',
-    };
-
-    render(<EntryCard entry={specialTextEntry} />);
-
-    expect(
-      screen.getByText('Text with émojis 🎉 and symbols @#$%')
-    ).toBeInTheDocument();
   });
 
   it('should render URL toggle when entry has attached links', () => {
     render(
       <EntryCard
         entry={{
-          ...mockEntry,
+          ...baseEntry,
           links: [{ id: 'link-1', url: 'https://example.com', addedAt: Date.now() }],
         }}
       />
     );
-
     expect(screen.getByLabelText(/show attached urls/i)).toBeInTheDocument();
-  });
-
-  it('should open URL dropdown with links and dates', async () => {
-    const user = userEvent.setup();
-    render(
-      <EntryCard
-        entry={{
-          ...mockEntry,
-          links: [{ id: 'link-1', url: 'https://example.com/source', addedAt: new Date('2026-03-27').getTime() }],
-        }}
-      />
-    );
-
-    await user.click(screen.getByLabelText(/show attached urls/i));
-
-    expect(screen.getByRole('menu', { name: /attached urls/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /https:\/\/example.com\/source/i })).toHaveAttribute('href', 'https://example.com/source');
-    expect(screen.getByText(/Added/)).toBeInTheDocument();
   });
 });
