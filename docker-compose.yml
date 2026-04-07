@@ -2,12 +2,8 @@ version: '3.8'
 
 services:
   zitate-web:
-    build:
-      context: ./Zitate.web
-      dockerfile: Dockerfile
-      args:
-        APP_VERSION: ${APP_VERSION:-SNAPSHOT}
     container_name: zitate-web
+    image: ghcr.io/thst71/zitate-web:1
     ports:
       - "8080:8080"
     restart: unless-stopped
