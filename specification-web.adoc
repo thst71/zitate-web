@@ -305,6 +305,64 @@ Single-page web application (SPA) for collecting and managing sayings, citations
 - The URL list presentation avoids cluttering the visible quote/citation text area
 - Selecting a URL in the list opens the selected URL in the browser
 
+=== FR-6: Server Synchronization
+
+==== FR-6.1: User Authentication
+*Requirement:* The system shall allow users to create an account and authenticate so that their data can be stored on a server and accessed from multiple devices.
+
+.*Acceptance Criteria:*
+
+- User can register with email and password
+- User can log in and log out
+- Authentication tokens are stored securely in the browser
+- The app remains fully functional without logging in (local-only mode)
+- Logging in enables background synchronization
+
+==== FR-6.2: Background Sync
+*Requirement:* The system shall synchronize all local data changes to a server-side database in the background when the user is authenticated and a network connection is available.
+
+.*Acceptance Criteria:*
+
+- Local writes happen first (offline-first); sync to server follows asynchronously
+- Sync starts automatically when the app detects a network connection
+- Sync resumes automatically after network interruption
+- All object stores (entries, authors, labels, folders, images, audio) are synchronized
+- Binary attachments (images, audio) are included in synchronization
+- A sync status indicator is visible in the UI (idle, syncing, error, offline)
+- Sync does not block or delay local user interactions
+
+==== FR-6.3: Multi-Device Access
+*Requirement:* The system shall allow authenticated users to access their complete data set from any device with a modern browser.
+
+.*Acceptance Criteria:*
+
+- Data created on device A appears on device B after sync completes on both
+- Deleted records are propagated across devices
+- Media attachments (images, audio) are available on all devices after sync
+- Initial sync on a new device downloads the complete data set
+
+==== FR-6.4: Conflict Resolution by Duplication
+*Requirement:* When the same record is modified on two devices before synchronization occurs, the system shall preserve both versions as separate entries for manual conflict resolution by the user.
+
+.*Acceptance Criteria:*
+
+- Conflicting edits to the same entry produce two entries after sync
+- Both conflicting versions are complete and independently editable
+- Conflicting entries are visually marked in the UI so the user can identify them
+- The user can manually delete or merge conflicting entries using existing edit and delete functions
+- Non-conflicting changes sync without duplication
+- Conflicts on authors, labels, or folders follow the same duplication strategy
+
+==== FR-6.5: Sync Opt-In
+*Requirement:* Server synchronization shall be entirely optional. The application shall remain fully functional as a local-only application without any server communication if the user does not log in.
+
+.*Acceptance Criteria:*
+
+- App launches and operates identically for unauthenticated users as it does today
+- No server requests are made unless the user explicitly logs in
+- A user who was previously logged in can log out and continue using the app locally
+- Logging out does not delete local data
+
 == Non-Functional Requirements
 
 === NFR-1: Performance
@@ -355,7 +413,8 @@ Single-page web application (SPA) for collecting and managing sayings, citations
 - Camera/microphone permissions requested on first use with explanation
 - App functions with all permissions denied (features disabled gracefully)
 - Privacy policy accessible from settings/footer
-- All data stored locally (no server communication)
+- All data stored locally by default (no server communication unless user opts in to sync)
+- When sync is enabled, data is transmitted only to the user's own server-side database
 - No cookies, tracking, or analytics
 - Data export allows user to control their data
 
@@ -383,6 +442,18 @@ Single-page web application (SPA) for collecting and managing sayings, citations
 - Data operations work offline via IndexedDB
 - Updates check for new version when online
 
+=== NFR-7: Sync Performance
+*Requirement:* Background synchronization shall not degrade application responsiveness and shall complete within reasonable timeframes.
+
+.*Acceptance Criteria:*
+
+- Local writes complete in <100ms regardless of sync status
+- Initial full sync of 1,000 text entries completes in <30 seconds on a broadband connection
+- Incremental sync of a single entry completes in <2 seconds
+- Binary attachment sync does not block text-record sync
+- Sync retries use exponential backoff to avoid server overload
+- Failed sync operations are queued and retried without data loss
+
 == Future Enhancements (Post v1.0)
 
 === FE-1: Natural Language Query Processing
@@ -403,7 +474,7 @@ Single-page web application (SPA) for collecting and managing sayings, citations
 === FE-4: Cloud Sync
 *Description:* Optional cloud synchronization across devices using user's cloud storage (Google Drive, Dropbox, etc.)
 
-*Deferred Reason:* Local-only approach for v1.0; sync can be added if users request multi-device support.
+*Status:* Promoted to FR-6 (Server Synchronization) using PouchDB + CouchDB as self-hosted offline-first sync instead of third-party cloud storage.
 
 === FE-5: Collaborative Features
 *Description:* Share quotes with other users, public/private collections, social features.
@@ -413,12 +484,13 @@ Single-page web application (SPA) for collecting and managing sayings, citations
 == Constraints
 
 - Web platform only (desktop and mobile browsers)
-- Local-only architecture (no server backend required)
+- Local-first architecture (server backend optional, only required for sync)
 - Browser storage limits apply (typically 50MB-1GB depending on browser)
 - Requires modern browser with IndexedDB, ES6+, CSS Grid support
 - Media features require browser API support (MediaRecorder, Geolocation, MediaDevices)
 - LLM features excluded from v1.0 (deferred to future enhancements)
 - Geocoding requires external service (optional feature)
+- Server sync requires a CouchDB instance (self-hosted or managed)
 
 == Assumptions
 
@@ -427,6 +499,6 @@ Single-page web application (SPA) for collecting and managing sayings, citations
 - Users manage browser storage quota
 - IndexedDB available and not disabled
 - Modern JavaScript features supported (ES6+, Modules, async/await)
-- No requirement for cross-device sync in v1.0
-- Users understand data is stored locally (browser-specific, not cloud)
-- Users responsible for data backup via export functionality
+- Users understand data is stored locally by default (browser-specific, not cloud)
+- Users responsible for data backup via export functionality or server sync
+- Server sync requires user to provide or configure a CouchDB endpoint

@@ -13,9 +13,11 @@ This document defines the technical architecture, tools, frameworks, and depende
 - *UI Framework:* React 18
 - *Build Tool:* Vite 7
 - *Package Manager:* npm
+- *Local Database:* PouchDB (IndexedDB-backed, replaces raw `idb` wrapper)
+- *Remote Database:* CouchDB (self-hosted, per-user database isolation)
 
 === Core Browser APIs
-- *IndexedDB:* Local database and persistence
+- *IndexedDB:* Used internally by PouchDB for local persistence
 - *Service Worker:* Offline capability and PWA
 - *Geolocation API:* GPS coordinates
 - *MediaRecorder API:* Audio recording
@@ -76,7 +78,9 @@ zitate-web/
 │   │       ├── Footer.tsx
 │   │       └── HomeScreen.tsx
 │   ├── services/                  # Business logic
-│   │   ├── db.service.ts          # IndexedDB wrapper
+│   │   ├── db.service.ts          # PouchDB wrapper (replaces raw idb)
+│   │   ├── sync.service.ts        # CouchDB replication and conflict handling
+│   │   ├── auth.service.ts        # User authentication (register, login, logout)
 │   │   ├── location.service.ts    # Geolocation
 │   │   ├── media.service.ts       # Camera/Audio
 │   │   ├── search.service.ts      # Search/filter logic
@@ -109,27 +113,51 @@ zitate-web/
 
 === State Management
 - *Local State:* Component state (useState)
-- *Persistent State:* IndexedDB via custom hooks (useEntries, useAuthors, useLabels, useFolders)
-- *Cross-instance sync:* Custom event emitter (storeSync) to keep multiple hook instances in sync
-- *Derived State:* Computed values from IndexedDB queries (useCallback, useMemo)
+- *Persistent State:* PouchDB (IndexedDB-backed) via custom hooks (useEntries, useAuthors, useLabels, useFolders)
+- *Cross-instance sync:* PouchDB change feed (`db.changes({ live: true })`) replaces the custom storeSync event emitter
+- *Remote sync:* PouchDB bidirectional replication to CouchDB (live, retry)
+- *Derived State:* Computed values from PouchDB queries (useCallback, useMemo)
 
 === Data Flow
 
 [source]
 ----
-User Interaction → Component → Hook → Service → IndexedDB
-                    ↑                              ↓
-                    └────── State Update ←─────────┘
+User Interaction → Component → Hook → DBService → PouchDB (local)
+                    ↑                                 ↓    ↕
+                    └────── Change Feed ←────────────┘  CouchDB (remote)
 ----
 
-== IndexedDB Schema
+== PouchDB Document Model
 
 === Database Configuration
-- *Database Name:* `zitate-db`
-- *Current Version:* 1
-- *Migration Strategy:* Version-based upgrades
+- *Local Database:* PouchDB with IndexedDB adapter (browser default)
+- *Remote Database:* CouchDB, one database per authenticated user
+- *Replication:* Bidirectional, live, with retry
+- *Migration:* Existing `idb`-based IndexedDB data is migrated to PouchDB on first launch after upgrade
 
-=== Object Stores
+=== Design Documents and Indexes
+
+PouchDB uses CouchDB-style design documents for secondary indexes.
+
+[source,javascript]
+----
+// Design document for entries by creation date
+{
+  _id: '_design/entries',
+  views: {
+    by_createdAt: {
+      map: "function(doc) { if (doc.type === 'entry') emit(doc.createdAt); }"
+    },
+    by_authorId: {
+      map: "function(doc) { if (doc.type === 'entry' && doc.authorId) emit(doc.authorId); }"
+    }
+  }
+}
+----
+
+=== Document Types
+
+All records include a `type` field to distinguish document kinds in the single PouchDB database. The `_id` uses the pattern `<type>:<uuid>` for efficient range queries.
 
 ==== entries
 
@@ -257,24 +285,25 @@ interface FolderCriteria {
 
 == Browser APIs Integration
 
-=== IndexedDB Wrapper
+=== PouchDB Service Wrapper
 
 [source,typescript]
 ----
 class DBService {
-  private db: IDBDatabase;
+  private db: PouchDB.Database;
 
   async init(): Promise<void>;
-  async get<T>(store: string, id: string): Promise<T>;
-  async getAll<T>(store: string): Promise<T[]>;
-  async add<T>(store: string, data: T): Promise<string>;
-  async update<T>(store: string, data: T): Promise<void>;
-  async delete(store: string, id: string): Promise<void>;
-  async query<T>(store: string, index: string, value: any): Promise<T[]>;
+  async get<T>(id: string): Promise<T>;
+  async getAll<T>(type: string): Promise<T[]>;
+  async add<T>(data: T & { type: string }): Promise<string>;
+  async update<T>(data: T & { _id: string; _rev: string }): Promise<void>;
+  async delete(id: string, rev: string): Promise<void>;
+  async query<T>(designDoc: string, view: string, options?: object): Promise<T[]>;
+  onChange(callback: (change: PouchDB.Core.ChangesResponseChange<{}>) => void): void;
 }
 ----
 
-The `entries` object store keeps URLs and citation dates embedded on the `Entry` record. No dedicated object store is required for URLs because they are always owned by a single entry and are loaded together with the entry payload.
+The `entries` store keeps URLs and citation dates embedded on the `Entry` record. No dedicated document type is required for URLs because they are always owned by a single entry and are loaded together with the entry payload.
 
 === Geolocation Service
 
@@ -407,6 +436,103 @@ class ExportService {
 
 Because URLs and citation dates are stored directly on `Entry`, export/import preserves them automatically as part of the serialized `entries` array. Derived favicon URLs are not exported.
 
+=== Synchronization Service
+
+==== Architecture
+
+[source]
+----
+PouchDB (local)  ←──  bidirectional live replication  ──→  CouchDB (remote)
+       ↓                                                          ↑
+  Change Feed                                               Per-User DB
+       ↓                                                    (userdb-<hex>)
+  Hook Reload
+----
+
+==== Sync Lifecycle
+
+[source,typescript]
+----
+class SyncService {
+  private replication: PouchDB.Replication.Sync<{}> | null = null;
+
+  /** Start live bidirectional sync to remote CouchDB */
+  startSync(localDb: PouchDB.Database, remoteUrl: string): void;
+
+  /** Stop active replication */
+  stopSync(): void;
+
+  /** Get current sync status */
+  getStatus(): SyncStatus;
+
+  /** Register listener for sync status changes */
+  onStatusChange(callback: (status: SyncStatus) => void): () => void;
+
+  /** Scan for conflicting revisions and create duplicate documents */
+  resolveConflicts(): Promise<ConflictResolutionResult>;
+}
+
+type SyncStatus = 'idle' | 'syncing' | 'paused' | 'error' | 'offline';
+
+interface ConflictResolutionResult {
+  resolved: number;
+  duplicatesCreated: string[];  // IDs of newly created duplicate documents
+}
+----
+
+==== Conflict Resolution Strategy
+- PouchDB/CouchDB automatically tracks conflicting revisions via the `_conflicts` flag
+- After each sync cycle, the `SyncService` scans for documents with `_conflicts`
+- For each conflicting document, the losing revision is extracted, given a new `_id`, and stored as a separate document
+- The winning revision remains at the original `_id`
+- Both documents are marked with a `conflictSource` field pointing to each other's ID
+- The UI displays a visual indicator (⚠️) on conflicting entries
+- The user resolves conflicts manually by editing or deleting one of the duplicates
+
+==== Per-User Database Isolation
+- CouchDB uses the database-per-user pattern
+- Each authenticated user gets a database named `userdb-<hex-encoded-username>`
+- The CouchDB `couch_peruser` plugin automatically creates databases on user registration
+- PouchDB replicates only between the local database and the user's remote database
+
+=== Authentication Service
+
+[source,typescript]
+----
+interface AuthCredentials {
+  email: string;
+  password: string;
+}
+
+interface AuthSession {
+  username: string;
+  token: string;
+  remoteDbUrl: string;
+}
+
+class AuthService {
+  /** Register a new user account on CouchDB */
+  async register(credentials: AuthCredentials): Promise<AuthSession>;
+
+  /** Log in and obtain a session */
+  async login(credentials: AuthCredentials): Promise<AuthSession>;
+
+  /** Log out and clear session */
+  async logout(): Promise<void>;
+
+  /** Get current session if logged in */
+  getSession(): AuthSession | null;
+
+  /** Check if user is currently authenticated */
+  isAuthenticated(): boolean;
+}
+----
+
+- Authentication uses CouchDB's built-in `_users` database and cookie/session authentication
+- Session tokens are stored in `localStorage` for persistence across page reloads
+- The `remoteDbUrl` is derived from the CouchDB base URL and the user's database name
+- Authentication state is exposed to React components via a `useAuth` hook
+
 == Performance Optimization
 
 === IndexedDB
@@ -445,10 +571,19 @@ self.addEventListener('fetch', (event) => {
 == Security and Privacy
 
 === Data Protection
-- All data stored locally in browser (IndexedDB)
-- No server communication (no API calls)
-- No cookies or tracking
+- All data stored locally in browser (PouchDB/IndexedDB) by default
+- Server communication only when user opts in to sync (authenticated session)
+- Data transmitted over HTTPS only
+- Per-user database isolation on CouchDB (no cross-user data access)
+- No cookies or tracking beyond authentication session
 - Content Security Policy (CSP) headers
+
+=== Authentication
+- CouchDB `_users` database for user management
+- Session-based authentication with HTTP-only cookies or bearer tokens
+- Password stored as bcrypt hash on CouchDB server
+- Session expires after configurable timeout
+- Logout clears session token from browser
 
 === Input Validation
 - Client-side validation for all user inputs
@@ -620,9 +755,10 @@ export default defineConfig({
 
 === Deployment Options
 - Docker container (multi-stage build: Node.js build + nginx serve)
+- CouchDB container for server-side sync (optional, only needed for multi-device sync)
 - Multi-arch images (linux/amd64, linux/arm64) published to GitHub Container Registry (GHCR)
-- docker-compose for local/self-hosted deployment
-- HTTPS required for Service Worker and Geolocation
+- docker-compose for local/self-hosted deployment (web app + CouchDB)
+- HTTPS required for Service Worker, Geolocation, and secure sync
 
 === CI/CD (GitHub Actions)
 - Pull requests: lint, test with coverage, security audit (`npm audit`), Docker build (without push)
@@ -688,6 +824,8 @@ export default defineConfig({
   "dependencies": {
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "pouchdb-browser": "^9.0.0",
+    "pouchdb-find": "^9.0.0",
     "uuid": "^11.0.0",
     "leaflet": "^1.9.0",
     "react-leaflet": "^5.0.0"
@@ -758,6 +896,15 @@ export default defineConfig({
 === Risk: Media Storage Limits
 - *Mitigation:* Image compression, size limits, warn before adding large files
 
+=== Risk: PouchDB Migration Data Loss
+- *Mitigation:* One-time migration reads old `idb` stores and writes to PouchDB before deleting old data. Export backup prompted before migration.
+
+=== Risk: Sync Conflicts Overwhelming Users
+- *Mitigation:* Clear visual indicators for conflicts, simple merge/delete workflow, automatic resolution for non-ambiguous changes (e.g., only one side modified)
+
+=== Risk: CouchDB Availability
+- *Mitigation:* App remains fully functional offline. Sync is optional and resumes automatically when CouchDB becomes available again.
+
 == Version History
 
 |===
@@ -770,4 +917,8 @@ export default defineConfig({
 | 1.1.0
 | 2026-03-28
 | Improved Release with URL and entry date
+
+| 2.0.0
+| TBD
+| PouchDB migration, CouchDB sync, user authentication, conflict resolution
 |===

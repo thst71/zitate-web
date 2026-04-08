@@ -1056,6 +1056,386 @@ FR-1.8
 
 '''
 
+== Epic 9: Server Synchronization
+
+=== Story 9.1: Migrate Data Layer from idb to PouchDB
+*As a* developer +
+*I want to* replace the raw `idb` wrapper with PouchDB +
+*So that* the data layer supports replication to CouchDB
+
+.*Acceptance Criteria:*
+- PouchDB is installed and configured as the local database
+- `DBService` is rewritten to use PouchDB API (`put`, `get`, `allDocs`, `query`)
+- All document types use the `type` field convention (e.g., `type: 'entry'`)
+- Document IDs follow the `<type>:<uuid>` pattern
+- All existing hooks (`useEntries`, `useAuthors`, `useLabels`, `useFolders`) work with the new DBService
+- The `idb` dependency is removed from `package.json`
+- Design documents are created for required secondary indexes (createdAt, authorId, entryId, name)
+- All existing unit and integration tests pass against the PouchDB-based DBService
+
+.*Reference:*
+FR-6.2, NFR-2
+
+.*Technical Tasks:*
+1. Install `pouchdb-browser` and `pouchdb-find`
+2. Rewrite `db.service.ts` to wrap PouchDB instead of `idb`
+3. Add `type` field to all document interfaces in `models/`
+4. Change document ID generation to `<type>:<uuid>` pattern
+5. Create design documents for secondary indexes
+6. Update all hooks to use new DBService API
+7. Remove `db/schema.ts` (PouchDB is schemaless)
+8. Remove `idb` dependency
+9. Update all existing tests
+
+.*Test Criteria:*
+- *Unit tests:* DBService CRUD methods, query methods, design document creation
+- *Integration tests:* All hooks with real PouchDB (using `pouchdb-adapter-memory` for tests)
+- *Component tests:* Verify existing component tests still pass with mocked PouchDB DBService
+
+.*Estimated Effort:*
+16 hours
+
+'''
+
+=== Story 9.2: Migrate Binary Attachments to PouchDB Attachments
+*As a* developer +
+*I want to* store images and audio as PouchDB attachments instead of separate object store records +
+*So that* binary data replicates correctly to CouchDB
+
+.*Acceptance Criteria:*
+- Images are stored as PouchDB attachments on their parent entry document
+- Audio recordings are stored as PouchDB attachments on their parent entry document
+- `imageIds` and `audioId` on Entry are replaced by attachment naming convention (`image-<uuid>`, `audio-<uuid>`)
+- Image and audio retrieval uses `db.getAttachment()`
+- Upload, deletion, and replacement of images work with the attachment API
+- Export/import handles PouchDB attachments correctly (Base64 serialization)
+
+.*Reference:*
+FR-6.2, FR-1.3, FR-1.4
+
+.*Technical Tasks:*
+1. Update `saveImages` to use `db.putAttachment()` on the entry document
+2. Update `getImagesForEntry` to use `db.getAttachment()`
+3. Update image deletion and replacement to use attachment API
+4. Update audio recording storage to use attachment API
+5. Remove separate `images` and `audio` document types
+6. Update `export.service.ts` to export attachments
+7. Update `import.service.ts` to restore attachments
+8. Update `ImageEditor`, `ImageUpload` components
+
+.*Test Criteria:*
+- *Unit tests:* Attachment save, retrieve, delete via DBService
+- *Integration tests:* Full entry CRUD with attachments, export/import round-trip
+- *Component tests:* ImageEditor, ImageUpload with mocked attachment API
+
+.*Estimated Effort:*
+10 hours
+
+'''
+
+=== Story 9.3: One-Time Data Migration from Legacy IndexedDB
+*As a* user +
+*I want to* have my existing data automatically migrated to the new database format +
+*So that* I do not lose any data when the app upgrades
+
+.*Acceptance Criteria:*
+- On first launch after upgrade, the app detects legacy `idb`-based IndexedDB data
+- All entries, authors, labels, folders, images, and audio are migrated to PouchDB
+- Binary blobs are converted to PouchDB attachments
+- Migration runs once and marks itself as complete (flag in localStorage)
+- If migration fails partway, the user is prompted to export data manually and retry
+- Legacy IndexedDB data is preserved until migration is confirmed successful
+
+.*Reference:*
+FR-6.2, NFR-2
+
+.*Technical Tasks:*
+1. Create `services/migration.service.ts`
+2. Detect legacy `idb` database existence
+3. Read all records from legacy object stores
+4. Write records to PouchDB with new document format
+5. Convert blobs to PouchDB attachments
+6. Set `migrationComplete` flag in localStorage
+7. Show migration progress indicator to user
+8. Handle partial failure with rollback/retry
+
+.*Test Criteria:*
+- *Unit tests:* Migration detection, document conversion logic, flag management
+- *Integration tests:* Full migration from fake-indexeddb legacy stores to PouchDB in-memory
+
+.*Estimated Effort:*
+8 hours
+
+'''
+
+=== Story 9.4: Replace storeSync with PouchDB Change Feed
+*As a* developer +
+*I want to* use PouchDB's built-in change feed instead of the custom storeSync event emitter +
+*So that* hooks receive updates from both local changes and remote replication
+
+.*Acceptance Criteria:*
+- `storeSync.ts` is removed
+- All hooks subscribe to PouchDB `db.changes({ live: true, since: 'now' })` for real-time updates
+- Changes from local writes trigger hook reloads
+- Changes from remote replication trigger hook reloads
+- Hooks filter change events by document type to avoid unnecessary reloads
+- No duplicate reloads when the same hook instance triggers a write
+
+.*Reference:*
+FR-6.2
+
+.*Technical Tasks:*
+1. Create `useDbChanges` hook that wraps `db.changes()`
+2. Update `useEntries`, `useAuthors`, `useLabels`, `useFolders` to use `useDbChanges`
+3. Add document type filtering in change listener
+4. Remove `storeSync.ts` and all references
+5. Verify cross-tab synchronization still works
+
+.*Test Criteria:*
+- *Unit tests:* `useDbChanges` hook with mocked PouchDB change feed
+- *Integration tests:* Two hook instances receiving each other's changes
+- *Component tests:* EntryList re-rendering after external change event
+
+.*Estimated Effort:*
+6 hours
+
+'''
+
+=== Story 9.5: CouchDB Docker Setup
+*As a* developer +
+*I want to* add a CouchDB container to the docker-compose configuration +
+*So that* the server-side database is ready for sync
+
+.*Acceptance Criteria:*
+- `docker-compose.yml` includes a CouchDB service
+- CouchDB is configured with the `couch_peruser` plugin enabled
+- Admin credentials are configurable via environment variables
+- CouchDB data is persisted via a Docker volume
+- CORS is enabled for the web app origin
+- CouchDB health check is configured
+- The web app container can reach CouchDB via Docker networking
+
+.*Reference:*
+FR-6.2, FR-6.3
+
+.*Technical Tasks:*
+1. Add CouchDB service to `docker-compose.yml`
+2. Configure `couch_peruser` plugin in CouchDB config
+3. Add CORS configuration for web app origin
+4. Add Docker volume for CouchDB data persistence
+5. Add health check for CouchDB readiness
+6. Document CouchDB admin setup in README
+
+.*Test Criteria:*
+- *Blackbox test:* Docker compose up starts both containers, CouchDB responds on health endpoint
+
+.*Estimated Effort:*
+4 hours
+
+'''
+
+=== Story 9.6: Authentication Service
+*As a* user +
+*I want to* register and log in +
+*So that* my data can be synchronized to the server
+
+.*Acceptance Criteria:*
+- User can register with email and password
+- User can log in with email and password
+- User can log out
+- Authentication session persists across page reloads (stored in localStorage)
+- Invalid credentials show a clear error message
+- Registration validates email format and minimum password length (8 characters)
+- Authentication state is available to React components via `useAuth` hook
+
+.*Reference:*
+FR-6.1
+
+.*Technical Tasks:*
+1. Create `services/auth.service.ts` with register, login, logout methods
+2. Implement CouchDB `_users` database interaction for registration
+3. Implement CouchDB `_session` API for login/logout
+4. Store session in localStorage
+5. Create `hooks/useAuth.ts` hook exposing auth state and actions
+6. Add error handling for network failures, invalid credentials, duplicate email
+
+.*Test Criteria:*
+- *Unit tests:* AuthService register, login, logout, session persistence
+- *Integration tests:* useAuth hook with mocked AuthService
+
+.*Estimated Effort:*
+8 hours
+
+'''
+
+=== Story 9.7: Authentication UI
+*As a* user +
+*I want to* see login and registration forms in the app +
+*So that* I can create an account and sign in
+
+.*Acceptance Criteria:*
+- Login/Register button visible in the header when not authenticated
+- Clicking the button opens a modal with login and registration tabs
+- Login form has email and password fields with validation
+- Registration form has email, password, and confirm password fields with validation
+- Successful login closes the modal and shows user indicator in header
+- Logged-in state shows user email and logout button in header
+- All forms are keyboard accessible and responsive
+
+.*Reference:*
+FR-6.1
+
+.*Technical Tasks:*
+1. Create `components/auth/AuthModal.tsx` with login and register tabs
+2. Create `components/auth/LoginForm.tsx`
+3. Create `components/auth/RegisterForm.tsx`
+4. Add auth button to Header component
+5. Add logged-in user display to Header
+6. Wire forms to `useAuth` hook
+7. Add form validation (email format, password length, password match)
+8. Style for mobile and desktop
+
+.*Test Criteria:*
+- *Component tests:* LoginForm validation, RegisterForm validation, AuthModal tab switching
+- *Component tests:* Header auth button states (logged in vs. logged out)
+
+.*Estimated Effort:*
+6 hours
+
+'''
+
+=== Story 9.8: Sync Service Implementation
+*As a* user +
+*I want to* have my data synchronized to the server automatically after login +
+*So that* my data is backed up and accessible from other devices
+
+.*Acceptance Criteria:*
+- After login, bidirectional live replication starts between PouchDB and the user's CouchDB database
+- Replication pauses when the browser goes offline and resumes when online
+- Replication uses retry with exponential backoff
+- Sync stops when the user logs out
+- New and modified records appear on both ends within seconds
+- Binary attachments (images, audio) are included in replication
+
+.*Reference:*
+FR-6.2, FR-6.3, NFR-7
+
+.*Technical Tasks:*
+1. Create `services/sync.service.ts` with startSync, stopSync, getStatus
+2. Implement `PouchDB.sync(localDb, remoteUrl, { live: true, retry: true })`
+3. Listen for `navigator.onLine` events to pause/resume
+4. Expose sync status via `useSyncStatus` hook
+5. Wire sync start/stop to login/logout in `useAuth`
+6. Handle authentication errors during sync (re-login prompt)
+
+.*Test Criteria:*
+- *Unit tests:* SyncService start, stop, status transitions, offline handling
+- *Integration tests:* Bidirectional replication between two PouchDB in-memory instances
+
+.*Estimated Effort:*
+8 hours
+
+'''
+
+=== Story 9.9: Sync Status UI
+*As a* user +
+*I want to* see the current sync status in the app +
+*So that* I know whether my data is up to date on the server
+
+.*Acceptance Criteria:*
+- Sync status indicator visible in the header when authenticated
+- Status displays: idle (✓), syncing (↻), paused/offline (⏸), error (⚠)
+- Clicking the indicator shows sync details (last sync time, pending changes count)
+- Error status shows a brief error message with retry option
+
+.*Reference:*
+FR-6.2
+
+.*Technical Tasks:*
+1. Create `components/common/SyncIndicator.tsx`
+2. Create `hooks/useSyncStatus.ts` consuming SyncService events
+3. Add SyncIndicator to Header (only when authenticated)
+4. Style icons for each status state
+5. Add tooltip or popover with sync details
+
+.*Test Criteria:*
+- *Component tests:* SyncIndicator renders correct icon for each status
+- *Component tests:* SyncIndicator shows details on click
+
+.*Estimated Effort:*
+4 hours
+
+'''
+
+=== Story 9.10: Conflict Detection and Duplication
+*As a* user +
+*I want to* see both versions when a conflict occurs during sync +
+*So that* I can decide which version to keep
+
+.*Acceptance Criteria:*
+- After sync, documents with `_conflicts` are detected automatically
+- For each conflict, the losing revision is extracted and saved as a new document
+- Both documents are marked with a `conflictSource` field linking to each other
+- Conflicting entries are visually marked with a ⚠️ icon in entry lists and cards
+- The user can edit or delete either version using existing edit/delete functions
+- Resolving a conflict (deleting one version) removes the conflict marker from the other
+- Conflicts on authors, labels, and folders are handled with the same strategy
+
+.*Reference:*
+FR-6.4
+
+.*Technical Tasks:*
+1. Add conflict scanning to `SyncService.resolveConflicts()`
+2. Extract losing revisions via `db.get(id, { conflicts: true })`
+3. Create duplicate document from losing revision with new ID
+4. Add `conflictSource` field to both documents
+5. Add `isConflicted` computed property to entry display logic
+6. Add ⚠️ indicator to `EntryCard`
+7. Clear `conflictSource` when linked document is deleted
+8. Handle conflicts for author, label, and folder document types
+
+.*Test Criteria:*
+- *Unit tests:* Conflict detection logic, duplicate creation, conflict marker cleanup
+- *Integration tests:* Two PouchDB instances writing conflicting changes, sync, verify duplicates created
+- *Component tests:* EntryCard displays conflict indicator when `conflictSource` is set
+
+.*Estimated Effort:*
+10 hours
+
+'''
+
+=== Story 9.11: Sync Opt-In and Local-Only Mode
+*As a* user +
+*I want to* use the app without creating an account +
+*So that* the app works exactly as before if I do not need sync
+
+.*Acceptance Criteria:*
+- The app launches and operates identically for unauthenticated users
+- No server requests are made unless the user logs in
+- PouchDB operates in local-only mode without replication
+- A user who logs out continues using the app with all local data intact
+- The sync UI elements (status indicator, auth button) degrade gracefully when not authenticated
+
+.*Reference:*
+FR-6.5
+
+.*Technical Tasks:*
+1. Guard SyncService.startSync behind authentication check
+2. Ensure DBService works without any remote configuration
+3. Hide SyncIndicator when not authenticated
+4. Show login/register prompt as non-intrusive option (not blocking)
+5. Verify all existing functionality works without authentication
+
+.*Test Criteria:*
+- *Integration tests:* Full app flow without authentication (no sync attempted)
+- *Component tests:* Header renders without sync elements when not authenticated
+- *Blackbox test:* Complete user journey (create, edit, search, delete entry) without login
+
+.*Estimated Effort:*
+4 hours
+
+'''
+
 == Implementation Phases
 
 === Phase 1: Foundation (Weeks 1-2)
@@ -1112,6 +1492,22 @@ Production-ready PWA with offline support and export/import
 
 '''
 
+=== Phase 5: Server Sync (Weeks 8-11)
+.*Goal:*
+PouchDB migration, CouchDB sync, user authentication, conflict resolution
+
+.*Stories:*
+- Epic 9: Stories 9.1-9.4 (PouchDB migration, attachments, legacy migration, change feed)
+- Epic 9: Story 9.5 (CouchDB Docker setup)
+- Epic 9: Stories 9.6-9.7 (Authentication service and UI)
+- Epic 9: Stories 9.8-9.9 (Sync service and status UI)
+- Epic 9: Stories 9.10-9.11 (Conflict resolution and local-only mode)
+
+.*Deliverable:*
+Multi-device sync with offline-first architecture and conflict resolution
+
+'''
+
 == Definition of Done
 
 A story is considered "Done" when:
@@ -1134,7 +1530,7 @@ A story is considered "Done" when:
 === Known Compromises for v1.0
 
 1. **LLM Features:** Deferred to v2.0 (FE-1, FE-2)
-2. **Cloud Sync:** Deferred to v2.0 (FE-4)
+2. **Cloud Sync:** Promoted to Epic 9 (PouchDB + CouchDB), planned for Phase 5
 3. **Advanced Media Editing:** No cropping/filters in v1.0
 4. **Social Features:** Deferred to v2.0 (FE-5)
 5. **Multi-language:** Deferred to v2.0
@@ -1143,5 +1539,5 @@ These will be prioritized based on user feedback after v1.0 launch.
 
 '''
 
-*Total Estimated Effort:* ~120 hours (7 weeks part-time)
-*Target Completion:* 7 weeks from start
+*Total Estimated Effort:* ~204 hours (~120h existing + ~84h Epic 9)
+*Target Completion:* 11 weeks from start
