@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ImageEditor, type ImageChanges } from './ImageEditor';
-import type { ImageAttachment } from '../../models';
+import type { ImageAttachmentWithBlob } from '../../models';
 
 // Mock useEntries to avoid IndexedDB dependency
 vi.mock('../../hooks/useEntries', () => ({
@@ -21,10 +21,9 @@ vi.mock('../../services/image.service', () => ({
   compressImage: vi.fn((file: File) => Promise.resolve(file)),
 }));
 
-function createMockImage(id: string, order: number): ImageAttachment {
+function createMockImage(id: string, order: number): ImageAttachmentWithBlob {
   return {
     id,
-    entryId: 'entry-1',
     blob: new Blob(['mock-image-data'], { type: 'image/png' }),
     mimeType: 'image/png',
     size: 1024,
@@ -35,7 +34,7 @@ function createMockImage(id: string, order: number): ImageAttachment {
 
 describe('ImageEditor', () => {
   let onChange: ReturnType<typeof vi.fn>;
-  let mockImages: ImageAttachment[];
+  let mockImages: ImageAttachmentWithBlob[];
 
   beforeEach(() => {
     vi.clearAllMocks();

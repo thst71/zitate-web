@@ -12,25 +12,40 @@
  *  - a document model gains / loses / renames a field
  *  - a design-document view function changes
  *  - the export format changes
+ *
+ * Version history:
+ *  1 — initial PouchDB migration from idb
+ *  2 — added citationDate and links fields on entries
+ *  3 — images/audio stored as PouchDB attachments on entry documents
  */
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 export const DB_NAME = 'zitate-db';
 
 /**
  * Document type prefixes used in PouchDB _id fields.
  * IDs follow the pattern: "<type>:<uuid>"
+ *
+ * Since v3, images and audio are stored as PouchDB attachments on entry
+ * documents. The legacy `image` and `audio` type prefixes are only used
+ * during migration from v2 → v3.
  */
 export const STORES = {
   ENTRIES: 'entry',
   AUTHORS: 'author',
   LABELS: 'label',
-  IMAGES: 'image',
-  AUDIO: 'audio',
   FOLDERS: 'folder',
 } as const;
 
-export type StoreType = typeof STORES[keyof typeof STORES];
+/**
+ * Legacy store prefixes — only used by the v2→v3 migration.
+ */
+export const LEGACY_STORES = {
+  IMAGES: 'image',
+  AUDIO: 'audio',
+} as const;
+
+export type StoreType = typeof STORES[keyof typeof STORES] | typeof LEGACY_STORES[keyof typeof LEGACY_STORES];
 
 /**
  * Build a PouchDB document _id from type prefix and uuid.
@@ -69,22 +84,6 @@ export function getDesignDocuments(): Array<{ _id: string; views: Record<string,
         },
         by_authorId: {
           map: "function(doc) { if (doc.type === 'entry' && doc.authorId) emit(doc.authorId); }",
-        },
-      },
-    },
-    {
-      _id: '_design/images',
-      views: {
-        by_entryId: {
-          map: "function(doc) { if (doc.type === 'image') emit(doc.entryId); }",
-        },
-      },
-    },
-    {
-      _id: '_design/audio',
-      views: {
-        by_entryId: {
-          map: "function(doc) { if (doc.type === 'audio') emit(doc.entryId); }",
         },
       },
     },

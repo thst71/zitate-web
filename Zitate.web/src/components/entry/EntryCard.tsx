@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Entry, EntryLink, ImageAttachment } from '../../models';
+import { Entry, EntryLink } from '../../models';
+import type { ImageAttachmentWithBlob } from '../../models';
 import { formatCoordinates, locationService, type ReverseGeocodeResult } from '../../services/location.service';
 import { useAuthors } from '../../hooks/useAuthors';
 import { useLabels } from '../../hooks/useLabels';
@@ -21,7 +22,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
   const { getAuthorById } = useAuthors();
   const { getLabelsByIds } = useLabels();
   const { getImagesForEntry } = useEntries();
-  const [images, setImages] = useState<ImageAttachment[]>([]);
+  const [images, setImages] = useState<ImageAttachmentWithBlob[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
   const [linksOpen, setLinksOpen] = useState(false);
@@ -35,10 +36,10 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
   const links = entry.links ?? [];
 
   useEffect(() => {
-    if (entry.imageIds.length > 0) {
+    if (entry.imageAttachments && entry.imageAttachments.length > 0) {
       getImagesForEntry(entry.id).then(setImages);
     }
-  }, [entry.id, entry.imageIds, getImagesForEntry]);
+  }, [entry.id, entry.imageAttachments, getImagesForEntry]);
 
   const hasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
 

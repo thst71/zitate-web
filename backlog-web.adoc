@@ -1109,18 +1109,31 @@ FR-6.2, NFR-2
 
 '''
 
-=== Story 9.2: Migrate Binary Attachments to PouchDB Attachments
+=== Story 9.2: Migrate Binary Attachments to PouchDB Attachments [DONE]
 *As a* developer +
 *I want to* store images and audio as PouchDB attachments instead of separate object store records +
 *So that* binary data replicates correctly to CouchDB
 
+.*Status:* ✅ Implemented (2026-04-09)
+
 .*Acceptance Criteria:*
-- Images are stored as PouchDB attachments on their parent entry document
-- Audio recordings are stored as PouchDB attachments on their parent entry document
-- `imageIds` and `audioId` on Entry are replaced by attachment naming convention (`image-<uuid>`, `audio-<uuid>`)
-- Image and audio retrieval uses `db.getAttachment()`
-- Upload, deletion, and replacement of images work with the attachment API
-- Export/import handles PouchDB attachments correctly (Base64 serialization)
+- [x] Images are stored as PouchDB attachments on their parent entry document
+- [x] Audio recordings are stored as PouchDB attachments on their parent entry document
+- [x] `imageIds` and `audioId` on Entry are replaced by `imageAttachments: ImageAttachmentMeta[]` and `audioAttachment?: AudioAttachmentMeta`
+- [x] Image and audio retrieval uses `db.getAttachment()`
+- [x] Upload, deletion, and replacement of images work with the attachment API
+- [x] Export/import handles PouchDB attachments correctly (Base64 serialization)
+- [x] Automatic v2→v3 migration converts legacy separate documents to attachments
+
+.*Implementation Notes:*
+- `Entry` model: `imageIds: string[]` → `imageAttachments: ImageAttachmentMeta[]`, `audioId?: string` → `audioAttachment?: AudioAttachmentMeta`
+- New model types: `ImageAttachmentMeta`, `ImageAttachmentWithBlob`, `AudioAttachmentMeta`, `AudioAttachmentWithBlob`
+- `DBService`: new methods `putAttachment()`, `getAttachment()`, `removeAttachment()`; `update()` preserves `_attachments` stubs
+- `db/schema.ts`: `DB_VERSION` bumped to 3; `STORES.IMAGES`/`STORES.AUDIO` removed; design docs for `images`/`audio` removed; `LEGACY_STORES` added for migration
+- `useEntries`: `saveImages` stores blobs as PouchDB attachments; `getImagesForEntry` loads from attachments; `deleteEntry` simplified (PouchDB auto-removes attachments)
+- `export.service.ts`: exports read attachments from entry documents; imports restore as `putAttachment()`
+- All image components updated to use `ImageAttachmentWithBlob` (runtime type with blob)
+- Migration: automatic in-place v2→v3 migration on first launch after upgrade
 
 .*Reference:*
 FR-6.2, FR-1.3, FR-1.4

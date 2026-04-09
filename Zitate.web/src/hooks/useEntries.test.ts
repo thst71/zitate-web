@@ -9,9 +9,7 @@ globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
 
 describe('useEntries', () => {
   beforeEach(async () => {
-    // Clear relevant stores before each test
     await dbService.clear(STORES.ENTRIES);
-    await dbService.clear(STORES.IMAGES);
   });
 
   it('should initialize with empty entries array', async () => {
@@ -32,7 +30,7 @@ describe('useEntries', () => {
         id: 'entry-1',
         text: 'Test entry 1',
         labelIds: [],
-        imageIds: [],
+        imageAttachments: [],
         createdAt: Date.now() - 1000,
         updatedAt: Date.now() - 1000,
       },
@@ -40,7 +38,7 @@ describe('useEntries', () => {
         id: 'entry-2',
         text: 'Test entry 2',
         labelIds: [],
-        imageIds: [],
+        imageAttachments: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
@@ -154,7 +152,6 @@ describe('useEntries', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Hook allows any text - validation is done at form level
     await act(async () => {
       await result.current.addEntry('Valid text', Date.now());
     });
@@ -175,7 +172,7 @@ describe('useEntries', () => {
       id: 'external-entry',
       text: 'External entry',
       labelIds: [],
-      imageIds: [],
+      imageAttachments: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -221,7 +218,6 @@ describe('useEntries', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Add with only latitude (should treat as no location)
     await act(async () => {
       await result.current.addEntry('Entry', Date.now(), 52.52, undefined);
     });
@@ -317,56 +313,39 @@ describe('useEntries', () => {
       ).rejects.toThrow('Entry not found');
     });
 
-    it('should delete images from entry on update', async () => {
+    it('should delete image attachments from entry on update', async () => {
       const { result } = renderHook(() => useEntries());
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
 
-      // Add an entry with manually created image records
+      // Create an entry with manually added image attachments
       const entryId = 'entry-with-images';
-      const imageId1 = 'img-1';
-      const imageId2 = 'img-2';
-
-      // Store image records
-      await dbService.add(STORES.IMAGES, {
-        id: imageId1,
-        entryId,
-        blob: new Blob(['data1']),
-        mimeType: 'image/png',
-        size: 100,
-        order: 0,
-        createdAt: Date.now(),
-      });
-      await dbService.add(STORES.IMAGES, {
-        id: imageId2,
-        entryId,
-        blob: new Blob(['data2']),
-        mimeType: 'image/png',
-        size: 100,
-        order: 1,
-        createdAt: Date.now(),
-      });
-
-      // Store entry
       const now = Date.now();
+
       await dbService.add(STORES.ENTRIES, {
         id: entryId,
         text: 'Entry with images',
         labelIds: [],
-        imageIds: [imageId1, imageId2],
+        imageAttachments: [
+          { id: 'img-1', mimeType: 'image/png', size: 100, order: 0, createdAt: now },
+          { id: 'img-2', mimeType: 'image/png', size: 100, order: 1, createdAt: now },
+        ],
         createdAt: now,
         updatedAt: now,
       });
 
-      // Reload to pick up the entry
+      // Add attachments to the entry document
+      await dbService.putAttachment(STORES.ENTRIES, entryId, 'image-img-1', new Blob(['data1']), 'image/png');
+      await dbService.putAttachment(STORES.ENTRIES, entryId, 'image-img-2', new Blob(['data2']), 'image/png');
+
       await act(async () => {
         await result.current.reload();
       });
 
       expect(result.current.entries).toHaveLength(1);
-      expect(result.current.entries[0].imageIds).toEqual([imageId1, imageId2]);
+      expect(result.current.entries[0].imageAttachments).toHaveLength(2);
 
       // Delete img-1 via updateEntry
       await act(async () => {
@@ -374,23 +353,20 @@ describe('useEntries', () => {
           entryId, 'Entry with images', Date.now(), undefined, [],
           undefined, undefined,
           [], // imagesToAdd
-          [imageId1], // imagesToDelete
+          ['img-1'], // imagesToDelete
         );
       });
 
       const updated = result.current.entries[0];
-      expect(updated.imageIds).toEqual([imageId2]);
+      expect(updated.imageAttachments).toHaveLength(1);
+      expect(updated.imageAttachments[0].id).toBe('img-2');
 
-      // Verify img-1 is deleted from IndexedDB
-      const deletedImage = await dbService.get(STORES.IMAGES, imageId1);
-      expect(deletedImage).toBeUndefined();
-
-      // Verify img-2 still exists
-      const remainingImage = await dbService.get(STORES.IMAGES, imageId2);
-      expect(remainingImage).toBeDefined();
+      // Verify img-2 attachment still exists
+      const blob2 = await dbService.getAttachment(STORES.ENTRIES, entryId, 'image-img-2');
+      expect(blob2).toBeDefined();
     });
 
-    it('should reorder images on update', async () => {
+    it('should reorder image attachments on update', async () => {
       const { result } = renderHook(() => useEntries());
 
       await waitFor(() => {
@@ -400,24 +376,15 @@ describe('useEntries', () => {
       const entryId = 'entry-reorder';
       const now = Date.now();
 
-      // Create images
-      for (let i = 0; i < 3; i++) {
-        await dbService.add(STORES.IMAGES, {
-          id: `img-${i}`,
-          entryId,
-          blob: new Blob([`data-${i}`]),
-          mimeType: 'image/png',
-          size: 100,
-          order: i,
-          createdAt: now,
-        });
-      }
-
       await dbService.add(STORES.ENTRIES, {
         id: entryId,
         text: 'Reorder test',
         labelIds: [],
-        imageIds: ['img-0', 'img-1', 'img-2'],
+        imageAttachments: [
+          { id: 'img-0', mimeType: 'image/png', size: 100, order: 0, createdAt: now },
+          { id: 'img-1', mimeType: 'image/png', size: 100, order: 1, createdAt: now },
+          { id: 'img-2', mimeType: 'image/png', size: 100, order: 2, createdAt: now },
+        ],
         createdAt: now,
         updatedAt: now,
       });
@@ -438,18 +405,13 @@ describe('useEntries', () => {
       });
 
       const updated = result.current.entries[0];
-      expect(updated.imageIds).toEqual(['img-2', 'img-0', 'img-1']);
-
-      // Verify order fields updated in IndexedDB
-      const img2 = await dbService.get<{ order: number }>(STORES.IMAGES, 'img-2');
-      const img0 = await dbService.get<{ order: number }>(STORES.IMAGES, 'img-0');
-      const img1 = await dbService.get<{ order: number }>(STORES.IMAGES, 'img-1');
-      expect(img2?.order).toBe(0);
-      expect(img0?.order).toBe(1);
-      expect(img1?.order).toBe(2);
+      expect(updated.imageAttachments.map((m) => m.id)).toEqual(['img-2', 'img-0', 'img-1']);
+      expect(updated.imageAttachments[0].order).toBe(0);
+      expect(updated.imageAttachments[1].order).toBe(1);
+      expect(updated.imageAttachments[2].order).toBe(2);
     });
 
-    it('should preserve imageIds when no image changes provided', async () => {
+    it('should preserve imageAttachments when no image changes provided', async () => {
       const { result } = renderHook(() => useEntries());
 
       await waitFor(() => {
@@ -463,7 +425,10 @@ describe('useEntries', () => {
         id: entryId,
         text: 'Preserve images',
         labelIds: [],
-        imageIds: ['img-a', 'img-b'],
+        imageAttachments: [
+          { id: 'img-a', mimeType: 'image/png', size: 100, order: 0, createdAt: now },
+          { id: 'img-b', mimeType: 'image/png', size: 100, order: 1, createdAt: now },
+        ],
         createdAt: now,
         updatedAt: now,
       });
@@ -479,7 +444,8 @@ describe('useEntries', () => {
 
       const updated = result.current.entries[0];
       expect(updated.text).toBe('Updated text');
-      expect(updated.imageIds).toEqual(['img-a', 'img-b']);
+      expect(updated.imageAttachments).toHaveLength(2);
+      expect(updated.imageAttachments.map((m) => m.id)).toEqual(['img-a', 'img-b']);
     });
   });
 });

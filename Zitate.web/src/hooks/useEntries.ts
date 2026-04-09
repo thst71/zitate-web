@@ -1,34 +1,38 @@
 /**
- * useEntries hook - Manages entry CRUD operations and image attachments
+ * useEntries hook - Manages entry CRUD operations and image attachments.
+ *
+ * Since schema v3, images are stored as PouchDB attachments on the entry
+ * document. Metadata (mimeType, size, order, createdAt) is kept in the
+ * `imageAttachments` array on the Entry model.
  */
-import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { dbService, STORES } from '../services/db.service';
-import { onStoreChange, emitStoreChange } from '../services/storeSync';
-import { compressImage } from '../services/image.service';
-import { locationService } from '../services/location.service';
-import type { Entry, EntryLink, ImageAttachment } from '../models';
-import type { SelectedImage } from '../components/image/ImageUpload';
+import {useCallback, useEffect, useState} from 'react';
+import {v4 as uuidv4} from 'uuid';
+import {dbService, STORES} from '../services/db.service';
+import {emitStoreChange, onStoreChange} from '../services/storeSync';
+import {compressImage} from '../services/image.service';
+import {locationService} from '../services/location.service';
+import type {Entry, EntryLink, ImageAttachmentMeta, ImageAttachmentWithBlob} from '../models';
+import type {SelectedImage} from '../components/image/ImageUpload';
 
 const ENTRY_STORE = STORES.ENTRIES;
 
 export function useEntries() {
-      const normalizeEntry = useCallback(
-        (entry: Entry): Entry => ({
-          ...entry,
-          labelIds: entry.labelIds ?? [],
-          links: entry.links ?? [],
-          imageIds: entry.imageIds ?? [],
-        }),
-        []
-      );
+  const normalizeEntry = useCallback(
+    (entry: Entry): Entry => ({
+      ...entry,
+      labelIds: entry.labelIds ?? [],
+      links: entry.links ?? [],
+      imageAttachments: entry.imageAttachments ?? [],
+    }),
+    []
+  );
 
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Load all entries from IndexedDB
+   * Load all entries from PouchDB
    */
   const loadEntries = useCallback(async () => {
     setLoading(true);
@@ -45,58 +49,69 @@ export function useEntries() {
   }, [normalizeEntry]);
 
   /**
-   * Save images to IndexedDB
+   * Save images as PouchDB attachments on the entry document.
+   * Returns the metadata array for the saved images.
    */
   const saveImages = useCallback(
-    async (entryId: string, selectedImages: SelectedImage[]): Promise<string[]> => {
-      const imageIds: string[] = [];
+    async (entryId: string, selectedImages: SelectedImage[], startOrder: number = 0): Promise<ImageAttachmentMeta[]> => {
+      const metas: ImageAttachmentMeta[] = [];
 
       for (let i = 0; i < selectedImages.length; i++) {
         const selectedImage = selectedImages[i];
 
         try {
-          // Compress the image
           const compressedBlob = await compressImage(selectedImage.file);
+          const imageId = uuidv4();
+          const attachmentName = `image-${imageId}`;
 
-          // Create ImageAttachment
-          const imageAttachment: ImageAttachment = {
-            id: uuidv4(),
-            entryId,
-            blob: compressedBlob,
+          await dbService.putAttachment(
+            STORES.ENTRIES, entryId, attachmentName,
+            compressedBlob, selectedImage.file.type
+          );
+
+          metas.push({
+            id: imageId,
             mimeType: selectedImage.file.type,
             size: compressedBlob.size,
-            order: i,
+            order: startOrder + i,
             createdAt: Date.now(),
-          };
-
-          // Save to IndexedDB
-          await dbService.add(STORES.IMAGES, imageAttachment);
-          imageIds.push(imageAttachment.id);
+          });
         } catch (err) {
-          console.error(`Failed to save image ${selectedImage.file.name}:`, err);
+          // Log but don't fail the whole operation
+          void err;
         }
       }
 
-      return imageIds;
+      return metas;
     },
     []
   );
 
   /**
-   * Get images for an entry
+   * Get images for an entry by loading PouchDB attachments.
    */
   const getImagesForEntry = useCallback(
-    async (entryId: string): Promise<ImageAttachment[]> => {
+    async (entryId: string): Promise<ImageAttachmentWithBlob[]> => {
       try {
-        const images = await dbService.query<ImageAttachment>(
-          STORES.IMAGES,
-          'entryId',
-          entryId
-        );
-        // Sort by order
+        const entry = await dbService.get<Entry>(STORES.ENTRIES, entryId);
+        if (!entry || !entry.imageAttachments || entry.imageAttachments.length === 0) {
+          return [];
+        }
+
+        const images: ImageAttachmentWithBlob[] = [];
+        for (const meta of entry.imageAttachments) {
+          try {
+            const blob = await dbService.getAttachment(
+              STORES.ENTRIES, entryId, `image-${meta.id}`
+            );
+            images.push({ ...meta, blob });
+          } catch {
+            // Attachment missing — skip
+          }
+        }
+
         return images.sort((a, b) => a.order - b.order);
-      } catch (err) {
-        console.error('Failed to load images:', err);
+      } catch {
         return [];
       }
     },
@@ -104,12 +119,12 @@ export function useEntries() {
   );
 
   /**
-   * Delete an image
+   * Delete an image attachment from an entry.
    */
   const deleteImage = useCallback(
-    async (imageId: string): Promise<void> => {
+    async (entryId: string, imageId: string): Promise<void> => {
       try {
-        await dbService.delete(STORES.IMAGES, imageId);
+        await dbService.removeAttachment(STORES.ENTRIES, entryId, `image-${imageId}`);
       } catch (err) {
         throw new Error(
           err instanceof Error ? err.message : 'Failed to delete image'
@@ -121,7 +136,6 @@ export function useEntries() {
 
   /**
    * Reverse-geocode coordinates and persist address fields on the entry.
-   * Runs asynchronously – does not block the caller.
    */
   const geocodeAndPersist = useCallback(
     async (entry: Entry) => {
@@ -141,7 +155,7 @@ export function useEntries() {
           emitStoreChange(ENTRY_STORE, loadEntries);
         }
       } catch (err) {
-        console.warn('Background geocoding failed:', err);
+        void err;
       }
     },
     [loadEntries]
@@ -166,9 +180,7 @@ export function useEntries() {
       const now = Date.now();
       const entryId = uuidv4();
 
-      // Save images first
-      const imageIds = await saveImages(entryId, selectedImages);
-
+      // Create entry first (without images) so the document exists for attachments
       const entry: Entry = {
         id: entryId,
         text,
@@ -180,13 +192,20 @@ export function useEntries() {
         authorId,
         labelIds,
         links,
-        imageIds,
+        imageAttachments: [],
         createdAt: now,
         updatedAt: now,
       };
 
       try {
         await dbService.add(STORES.ENTRIES, entry);
+
+        // Save images as attachments
+        if (selectedImages.length > 0) {
+          entry.imageAttachments = await saveImages(entryId, selectedImages);
+          await dbService.update(STORES.ENTRIES, entry);
+        }
+
         setEntries((prev) => [normalizeEntry(entry), ...prev]);
         emitStoreChange(ENTRY_STORE, loadEntries);
 
@@ -225,69 +244,60 @@ export function useEntries() {
       addressFull?: string,
       links?: EntryLink[]
     ): Promise<Entry> => {
-      // Find the existing entry
       const existingEntry = entries.find((e) => e.id === id);
       if (!existingEntry) {
         throw new Error('Entry not found');
       }
 
-      // Detect if location changed
       const locationChanged =
         latitude !== existingEntry.latitude ||
         longitude !== existingEntry.longitude;
 
-      let updatedImageIds = imageIdsOrder
-        ? [...imageIdsOrder]
-        : [...existingEntry.imageIds];
+      let updatedAttachments = imageIdsOrder
+        ? imageIdsOrder.map((imgId) =>
+            existingEntry.imageAttachments.find((m) => m.id === imgId)
+          ).filter((m): m is ImageAttachmentMeta => m !== undefined)
+        : [...existingEntry.imageAttachments];
 
-      // 1. Handle replacements: delete old image, save new one, swap ID
+      // 1. Handle replacements
       for (const [oldId, selectedImage] of imageReplacements.entries()) {
         try {
-          // Delete old image from IndexedDB
-          await dbService.delete(STORES.IMAGES, oldId);
-
-          // Save new image
-          const newIds = await saveImages(id, [selectedImage]);
-          if (newIds.length > 0) {
-            const idx = updatedImageIds.indexOf(oldId);
+          await dbService.removeAttachment(STORES.ENTRIES, id, `image-${oldId}`);
+          const newMetas = await saveImages(id, [selectedImage]);
+          if (newMetas.length > 0) {
+            const idx = updatedAttachments.findIndex((m) => m.id === oldId);
             if (idx !== -1) {
-              updatedImageIds[idx] = newIds[0];
+              updatedAttachments[idx] = { ...newMetas[0], order: updatedAttachments[idx].order };
             }
           }
-        } catch (err) {
-          console.error(`Failed to replace image ${oldId}:`, err);
+        } catch {
+          // Skip failed replacement
         }
       }
 
       // 2. Handle deletions
       for (const imageId of imagesToDelete) {
         try {
-          await dbService.delete(STORES.IMAGES, imageId);
-        } catch (err) {
-          console.error(`Failed to delete image ${imageId}:`, err);
+          await dbService.removeAttachment(STORES.ENTRIES, id, `image-${imageId}`);
+        } catch {
+          // Already removed
         }
       }
-      updatedImageIds = updatedImageIds.filter(
-        (imgId) => !imagesToDelete.includes(imgId)
+      updatedAttachments = updatedAttachments.filter(
+        (m) => !imagesToDelete.includes(m.id)
       );
 
       // 3. Handle additions
       if (imagesToAdd.length > 0) {
-        const newIds = await saveImages(id, imagesToAdd);
-        updatedImageIds = [...updatedImageIds, ...newIds];
+        const newMetas = await saveImages(id, imagesToAdd, updatedAttachments.length);
+        updatedAttachments = [...updatedAttachments, ...newMetas];
       }
 
-      // 4. Update order field on all remaining images
-      for (let i = 0; i < updatedImageIds.length; i++) {
-        try {
-          const img = await dbService.get<ImageAttachment>(STORES.IMAGES, updatedImageIds[i]);
-          if (img && img.order !== i) {
-            await dbService.update(STORES.IMAGES, { ...img, order: i });
-          }
-        } catch (err) {
-          console.error(`Failed to update image order for ${updatedImageIds[i]}:`, err);
-        }
-      }
+      // 4. Update order fields
+      updatedAttachments = updatedAttachments.map((m, i) => ({
+        ...m,
+        order: i,
+      }));
 
       const updatedEntry: Entry = {
         ...existingEntry,
@@ -298,12 +308,9 @@ export function useEntries() {
         links: links ?? existingEntry.links ?? [],
         latitude,
         longitude,
-        // If address explicitly provided (e.g. from LocationPicker), use it.
-        // If location changed but no address given, clear old address (will be geocoded).
-        // If location unchanged, keep existing address.
         addressShort: addressShort ?? (locationChanged ? undefined : existingEntry.addressShort),
         addressFull: addressFull ?? (locationChanged ? undefined : existingEntry.addressFull),
-        imageIds: updatedImageIds,
+        imageAttachments: updatedAttachments,
         updatedAt: Date.now(),
       };
 
@@ -314,7 +321,6 @@ export function useEntries() {
         );
         emitStoreChange(ENTRY_STORE, loadEntries);
 
-        // Background geocoding if location changed and no address provided
         if (locationChanged && latitude != null && longitude != null && !addressShort) {
           geocodeAndPersist(updatedEntry);
         }
@@ -330,25 +336,10 @@ export function useEntries() {
   );
 
   /**
-   * Delete an entry and its associated images
+   * Delete an entry (PouchDB automatically removes all attachments with the document)
    */
   const deleteEntry = useCallback(async (id: string): Promise<void> => {
     try {
-      // Get entry to find associated images
-      const entry = entries.find((e) => e.id === id);
-
-      // Delete associated images
-      if (entry && entry.imageIds.length > 0) {
-        for (const imageId of entry.imageIds) {
-          try {
-            await dbService.delete(STORES.IMAGES, imageId);
-          } catch (err) {
-            console.error(`Failed to delete image ${imageId}:`, err);
-          }
-        }
-      }
-
-      // Delete entry
       await dbService.delete(STORES.ENTRIES, id);
       setEntries((prev) => prev.filter((entry) => entry.id !== id));
       emitStoreChange(ENTRY_STORE, loadEntries);
@@ -357,7 +348,7 @@ export function useEntries() {
         err instanceof Error ? err.message : 'Failed to delete entry'
       );
     }
-  }, [entries, loadEntries]);
+  }, [loadEntries]);
 
   // Load entries on mount and subscribe to changes from other hook instances
   useEffect(() => {

@@ -1,4 +1,4 @@
-import type { Entry, Author, Label, SmartFolder, ImageAttachment, AudioAttachment } from '../models';
+import type { Entry, Author, Label, SmartFolder } from '../models';
 import { DB_VERSION, STORES } from '../db/schema';
 
 export interface ExportData {
@@ -36,10 +36,8 @@ class ExportService {
 
   async exportAllData(): Promise<Blob> {
     try {
-      // Import db service dynamically to avoid circular dependencies
       const { dbService } = await import('./db.service');
       
-      // Get all data from IndexedDB
       const [entries, authors, labels, folders] = await Promise.all([
         dbService.getAll<Entry>(STORES.ENTRIES),
         dbService.getAll<Author>(STORES.AUTHORS),
@@ -47,31 +45,51 @@ class ExportService {
         dbService.getAll<SmartFolder>(STORES.FOLDERS)
       ]);
 
-      // Get all images and convert to base64
-      const images = await dbService.getAll<ImageAttachment>(STORES.IMAGES);
-      const imagesData = await Promise.all(
-        images.map(async (image) => ({
-          id: image.id,
-          entryId: image.entryId,
-          data: await this.blobToBase64(image.blob),
-          mimeType: image.mimeType,
-          order: image.order,
-          createdAt: image.createdAt
-        }))
-      );
+      // Export images from PouchDB attachments on entry documents
+      const imagesData: ExportData['media']['images'] = [];
+      const audioData: ExportData['media']['audio'] = [];
 
-      // Get all audio and convert to base64
-      const audio = await dbService.getAll<AudioAttachment>(STORES.AUDIO);
-      const audioData = await Promise.all(
-        audio.map(async (audioItem) => ({
-          id: audioItem.id,
-          entryId: audioItem.entryId,
-          data: await this.blobToBase64(audioItem.blob),
-          mimeType: audioItem.mimeType,
-          duration: audioItem.duration,
-          createdAt: audioItem.createdAt
-        }))
-      );
+      for (const entry of entries) {
+        // Export image attachments
+        if (entry.imageAttachments) {
+          for (const meta of entry.imageAttachments) {
+            try {
+              const blob = await dbService.getAttachment(
+                STORES.ENTRIES, entry.id, `image-${meta.id}`
+              );
+              imagesData.push({
+                id: meta.id,
+                entryId: entry.id,
+                data: await this.blobToBase64(blob),
+                mimeType: meta.mimeType,
+                order: meta.order,
+                createdAt: meta.createdAt,
+              });
+            } catch {
+              // Attachment missing — skip
+            }
+          }
+        }
+
+        // Export audio attachment
+        if (entry.audioAttachment) {
+          try {
+            const blob = await dbService.getAttachment(
+              STORES.ENTRIES, entry.id, `audio-${entry.audioAttachment.id}`
+            );
+            audioData.push({
+              id: entry.audioAttachment.id,
+              entryId: entry.id,
+              data: await this.blobToBase64(blob),
+              mimeType: entry.audioAttachment.mimeType,
+              duration: entry.audioAttachment.duration,
+              createdAt: entry.audioAttachment.createdAt,
+            });
+          } catch {
+            // Attachment missing — skip
+          }
+        }
+      }
 
       const exportData: ExportData = {
         version: DB_VERSION,
@@ -82,15 +100,14 @@ class ExportService {
         folders,
         media: {
           images: imagesData,
-          audio: audioData
+          audio: audioData,
         }
       };
 
       const jsonString = JSON.stringify(exportData, null, 2);
       return new Blob([jsonString], { type: 'application/json' });
     } catch (error) {
-      console.error('Export failed:', error);
-      throw new Error('Failed to export data. Please try again.');
+      throw new Error(`Failed to export data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -99,7 +116,6 @@ class ExportService {
       const jsonText = await file.text();
       const importData: ExportData = JSON.parse(jsonText);
       
-      // Validate import data
       const validation = this.validateImportData(importData);
       if (!validation.isValid) {
         return {
@@ -111,7 +127,6 @@ class ExportService {
       const { dbService } = await import('./db.service');
 
       if (options.strategy === 'replace') {
-        // Clear existing data
         await this.clearAllData();
       }
 
@@ -152,44 +167,70 @@ class ExportService {
         }
       }
 
-      // Import media if requested
+      // Build a map of images/audio grouped by entryId for attachment restoration
+      const imagesByEntry = new Map<string, ExportData['media']['images']>();
+      const audioByEntry = new Map<string, ExportData['media']['audio']>();
+
       if (options.includeMedia) {
         for (const image of importData.media.images) {
-          const blob = this.base64ToBlob(image.data, image.mimeType);
-          const imageRecord = {
-            id: image.id,
-            entryId: image.entryId,
-            blob,
-            mimeType: image.mimeType,
-            order: image.order,
-            createdAt: image.createdAt
-          };
-          await dbService.add(STORES.IMAGES, imageRecord);
-          stats.images++;
+          if (!imagesByEntry.has(image.entryId)) {
+            imagesByEntry.set(image.entryId, []);
+          }
+          imagesByEntry.get(image.entryId)!.push(image);
         }
 
         for (const audioItem of importData.media.audio) {
-          const blob = this.base64ToBlob(audioItem.data, audioItem.mimeType);
-          const audioRecord = {
-            id: audioItem.id,
-            entryId: audioItem.entryId,
-            blob,
-            mimeType: audioItem.mimeType,
-            duration: audioItem.duration,
-            createdAt: audioItem.createdAt
-          };
-          await dbService.add(STORES.AUDIO, audioRecord);
-          stats.audio++;
+          if (!audioByEntry.has(audioItem.entryId)) {
+            audioByEntry.set(audioItem.entryId, []);
+          }
+          audioByEntry.get(audioItem.entryId)!.push(audioItem);
         }
       }
 
       // Import entries
       for (const entry of importData.entries) {
-        if (options.strategy === 'merge') {
-          await dbService.add(STORES.ENTRIES, { ...entry, id: this.generateId() });
-        } else {
-          await dbService.add(STORES.ENTRIES, entry);
+        const entryId = options.strategy === 'merge' ? this.generateId() : entry.id;
+        const entryToStore = { ...entry, id: entryId };
+
+        // Build imageAttachments metadata from media data
+        const entryImages = imagesByEntry.get(entry.id) ?? [];
+        const entryAudio = audioByEntry.get(entry.id) ?? [];
+
+        if (options.includeMedia && entryImages.length > 0) {
+          entryToStore.imageAttachments = entryImages.map((img) => ({
+            id: img.id,
+            mimeType: img.mimeType,
+            size: 0, // Will be set from blob
+            order: img.order,
+            createdAt: img.createdAt,
+          }));
+        } else if (!entryToStore.imageAttachments) {
+          entryToStore.imageAttachments = [];
         }
+
+        await dbService.add(STORES.ENTRIES, entryToStore);
+
+        // Restore image attachments
+        if (options.includeMedia) {
+          for (const image of entryImages) {
+            const blob = this.base64ToBlob(image.data, image.mimeType);
+            await dbService.putAttachment(
+              STORES.ENTRIES, entryId, `image-${image.id}`,
+              blob, image.mimeType
+            );
+            stats.images++;
+          }
+
+          for (const audioItem of entryAudio) {
+            const blob = this.base64ToBlob(audioItem.data, audioItem.mimeType);
+            await dbService.putAttachment(
+              STORES.ENTRIES, entryId, `audio-${audioItem.id}`,
+              blob, audioItem.mimeType
+            );
+            stats.audio++;
+          }
+        }
+
         stats.entries++;
       }
 
@@ -214,7 +255,6 @@ class ExportService {
       };
 
     } catch (error) {
-      console.error('Import failed:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to import data. Please check the file format.'
@@ -255,26 +295,26 @@ class ExportService {
       }
     }
 
-      const entries = record.entries as Array<Record<string, unknown>>;
-      for (const entry of entries) {
-        if (entry.links !== undefined) {
-          if (!Array.isArray(entry.links)) {
-            return { isValid: false, error: 'Invalid entry link metadata' };
-          }
+    const entries = record.entries as Array<Record<string, unknown>>;
+    for (const entry of entries) {
+      if (entry.links !== undefined) {
+        if (!Array.isArray(entry.links)) {
+          return { isValid: false, error: 'Invalid entry link metadata' };
+        }
 
-          for (const link of entry.links as Array<Record<string, unknown>>) {
-            if (
-              !link ||
-              typeof link !== 'object' ||
-              typeof link.id !== 'string' ||
-              typeof link.url !== 'string' ||
-              typeof link.addedAt !== 'number'
-            ) {
-              return { isValid: false, error: 'Malformed URL attachment metadata' };
-            }
+        for (const link of entry.links as Array<Record<string, unknown>>) {
+          if (
+            !link ||
+            typeof link !== 'object' ||
+            typeof link.id !== 'string' ||
+            typeof link.url !== 'string' ||
+            typeof link.addedAt !== 'number'
+          ) {
+            return { isValid: false, error: 'Malformed URL attachment metadata' };
           }
         }
       }
+    }
 
     return { isValid: true };
   }
@@ -282,7 +322,7 @@ class ExportService {
   private async clearAllData() {
     const { dbService } = await import('./db.service');
     
-    const stores = [STORES.ENTRIES, STORES.AUTHORS, STORES.LABELS, STORES.FOLDERS, STORES.IMAGES, STORES.AUDIO];
+    const stores = [STORES.ENTRIES, STORES.AUTHORS, STORES.LABELS, STORES.FOLDERS];
     for (const store of stores) {
       const items = await dbService.getAll(store);
       for (const item of items) {
@@ -296,7 +336,6 @@ class ExportService {
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === 'string') {
-          // Remove data:type/subtype;base64, prefix
           const base64 = reader.result.split(',')[1];
           resolve(base64);
         } else {

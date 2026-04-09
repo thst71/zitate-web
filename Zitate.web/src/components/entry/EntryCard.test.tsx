@@ -41,7 +41,7 @@ describe('EntryCard', () => {
     latitude: 52.52,
     longitude: 13.405,
     labelIds: [],
-    imageIds: [],
+    imageAttachments: [],
     links: [],
     createdAt: new Date('2024-06-15').getTime(),
     updatedAt: new Date('2024-06-15').getTime(),

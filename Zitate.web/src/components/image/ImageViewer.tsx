@@ -4,11 +4,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '../common/Modal';
 import { createImageURL, revokeImageURL } from '../../services/image.service';
-import type { ImageAttachment } from '../../models';
+import type { ImageAttachmentWithBlob } from '../../models';
 import './ImageViewer.css';
 
 interface ImageViewerProps {
-  images: ImageAttachment[];
+  images: ImageAttachmentWithBlob[];
   initialIndex: number;
   isOpen: boolean;
   onClose: () => void;

@@ -20,7 +20,7 @@ describe('DBService', () => {
         latitude: 52.52,
         longitude: 13.405,
         labelIds: [],
-        imageIds: [],
+        imageAttachments: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
@@ -56,7 +56,7 @@ describe('DBService', () => {
           id: 'entry-1',
           text: 'First entry',
           labelIds: [],
-          imageIds: [],
+          imageAttachments: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
         },
@@ -64,7 +64,7 @@ describe('DBService', () => {
           id: 'entry-2',
           text: 'Second entry',
           labelIds: [],
-          imageIds: [],
+          imageAttachments: [],
           createdAt: Date.now() + 1000,
           updatedAt: Date.now() + 1000,
         },
@@ -91,7 +91,7 @@ describe('DBService', () => {
         id: 'entry-1',
         text: 'Original text',
         labelIds: [],
-        imageIds: [],
+        imageAttachments: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
@@ -134,7 +134,7 @@ describe('DBService', () => {
           id: 'entry-1',
           text: 'First',
           labelIds: [],
-          imageIds: [],
+          imageAttachments: [],
           createdAt: now - 2000,
           updatedAt: now - 2000,
         },
@@ -142,7 +142,7 @@ describe('DBService', () => {
           id: 'entry-2',
           text: 'Second',
           labelIds: [],
-          imageIds: [],
+          imageAttachments: [],
           createdAt: now - 1000,
           updatedAt: now - 1000,
         },
@@ -150,7 +150,7 @@ describe('DBService', () => {
           id: 'entry-3',
           text: 'Third',
           labelIds: [],
-          imageIds: [],
+          imageAttachments: [],
           createdAt: now,
           updatedAt: now,
         },
@@ -181,7 +181,7 @@ describe('DBService', () => {
           id: 'entry-1',
           text: 'Oldest',
           labelIds: [],
-          imageIds: [],
+          imageAttachments: [],
           createdAt: now - 3000,
           updatedAt: now - 3000,
         },
@@ -189,7 +189,7 @@ describe('DBService', () => {
           id: 'entry-2',
           text: 'Middle',
           labelIds: [],
-          imageIds: [],
+          imageAttachments: [],
           createdAt: now - 1000,
           updatedAt: now - 1000,
         },
@@ -197,7 +197,7 @@ describe('DBService', () => {
           id: 'entry-3',
           text: 'Newest',
           labelIds: [],
-          imageIds: [],
+          imageAttachments: [],
           createdAt: now,
           updatedAt: now,
         },
@@ -235,6 +235,88 @@ describe('DBService', () => {
       await dbService.add(STORES.LABELS, { id: 'l2', name: 'b' });
       await dbService.clear(STORES.LABELS);
       expect(await dbService.count(STORES.LABELS)).toBe(0);
+    });
+  });
+
+  describe('attachments', () => {
+    it('should put and get an attachment on an entry document', async () => {
+      const entry: Entry = {
+        id: 'attach-entry-1',
+        text: 'Entry with attachment',
+        labelIds: [],
+        imageAttachments: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await dbService.add(STORES.ENTRIES, entry);
+
+      const blob = new Blob(['fake-image-data'], { type: 'image/png' });
+      await dbService.putAttachment(STORES.ENTRIES, entry.id, 'image-abc', blob, 'image/png');
+
+      const retrieved = await dbService.getAttachment(STORES.ENTRIES, entry.id, 'image-abc');
+      expect(retrieved).toBeDefined();
+    });
+
+    it('should remove an attachment from a document', async () => {
+      const entry: Entry = {
+        id: 'attach-entry-2',
+        text: 'Entry for removal',
+        labelIds: [],
+        imageAttachments: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await dbService.add(STORES.ENTRIES, entry);
+
+      const blob = new Blob(['data'], { type: 'image/jpeg' });
+      await dbService.putAttachment(STORES.ENTRIES, entry.id, 'image-xyz', blob, 'image/jpeg');
+
+      await dbService.removeAttachment(STORES.ENTRIES, entry.id, 'image-xyz');
+
+      await expect(
+        dbService.getAttachment(STORES.ENTRIES, entry.id, 'image-xyz')
+      ).rejects.toThrow();
+    });
+
+    it('should support multiple attachments on the same document', async () => {
+      const entry: Entry = {
+        id: 'attach-entry-3',
+        text: 'Entry with multiple attachments',
+        labelIds: [],
+        imageAttachments: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await dbService.add(STORES.ENTRIES, entry);
+
+      const blob1 = new Blob(['image-1'], { type: 'image/png' });
+      const blob2 = new Blob(['image-2'], { type: 'image/jpeg' });
+      await dbService.putAttachment(STORES.ENTRIES, entry.id, 'image-a', blob1, 'image/png');
+      await dbService.putAttachment(STORES.ENTRIES, entry.id, 'image-b', blob2, 'image/jpeg');
+
+      const retrieved1 = await dbService.getAttachment(STORES.ENTRIES, entry.id, 'image-a');
+      const retrieved2 = await dbService.getAttachment(STORES.ENTRIES, entry.id, 'image-b');
+      expect(retrieved1).toBeDefined();
+      expect(retrieved2).toBeDefined();
+    });
+
+    it('should not destroy existing document data when adding attachment', async () => {
+      const entry: Entry = {
+        id: 'attach-entry-4',
+        text: 'Preserved text',
+        labelIds: ['label-1'],
+        imageAttachments: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await dbService.add(STORES.ENTRIES, entry);
+
+      const blob = new Blob(['data'], { type: 'image/png' });
+      await dbService.putAttachment(STORES.ENTRIES, entry.id, 'image-keep', blob, 'image/png');
+
+      const retrieved = await dbService.get<Entry>(STORES.ENTRIES, entry.id);
+      expect(retrieved?.text).toBe('Preserved text');
+      expect(retrieved?.labelIds).toEqual(['label-1']);
     });
   });
 });

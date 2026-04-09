@@ -9,7 +9,8 @@ import { AuthorSelect } from '../author/AuthorSelect';
 import { LabelInput } from '../label/LabelInput';
 import { ImageUpload, type SelectedImage } from '../image/ImageUpload';
 import { ImageEditor, type ImageChanges } from '../image/ImageEditor';
-import type { Entry, EntryLink, ImageAttachment } from '../../models';
+import type { Entry, EntryLink } from '../../models';
+import type { ImageAttachmentWithBlob } from '../../models';
 import './EntryForm.css';
 
 interface EntryFormProps {
@@ -46,7 +47,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   const [labelIds, setLabelIds] = useState<string[]>(initialEntry?.labelIds || []);
   const [links, setLinks] = useState<EntryLink[]>(initialEntry?.links ?? []);
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
-  const [existingImages, setExistingImages] = useState<ImageAttachment[]>([]);
+  const [existingImages, setExistingImages] = useState<ImageAttachmentWithBlob[]>([]);
   const [imageChanges, setImageChanges] = useState<ImageChanges | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,10 +63,10 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
 
   // Load existing images when editing
   useEffect(() => {
-    if (isEditing && initialEntry.imageIds.length > 0) {
+    if (isEditing && initialEntry.imageAttachments && initialEntry.imageAttachments.length > 0) {
       getImagesForEntry(initialEntry.id).then(setExistingImages);
     }
-  }, [isEditing, initialEntry?.id, initialEntry?.imageIds, getImagesForEntry]);
+  }, [isEditing, initialEntry?.id, initialEntry?.imageAttachments, getImagesForEntry]);
 
   const {
     coords,

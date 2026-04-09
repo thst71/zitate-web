@@ -1,6 +1,9 @@
 /**
  * Entry interface - represents a quote/citation with metadata
  */
+import type { ImageAttachmentMeta } from './ImageAttachment';
+import type { AudioAttachmentMeta } from './AudioAttachment';
+
 export interface EntryLink {
   id: string;                    // UUID v4
   url: string;                   // Absolute URL
@@ -18,8 +21,8 @@ export interface Entry {
   authorId?: string;             // Foreign key to Author
   labelIds: string[];            // Foreign keys to Labels
   links?: EntryLink[];           // Attached URLs with metadata
-  imageIds: string[];            // Foreign keys to Images
-  audioId?: string;              // Foreign key to Audio
+  imageAttachments: ImageAttachmentMeta[];  // Image metadata (blobs stored as PouchDB attachments)
+  audioAttachment?: AudioAttachmentMeta;    // Audio metadata (blob stored as PouchDB attachment)
   createdAt: number;             // Unix timestamp (ms)
   updatedAt: number;             // Unix timestamp (ms)
 }
@@ -35,6 +38,6 @@ export function createEntry(text: string, latitude?: number, longitude?: number)
     longitude,
     labelIds: [],
     links: [],
-    imageIds: [],
+    imageAttachments: [],
   };
 }

@@ -6,10 +6,14 @@
  * and data objects that carry an `id` field.  Internally the service
  * maps them to PouchDB documents with `_id = <type>:<uuid>` and a
  * `type` field.
+ *
+ * Since schema v3, images and audio are stored as PouchDB attachments
+ * on entry documents rather than in separate document stores.
  */
 import PouchDB from 'pouchdb-browser';
 import PouchDBFind from 'pouchdb-find';
-import { DB_NAME, DB_VERSION, STORES, type StoreType, buildId, extractUuid, getDesignDocuments } from '../db/schema';
+import { DB_NAME, DB_VERSION, STORES, LEGACY_STORES, type StoreType, buildId, extractUuid, getDesignDocuments } from '../db/schema';
+import type { ImageAttachmentMeta } from '../models';
 
 PouchDB.plugin(PouchDBFind);
 
@@ -80,8 +84,20 @@ class DBService {
           }
         }
 
-        // Future migration hooks go here:
-        // if (storedVersion < 2) { await migrateV1toV2(db); }
+        // Remove obsolete design documents (images, audio)
+        for (const obsoleteId of ['_design/images', '_design/audio']) {
+          try {
+            const doc = await db.get(obsoleteId);
+            await db.remove(doc);
+          } catch {
+            // Already gone
+          }
+        }
+
+        // Migration: v2 → v3 – move image/audio docs to entry attachments
+        if (storedVersion > 0 && storedVersion < 3) {
+          await this.migrateAttachmentsV2toV3(db);
+        }
 
         // Persist the new schema version
         const newVersionDoc: SchemaVersionDoc = {
@@ -99,6 +115,152 @@ class DBService {
     return this.initPromise;
   }
 
+  // ────────────────────── migration ──────────────────────
+
+  /**
+   * Migrate legacy separate image/audio documents to PouchDB attachments
+   * on their parent entry documents.
+   */
+  private async migrateAttachmentsV2toV3(db: PouchDB.Database): Promise<void> {
+    // Collect all legacy image documents
+    const imagePrefix = `${LEGACY_STORES.IMAGES}:`;
+    const imageResult = await db.allDocs({
+      include_docs: true,
+      startkey: imagePrefix,
+      endkey: `${imagePrefix}\ufff0`,
+    });
+
+    // Group images by entryId
+    const imagesByEntry = new Map<string, Array<PouchDoc & { blob?: Blob }>>();
+    for (const row of imageResult.rows) {
+      if (!row.doc) continue;
+      const doc = row.doc as PouchDoc;
+      const entryId = doc.entryId as string;
+      if (!entryId) continue;
+      if (!imagesByEntry.has(entryId)) {
+        imagesByEntry.set(entryId, []);
+      }
+      imagesByEntry.get(entryId)!.push(doc);
+    }
+
+    // Migrate each entry's images
+    for (const [entryId, imageDocs] of imagesByEntry.entries()) {
+      const entryDocId = buildId(STORES.ENTRIES, entryId);
+      try {
+        const metas: ImageAttachmentMeta[] = [];
+
+        for (const imgDoc of imageDocs) {
+          const imgUuid = extractUuid(imgDoc._id);
+          const attachmentName = `image-${imgUuid}`;
+          const blob = imgDoc.blob as unknown as Blob;
+          if (blob) {
+            // Re-read entry to get latest _rev after each putAttachment
+            const fresh = await db.get(entryDocId);
+            const currentRev: string = fresh._rev;
+            await db.putAttachment(
+              entryDocId, attachmentName, currentRev,
+              blob, (imgDoc.mimeType as string) || 'image/jpeg'
+            );
+          }
+          metas.push({
+            id: imgUuid,
+            mimeType: (imgDoc.mimeType as string) || 'image/jpeg',
+            size: (imgDoc.size as number) || 0,
+            order: (imgDoc.order as number) || 0,
+            createdAt: (imgDoc.createdAt as number) || Date.now(),
+          });
+        }
+
+        // Update entry document with imageAttachments metadata
+        const freshEntry = await db.get(entryDocId) as PouchDoc;
+        freshEntry.imageAttachments = metas.sort((a, b) => a.order - b.order);
+        // Remove legacy fields
+        delete freshEntry.imageIds;
+        delete freshEntry.audioId;
+        await db.put(freshEntry as unknown as PouchDB.Core.PutDocument<Record<string, unknown>>);
+
+        // Delete old image documents
+        for (const imgDoc of imageDocs) {
+          try {
+            const current = await db.get(imgDoc._id);
+            await db.remove(current);
+          } catch {
+            // Already removed
+          }
+        }
+      } catch {
+        // Entry not found or migration error — skip silently
+      }
+    }
+
+    // Migrate audio documents similarly
+    const audioPrefix = `${LEGACY_STORES.AUDIO}:`;
+    const audioResult = await db.allDocs({
+      include_docs: true,
+      startkey: audioPrefix,
+      endkey: `${audioPrefix}\ufff0`,
+    });
+
+    for (const row of audioResult.rows) {
+      if (!row.doc) continue;
+      const doc = row.doc as PouchDoc;
+      const entryId = doc.entryId as string;
+      if (!entryId) continue;
+
+      const entryDocId = buildId(STORES.ENTRIES, entryId);
+      try {
+        const audioUuid = extractUuid(doc._id);
+        const attachmentName = `audio-${audioUuid}`;
+        const blob = doc.blob as unknown as Blob;
+        if (blob) {
+          const fresh = await db.get(entryDocId);
+          await db.putAttachment(
+            entryDocId, attachmentName, fresh._rev,
+            blob, (doc.mimeType as string) || 'audio/webm'
+          );
+        }
+
+        const freshEntry = await db.get(entryDocId) as PouchDoc;
+        freshEntry.audioAttachment = {
+          id: audioUuid,
+          mimeType: (doc.mimeType as string) || 'audio/webm',
+          duration: (doc.duration as number) || 0,
+          createdAt: (doc.createdAt as number) || Date.now(),
+        };
+        delete freshEntry.audioId;
+        await db.put(freshEntry as unknown as PouchDB.Core.PutDocument<Record<string, unknown>>);
+
+        // Delete old audio document
+        try {
+          const current = await db.get(doc._id);
+          await db.remove(current);
+        } catch {
+          // Already removed
+        }
+      } catch {
+        // Entry not found or migration error — skip silently
+      }
+    }
+
+    // Clean up entries that had imageIds but no actual images (normalize)
+    const entryPrefix = `${STORES.ENTRIES}:`;
+    const entryResult = await db.allDocs({
+      include_docs: true,
+      startkey: entryPrefix,
+      endkey: `${entryPrefix}\ufff0`,
+    });
+    for (const row of entryResult.rows) {
+      if (!row.doc) continue;
+      const doc = row.doc as PouchDoc;
+      if (doc.imageIds && !doc.imageAttachments) {
+        doc.imageAttachments = [];
+        delete doc.imageIds;
+        delete doc.audioId;
+        await db.put(doc as unknown as PouchDB.Core.PutDocument<Record<string, unknown>>);
+      }
+    }
+  }
+
   // ────────────────────── helpers ──────────────────────
 
   /**
@@ -107,7 +269,7 @@ class DBService {
    */
   private toModel<T>(doc: PouchDoc): T {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { _id, _rev, type, ...rest } = doc;
+    const { _id, _rev, type, _attachments, ...rest } = doc;
     return { ...rest, id: extractUuid(_id) } as unknown as T;
   }
 
@@ -167,13 +329,19 @@ class DBService {
 
   /**
    * Update an existing item (upsert).
+   * Preserves PouchDB attachments by carrying forward the `_attachments`
+   * stub from the existing document revision.
    */
   async update<T>(storeName: string, data: T): Promise<string> {
     const db = await this.init();
     const doc = this.toDoc(storeName, data as unknown as HasId);
     try {
-      const existing = await db.get(doc._id);
+      const existing = await db.get(doc._id) as PouchDoc;
       doc._rev = existing._rev;
+      // Preserve binary attachments that live on the document
+      if (existing._attachments) {
+        doc._attachments = existing._attachments;
+      }
     } catch {
       // New document – no _rev needed
     }
@@ -214,8 +382,6 @@ class DBService {
       entry: 'entries',
       author: 'authors',
       label: 'labels',
-      image: 'images',
-      audio: 'audio',
       folder: 'folders',
     };
     const designName = designDocMap[storeName] || `${storeName}s`;
@@ -281,6 +447,66 @@ class DBService {
     return result.rows
       .filter((r) => r.doc)
       .map((r) => this.toModel<T>(r.doc as PouchDoc));
+  }
+
+  // ────────────────────── Attachments ──────────────────────
+
+  /**
+   * Store a binary attachment on a document.
+   * @param storeName — document type prefix (e.g. 'entry')
+   * @param id — document uuid
+   * @param attachmentName — attachment name (e.g. 'image-<uuid>')
+   * @param blob — binary data
+   * @param contentType — MIME type
+   */
+  async putAttachment(
+    storeName: string,
+    id: string,
+    attachmentName: string,
+    blob: Blob,
+    contentType: string
+  ): Promise<void> {
+    const db = await this.init();
+    const docId = buildId(storeName as StoreType, id);
+    const doc = await db.get(docId);
+    await db.putAttachment(docId, attachmentName, doc._rev, blob, contentType);
+  }
+
+  /**
+   * Retrieve a binary attachment from a document.
+   * PouchDB returns a Buffer in Node.js environments and a Blob in browsers.
+   * We normalise to Blob for a consistent API.
+   */
+  async getAttachment(
+    storeName: string,
+    id: string,
+    attachmentName: string
+  ): Promise<Blob> {
+    const db = await this.init();
+    const docId = buildId(storeName as StoreType, id);
+    const attachment = await db.getAttachment(docId, attachmentName);
+    // In browsers PouchDB returns a Blob directly
+    if (attachment instanceof Blob) {
+      return attachment;
+    }
+    // In Node.js test environments PouchDB returns a Buffer.
+    // Convert via ArrayBuffer for type-safe Blob creation.
+    const raw = attachment as unknown as ArrayBufferLike;
+    return new Blob([new Uint8Array(raw as ArrayBuffer)]);
+  }
+
+  /**
+   * Remove a binary attachment from a document.
+   */
+  async removeAttachment(
+    storeName: string,
+    id: string,
+    attachmentName: string
+  ): Promise<void> {
+    const db = await this.init();
+    const docId = buildId(storeName as StoreType, id);
+    const doc = await db.get(docId);
+    await db.removeAttachment(docId, attachmentName, doc._rev);
   }
 
   /**

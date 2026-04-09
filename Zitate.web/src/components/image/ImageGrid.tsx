@@ -2,11 +2,11 @@
  * ImageGrid Component - Grid display for multiple image thumbnails
  */
 import { ImageThumbnail } from './ImageThumbnail';
-import type { ImageAttachment } from '../../models';
+import type { ImageAttachmentWithBlob } from '../../models';
 import './ImageGrid.css';
 
 interface ImageGridProps {
-  images: ImageAttachment[];
+  images: ImageAttachmentWithBlob[];
   onImageClick?: (index: number) => void;
   onImageDelete?: (imageId: string) => void;
   maxDisplay?: number;

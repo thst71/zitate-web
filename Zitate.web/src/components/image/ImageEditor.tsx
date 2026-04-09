@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { ImageThumbnail } from './ImageThumbnail';
 import { ImageUpload, type SelectedImage } from './ImageUpload';
 import { isValidImageType, isValidImageSize, readFileAsDataURL } from '../../services/image.service';
-import type { ImageAttachment } from '../../models';
+import type { ImageAttachmentWithBlob } from '../../models';
 import './ImageEditor.css';
 
 export interface ImageChanges {
@@ -17,7 +17,7 @@ export interface ImageChanges {
 }
 
 interface ImageEditorProps {
-  existingImages: ImageAttachment[];
+  existingImages: ImageAttachmentWithBlob[];
   maxImages?: number;
   onChange: (changes: ImageChanges) => void;
 }
@@ -65,7 +65,7 @@ export function ImageEditor({
   const visibleExistingImages = workingImageIds
     .filter((id) => !imagesToDelete.includes(id))
     .map((id) => existingImages.find((img) => img.id === id))
-    .filter((img): img is ImageAttachment => img !== undefined);
+    .filter((img): img is ImageAttachmentWithBlob => img !== undefined);
 
   const totalCount = visibleExistingImages.length + imagesToAdd.length;
   const remainingSlots = maxImages - totalCount;

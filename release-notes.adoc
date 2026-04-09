@@ -1,0 +1,27 @@
+= Release Notes: Zitate Web
+:toc:
+
+== v2.0.0 — PouchDB Attachment Migration
+
+=== Breaking Changes
+
+* **Images and audio are now stored as PouchDB attachments** on entry documents instead of separate `image:*` and `audio:*` documents. This enables correct replication to CouchDB. +
+  _References: FR-6.2, FR-1.3, FR-1.4_
+
+* **Entry model change**: `imageIds: string[]` and `audioId?: string` replaced by `imageAttachments: ImageAttachmentMeta[]` and `audioAttachment?: AudioAttachmentMeta`. Legacy entries are migrated automatically on first launch.
+
+* **Schema version bumped to 3**: The `DB_VERSION` constant changed from `2` to `3`. A one-time in-place migration converts all existing `image:*` and `audio:*` documents to PouchDB attachments on their parent entry documents.
+
+* **STORES.IMAGES and STORES.AUDIO removed**: The `image` and `audio` type prefixes are no longer available in `STORES`. They exist as `LEGACY_STORES` for migration purposes only.
+
+=== Features
+
+* **PouchDB attachment API on DBService**: New methods `putAttachment()`, `getAttachment()`, `removeAttachment()` for binary data management on any document.
+* **Automatic v2→v3 migration**: On first launch after upgrade, legacy image and audio documents are migrated to PouchDB attachments. No user action required.
+* **Preserved export/import compatibility**: Export files include attachment data as Base64, import restores them as PouchDB attachments. Legacy export files (version ≤ 2) remain importable.
+* **Simpler entry deletion**: Deleting an entry now automatically removes all attached images and audio (PouchDB removes attachments with the document).
+
+=== Fixes
+
+* **`update()` preserves attachments**: The `DBService.update()` method now carries forward `_attachments` stubs from the existing document revision, preventing accidental loss of binary data during metadata updates.
+
