@@ -162,3 +162,69 @@ Tasks to be executed
 - The test criteria section must be updated to reflect any changed or added acceptance criteria
 - **Impact check:** If the change reveals a gap in the technical specification, the agent flags it or updates tech-specification-web.adoc
 - If the change invalidates or extends a requirement, the agent flags it for the user
+
+
+## Agentic Coding Guidelines
+
+To ensure successful implementation and agentic behavior during coding tasks, agents must strictly follow these rules:
+
+### Definition of Done (DoD)
+Every implementation task is only considered complete when:
+- All tests defined in the Test Pyramid for the story pass successfully.
+- Type-checking and linting run without any new warnings or errors.
+- No `console.log` statements, unused variables, or commented-out debug code are left behind.
+- Code matches existing architectural patterns and styling conventions.
+- Release notes file is updated with the following changes
+ - new Features:
+   - add the feature to the features list in the release-notes
+   - add references to the requirements touched by this feature by going back from the user-story to the requirement using the traceability in the user-story
+ - new Fixes:
+  - add the fix to the fixes list in the release-notes
+  - if there is any changes in behavior of the application besides the intended behavior before the fix was applied, describe it. For example if the search-result sorting adhered to case-sensitivity but it was not intended to be case-sensitive, describe that search will now sort results case-insensitive.
+ - new Breaking Changes:
+  - add the breaking change to the breaking changes list in the release-notes
+  - add references to the requirements touched by this breaking change by going back from the user-story to the requirement using the traceability in the user-story
+
+### Self-Correction & Debugging Protocol
+- **Do not guess:** Before modifying code to fix an error, read the specific error trace.
+- **Isolate:** Reproduce the problem in isolation (e.g., via a specific failing test) before fixing.
+- **Limit loops:** If a test or build fails more than 3 times for the same reason, stop and ask the user for guidance rather than continuing to guess.
+
+### Architectural & Context Boundaries
+- **Discovery First:** Before implementing a new component or utility, search the codebase for existing reusable equivalents.
+- **Dependency Constraint:** Never install new `npm` packages unless explicitly requested by the user or defined in the technical specification.
+
+
+## Skill implement-user-story
+
+Files to be modified
+
+- Code files corresponding to the feature architecture
+- Test files (`*.test.ts`, `*.test.tsx`, etc.)
+- release-notes.adoc (located next to the specification files)
+
+Tasks to be executed
+
+- The user provides a user story from `backlog-web.adoc`
+- **Context Gathering:** Read the relevant sections of `tech-specification-web.adoc` and the referenced user story
+- **Baseline Check:** Run the existing test suite first to ensure the project isn't already in a broken state
+- **TDD Approach:** Write the failing tests (Unit/Component) defined in the test criteria *before* writing the implementation
+- **Implementation:** Write the minimal code required to make the tests pass
+- **Verification:** Run linters, type-checkers, and tests to ensure no regressions were introduced. Ensure the Definition of Done is met.
+
+
+## Skill fix-bug
+
+Files to be modified
+
+- Code files causing the bug
+- Test files to prevent regressions
+- release-notes.adoc (located next to the specification files)
+
+Tasks to be executed
+
+- The user provides a bug report or stack trace
+- **Reproduction:** Write an automated test (Unit/Integration) that specifically reproduces the bug (the test must initially fail)
+- **Root Cause Analysis:** Read the relevant source files and briefly document the root cause
+- **Fix:** Modify the code so the newly created test passes
+- **Verification:** Ensure the rest of the test suite still passes (no regressions) and the Definition of Done is met.
