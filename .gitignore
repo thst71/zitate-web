@@ -29,3 +29,7 @@ coverage/
 # Docker
 docker-compose.override.yml
 /Zitate.web/Zitate.web/test_output.txt
+
+# CouchDB runtime config (written by entrypoint)
+couchdb/docker.ini
+

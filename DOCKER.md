@@ -78,6 +78,36 @@ The `nginx.conf` file includes:
 
 To modify nginx configuration, edit `Zitate.web/nginx.conf` and rebuild the image.
 
+### CouchDB Configuration
+
+CouchDB is built from `couchdb/Dockerfile`, which extends the official `couchdb:3` image and copies `couchdb/local.ini` into the image as `/opt/couchdb/etc/local.d/zitate.ini`. This avoids bind-mount permission issues on macOS Docker Desktop (virtiofs `chown` failure that kills the CouchDB entrypoint).
+
+| Setting | Default | Description |
+|---|---|---|
+| `COUCHDB_USER` | `admin` | Admin username (set via environment variable) |
+| `COUCHDB_PASSWORD` | `changeme` | Admin password (set via environment variable) |
+| `cluster.n` | `1` | Single-node setup (no clustering) |
+| `couch_peruser.enable` | `false` | Set to `true` to auto-create per-user databases on registration |
+| `cors.origins` | `*` | Allowed CORS origins (restrict in production) |
+| `chttpd.require_valid_user_except_for_up` | `true` | Requires auth for all endpoints except `/_up` |
+
+**Rebuilding after config changes:**
+
+```bash
+docker compose build couchdb
+docker compose up couchdb -d
+```
+
+**Volume:** CouchDB data is persisted in the named Docker volume `couchdb-data`. Removing this volume deletes all server-side data.
+
+**Reverse Proxy:** In the Docker setup, nginx proxies `/couchdb/` to the CouchDB container on port 5984. This keeps CouchDB same-origin with the web app. PouchDB replication should target `<app-origin>/couchdb/` as the remote URL.
+
+**Health Check:** CouchDB exposes `/_up` for readiness checks (no authentication required). The docker-compose health check polls this endpoint every 15 seconds. The web app container waits for CouchDB to pass the health check before starting.
+
+**Per-User Databases:** When `couch_peruser` is enabled, CouchDB creates a database named `userdb-<hex-encoded-username>` for each user registered in the `_users` database.
+
+> **⚠️ Production Note:** Change the default admin credentials before deploying. Override `COUCHDB_USER` and `COUCHDB_PASSWORD` via environment variables, or update the `[admins]` section in `couchdb/local.ini` and rebuild.
+
 ## Building for Production
 
 ```bash

@@ -5,7 +5,7 @@
 
 === Features
 
-* **CouchDB container in docker-compose**: A CouchDB 3 service is now included in `docker-compose.yml` with configurable admin credentials (`COUCHDB_USER`, `COUCHDB_PASSWORD`), a persistent Docker volume (`couchdb-data`), and a health check on `/_up`. The web app containers wait for CouchDB to become healthy before starting. +
+* **CouchDB container in docker-compose**: A CouchDB 3 service is now included in `docker-compose.yml`, built from `couchdb/Dockerfile` (extends `couchdb:3` with custom config baked in). Configurable admin credentials (`COUCHDB_USER`, `COUCHDB_PASSWORD`), persistent Docker volume (`couchdb-data`), and a health check on `/_up`. The web app containers wait for CouchDB to become healthy before starting. +
   _References: FR-6.2, FR-6.3_
 
 * **Per-user database isolation via `couch_peruser`**: The CouchDB configuration (`couchdb/local.ini`) enables the `couch_peruser` plugin, which automatically creates a `userdb-<hex>` database for each registered user.

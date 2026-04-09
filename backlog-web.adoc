@@ -1262,11 +1262,12 @@ FR-6.2
 - [x] The web app container can reach CouchDB via Docker networking
 
 .*Implementation Notes:*
-- `docker-compose.yml`: Added `couchdb` service (image `couchdb:3`) with health check on `/_up`, named volume `couchdb-data`, configurable `COUCHDB_USER`/`COUCHDB_PASSWORD` (default: `admin`/`changeme`), and `couchdb/local.ini` bind-mount
-- `couchdb/local.ini`: Single-node CouchDB config enabling `couch_peruser`, CORS (`origins = *` for development), and `require_valid_user = true`
+- `docker-compose.yml`: Added `couchdb` service (built from `couchdb/Dockerfile`, based on `couchdb:3`) with health check on `/_up`, named volume `couchdb-data`, configurable `COUCHDB_USER`/`COUCHDB_PASSWORD` (default: `admin`/`changeme`)
+- `couchdb/Dockerfile`: Extends `couchdb:3` and copies `local.ini` into the image as `/opt/couchdb/etc/local.d/zitate.ini` with correct ownership (`couchdb:couchdb`). This avoids macOS Docker Desktop virtiofs `chown` failures that kill the entrypoint (`set -e` + `find -exec chown -f` returning non-zero on bind-mounted files).
+- `couchdb/local.ini`: Single-node CouchDB config (`[cluster] n=1`) enabling CORS (`origins = *` for development), `require_valid_user_except_for_up = true`, and a pre-hashed `[admins]` entry
 - `Zitate.web/nginx.conf`: Added `/couchdb/` reverse proxy location targeting `http://couchdb:5984/` with HTTP/1.1 keep-alive, 300s timeouts for long-polling, and proxy headers
 - All web app services (`zitate-web-1`, `zitate-web-2`, `zitate-web-build`) depend on CouchDB via `condition: service_healthy`
-- `DOCKER.md`: Updated with CouchDB configuration reference, admin credentials, volume backup/restore, and production security notes
+- `DOCKER.md`: Updated with CouchDB configuration reference, rebuild instructions, volume backup/restore, and production security notes
 
 .*Reference:*
 FR-6.2, FR-6.3
