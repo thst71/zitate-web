@@ -18,7 +18,7 @@ export const LabelInput: React.FC<LabelInputProps> = ({
   selectedLabelIds,
   onLabelsChange,
 }) => {
-  const { addLabel, searchLabels, getLabelsByIds } = useLabels();
+  const { addLabel, searchLabels, getLabelsByIds, loading } = useLabels();
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<Label[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -216,6 +216,7 @@ export const LabelInput: React.FC<LabelInputProps> = ({
           maxLength={50}
           autoComplete="off"
           role="combobox"
+          aria-busy={loading}
           aria-expanded={showSuggestions}
           aria-controls={listboxId}
           aria-activedescendant={

@@ -25,6 +25,13 @@ describe('LabelInput', () => {
     await clearAndSeed();
   });
 
+  /** Wait until useLabels has finished loading from PouchDB */
+  async function waitForLabelsLoaded() {
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toHaveAttribute('aria-busy', 'false');
+    });
+  }
+
   it('should render the input with placeholder', () => {
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={vi.fn()} />);
     expect(screen.getByPlaceholderText(/type to search or create labels/i)).toBeInTheDocument();
@@ -33,6 +40,7 @@ describe('LabelInput', () => {
   it('should show suggestions when typing', async () => {
     const user = userEvent.setup();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={vi.fn()} />);
+    await waitForLabelsLoaded();
 
     await user.type(screen.getByRole('combobox'), 'ph');
 
@@ -49,6 +57,7 @@ describe('LabelInput', () => {
     const user = userEvent.setup();
     const onLabelsChange = vi.fn();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={onLabelsChange} />);
+    await waitForLabelsLoaded();
 
     await user.type(screen.getByRole('combobox'), 'ph');
     await waitFor(() => expect(screen.getByText('philosophy')).toBeInTheDocument());
@@ -60,6 +69,7 @@ describe('LabelInput', () => {
   it('should show Create option when no exact match', async () => {
     const user = userEvent.setup();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={vi.fn()} />);
+    await waitForLabelsLoaded();
 
     await user.type(screen.getByRole('combobox'), 'science');
     await waitFor(() => expect(screen.getByText(/Create "science"/)).toBeInTheDocument());
@@ -68,9 +78,12 @@ describe('LabelInput', () => {
   it('should highlight suggestions with ArrowDown/ArrowUp', async () => {
     const user = userEvent.setup();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={vi.fn()} />);
+    await waitForLabelsLoaded();
 
     await user.type(screen.getByRole('combobox'), 'p');
     await waitFor(() => expect(screen.getByRole('listbox')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('philosophy')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('physics')).toBeInTheDocument());
 
     await user.keyboard('{ArrowDown}');
     const first = screen.getByText('philosophy').closest('[role="option"]');
@@ -90,41 +103,59 @@ describe('LabelInput', () => {
     const user = userEvent.setup();
     const onLabelsChange = vi.fn();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={onLabelsChange} />);
+    await waitForLabelsLoaded();
 
     await user.type(screen.getByRole('combobox'), 'ph');
     await waitFor(() => expect(screen.getByRole('listbox')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('philosophy')).toBeInTheDocument());
 
-    await user.keyboard('{ArrowDown}{Enter}');
-    expect(onLabelsChange).toHaveBeenCalledWith(['l1']);
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => {
+      const first = screen.getByText('philosophy').closest('[role="option"]');
+      expect(first).toHaveAttribute('aria-selected', 'true');
+    });
+
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(onLabelsChange).toHaveBeenCalledWith(['l1']));
   });
 
   it('should select highlighted suggestion with Tab', async () => {
     const user = userEvent.setup();
     const onLabelsChange = vi.fn();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={onLabelsChange} />);
+    await waitForLabelsLoaded();
 
     await user.type(screen.getByRole('combobox'), 'ph');
     await waitFor(() => expect(screen.getByRole('listbox')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('philosophy')).toBeInTheDocument());
 
-    await user.keyboard('{ArrowDown}{Tab}');
-    expect(onLabelsChange).toHaveBeenCalledWith(['l1']);
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => {
+      const first = screen.getByText('philosophy').closest('[role="option"]');
+      expect(first).toHaveAttribute('aria-selected', 'true');
+    });
+
+    await user.keyboard('{Tab}');
+    await waitFor(() => expect(onLabelsChange).toHaveBeenCalledWith(['l1']));
   });
 
   it('should close suggestions with Escape', async () => {
     const user = userEvent.setup();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={vi.fn()} />);
+    await waitForLabelsLoaded();
 
     await user.type(screen.getByRole('combobox'), 'ph');
     await waitFor(() => expect(screen.getByRole('listbox')).toBeInTheDocument());
 
     await user.keyboard('{Escape}');
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
   });
 
   it('should create a new label with Enter on non-matching text', async () => {
     const user = userEvent.setup();
     const onLabelsChange = vi.fn();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={onLabelsChange} />);
+    await waitForLabelsLoaded();
 
     await user.type(screen.getByRole('combobox'), 'science');
     await user.keyboard('{Enter}');
@@ -137,6 +168,7 @@ describe('LabelInput', () => {
   it('should have correct ARIA attributes', async () => {
     const user = userEvent.setup();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={vi.fn()} />);
+    await waitForLabelsLoaded();
 
     const input = screen.getByRole('combobox');
     expect(input).toHaveAttribute('aria-expanded', 'false');
@@ -149,6 +181,7 @@ describe('LabelInput', () => {
   it('should set aria-activedescendant when navigating', async () => {
     const user = userEvent.setup();
     render(<LabelInput selectedLabelIds={[]} onLabelsChange={vi.fn()} />);
+    await waitForLabelsLoaded();
 
     const input = screen.getByRole('combobox');
     await user.type(input, 'p');
@@ -156,7 +189,7 @@ describe('LabelInput', () => {
 
     expect(input).not.toHaveAttribute('aria-activedescendant');
     await user.keyboard('{ArrowDown}');
-    expect(input).toHaveAttribute('aria-activedescendant', 'label-option-0');
+    await waitFor(() => expect(input).toHaveAttribute('aria-activedescendant', 'label-option-0'));
   });
 
   it('should display selected labels as tags', async () => {
@@ -183,6 +216,7 @@ describe('LabelInput', () => {
   it('should show checkmark on already-selected labels', async () => {
     const user = userEvent.setup();
     render(<LabelInput selectedLabelIds={['l1']} onLabelsChange={vi.fn()} />);
+    await waitForLabelsLoaded();
 
     await user.type(screen.getByRole('combobox'), 'ph');
     await waitFor(() => {
