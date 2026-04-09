@@ -108,7 +108,7 @@ zitate-web/
 === Component-Based Architecture
 - *Components:* Reusable React UI components
 - *Hooks:* Custom React hooks for shared logic and state management
-- *Services:* Singleton business logic services (db.service, location.service)
+- *Services:* Singleton business logic services (`db.service`, `location.service`)
 - *Models:* TypeScript interfaces for type safety
 
 === State Management
@@ -359,7 +359,7 @@ Attached URLs are managed as embedded `EntryLink` objects on the `Entry` record.
 - Entry cards render a dedicated link icon in the top-right area of the text block when `links.length > 0`
 - Activating the icon opens a compact dropdown or popover containing all attached URLs
 - Each row shows favicon, URL label/text, and the stored per-link attachment date
-- The URL list must be keyboard accessible and support mouse and touch interaction
+- The URL list must be keyboard-accessible and support mouse and touch interaction
 - Selecting a URL opens it in a new browser tab/window using standard browser navigation
 
 === Image Editing in Entry Edit Mode
@@ -383,7 +383,7 @@ When editing an existing entry, the user must be able to manage attached images 
 - Updates the `imageIds` array order on the `Entry`
 
 ==== Update Images (Replace)
-- User can click a "replace" action on an existing thumbnail
+- User can click a `replace` action on an existing thumbnail
 - Opens file picker for a single image
 - Old image is deleted from IndexedDB, new one is stored
 - Entry's `imageIds` array is updated (same position)
@@ -545,7 +545,7 @@ class AuthService {
 - Virtual scrolling for lists >100 items (react-window, vue-virtual-scroller)
 - Lazy loading images (IntersectionObserver)
 - Debounced search (300ms)
-- Code splitting by route (React.lazy, dynamic imports)
+- Code splitting by route (`React.lazy`, dynamic imports)
 - Memoization for expensive computations (useMemo, computed)
 
 === Bundle Size
@@ -756,13 +756,13 @@ export default defineConfig({
 === Deployment Options
 - Docker container (multi-stage build: Node.js build + nginx serve)
 - CouchDB container for server-side sync (optional, only needed for multi-device sync)
-- Multi-arch images (linux/amd64, linux/arm64) published to GitHub Container Registry (GHCR)
+- Multi-arch images (linux/amd64, linux/arm64) published to link:https://ghcr.io[GitHub Container Registry]
 - docker-compose for local/self-hosted deployment (web app + CouchDB)
 - HTTPS required for Service Worker, Geolocation, and secure sync
 
 === CI/CD (GitHub Actions)
 - Pull requests: lint, test with coverage, security audit (`npm audit`), Docker build (without push)
-- Tag push (`v*.*.*`): parallel native Docker builds per architecture, multi-arch manifest merge, push to GHCR, Trivy vulnerability scan with SARIF upload to GitHub Security tab
+- Tag push (`v*.*.*`): parallel native Docker builds per architecture, multi-arch manifest merge, push to link:https://ghcr.io[GitHub Container Registry], Trivy vulnerability scan with SARIF upload to GitHub Security tab
 
 == Development Environment
 
