@@ -1058,20 +1058,32 @@ FR-1.8
 
 == Epic 9: Server Synchronization
 
-=== Story 9.1: Migrate Data Layer from idb to PouchDB
+=== Story 9.1: Migrate Data Layer from idb to PouchDB [DONE]
 *As a* developer +
 *I want to* replace the raw `idb` wrapper with PouchDB +
 *So that* the data layer supports replication to CouchDB
 
+.*Status:* ✅ Implemented (2026-04-09)
+
 .*Acceptance Criteria:*
-- PouchDB is installed and configured as the local database
-- `DBService` is rewritten to use PouchDB API (`put`, `get`, `allDocs`, `query`)
-- All document types use the `type` field convention (e.g., `type: 'entry'`)
-- Document IDs follow the `<type>:<uuid>` pattern
-- All existing hooks (`useEntries`, `useAuthors`, `useLabels`, `useFolders`) work with the new DBService
-- The `idb` dependency is removed from `package.json`
-- Design documents are created for required secondary indexes (createdAt, authorId, entryId, name)
-- All existing unit and integration tests pass against the PouchDB-based DBService
+- [x] PouchDB is installed and configured as the local database
+- [x] `DBService` is rewritten to use PouchDB API (`put`, `get`, `allDocs`, `query`)
+- [x] All document types use the `type` field convention (e.g., `type: 'entry'`)
+- [x] Document IDs follow the `<type>:<uuid>` pattern
+- [x] All existing hooks (`useEntries`, `useAuthors`, `useLabels`, `useFolders`) work with the new DBService
+- [x] The `idb` dependency is removed from `package.json`
+- [x] Design documents are created for required secondary indexes (createdAt, authorId, entryId, name)
+- [x] All existing unit and integration tests pass against the PouchDB-based DBService (267/267)
+
+.*Implementation Notes:*
+- `db/schema.ts` rewritten: defines `STORES` as type prefixes (`entry`, `author`, etc.), `buildId()`, `extractUuid()`, and design documents for map/reduce views
+- `db.service.ts` rewritten: PouchDB-backed singleton with compatible public API (`get`, `getAll`, `add`, `update`, `delete`, `query`, `clear`, `count`, `getAllEntriesSorted`)
+- Documents stored with `_id = <type>:<uuid>`, `type` field, and model fields (minus `id`)
+- `toModel()` / `toDoc()` helpers handle conversion between PouchDB docs and public model shapes
+- `export.service.ts` updated to use `STORES` constants instead of hardcoded string store names
+- `vitest.config.ts` updated: `fileParallelism: false` to prevent cross-file PouchDB state interference
+- Hook tests use `dbService.clear()` for fast atomic cleanup
+- `db/schema.ts` kept (not removed) — it now defines the PouchDB document conventions and design documents
 
 .*Reference:*
 FR-6.2, NFR-2
