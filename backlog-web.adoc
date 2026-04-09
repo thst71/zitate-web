@@ -1250,14 +1250,23 @@ FR-6.2
 *I want to* add a CouchDB container to the docker-compose configuration +
 *So that* the server-side database is ready for sync
 
+.*Status:* ✅ Implemented (2026-04-09)
+
 .*Acceptance Criteria:*
-- `docker-compose.yml` includes a CouchDB service
-- CouchDB is configured with the `couch_peruser` plugin enabled
-- Admin credentials are configurable via environment variables
-- CouchDB data is persisted via a Docker volume
-- CORS is enabled for the web app origin
-- CouchDB health check is configured
-- The web app container can reach CouchDB via Docker networking
+- [x] `docker-compose.yml` includes a CouchDB service
+- [x] CouchDB is configured with the `couch_peruser` plugin enabled
+- [x] Admin credentials are configurable via environment variables
+- [x] CouchDB data is persisted via a Docker volume
+- [x] CORS is enabled for the web app origin
+- [x] CouchDB health check is configured
+- [x] The web app container can reach CouchDB via Docker networking
+
+.*Implementation Notes:*
+- `docker-compose.yml`: Added `couchdb` service (image `couchdb:3`) with health check on `/_up`, named volume `couchdb-data`, configurable `COUCHDB_USER`/`COUCHDB_PASSWORD` (default: `admin`/`changeme`), and `couchdb/local.ini` bind-mount
+- `couchdb/local.ini`: Single-node CouchDB config enabling `couch_peruser`, CORS (`origins = *` for development), and `require_valid_user = true`
+- `Zitate.web/nginx.conf`: Added `/couchdb/` reverse proxy location targeting `http://couchdb:5984/` with HTTP/1.1 keep-alive, 300s timeouts for long-polling, and proxy headers
+- All web app services (`zitate-web-1`, `zitate-web-2`, `zitate-web-build`) depend on CouchDB via `condition: service_healthy`
+- `DOCKER.md`: Updated with CouchDB configuration reference, admin credentials, volume backup/restore, and production security notes
 
 .*Reference:*
 FR-6.2, FR-6.3

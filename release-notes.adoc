@@ -1,6 +1,21 @@
 = Release Notes: Zitate Web
 :toc:
 
+== v2.2.0 — CouchDB Docker Setup
+
+=== Features
+
+* **CouchDB container in docker-compose**: A CouchDB 3 service is now included in `docker-compose.yml` with configurable admin credentials (`COUCHDB_USER`, `COUCHDB_PASSWORD`), a persistent Docker volume (`couchdb-data`), and a health check on `/_up`. The web app containers wait for CouchDB to become healthy before starting. +
+  _References: FR-6.2, FR-6.3_
+
+* **Per-user database isolation via `couch_peruser`**: The CouchDB configuration (`couchdb/local.ini`) enables the `couch_peruser` plugin, which automatically creates a `userdb-<hex>` database for each registered user.
+
+* **Nginx reverse proxy to CouchDB**: The nginx configuration proxies `/couchdb/` to the CouchDB container, keeping PouchDB replication same-origin with the web app. Long-polling and continuous changes feeds are supported via appropriate proxy timeouts and HTTP/1.1 keep-alive.
+
+* **CORS enabled for development**: CouchDB CORS is configured with permissive origins for local development. Production deployments should restrict `cors.origins` in `couchdb/local.ini`.
+
+'''
+
 == v2.1.0 — PouchDB Change Feed
 
 === Features

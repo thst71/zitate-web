@@ -136,10 +136,21 @@ npm run dev
 
 ## Data Persistence
 
-The Zitate web application stores all data in the browser's IndexedDB. There is no server-side data storage, so:
-- No volumes are required
-- Data is stored client-side only
-- Multiple users will have separate data stores
+The Zitate web application stores data in two locations:
+
+- **Client-side (PouchDB / IndexedDB):** All data is stored locally in the browser. No volumes are required for the web app container.
+- **Server-side (CouchDB):** When sync is enabled, data replicates to CouchDB. Server-side data is persisted in the `couchdb-data` Docker volume.
+
+```bash
+# List volumes
+docker volume ls | grep couchdb
+
+# Back up CouchDB data
+docker run --rm -v couchdb-data:/data -v $(pwd):/backup alpine tar czf /backup/couchdb-backup.tar.gz -C /data .
+
+# Restore CouchDB data
+docker run --rm -v couchdb-data:/data -v $(pwd):/backup alpine sh -c "cd /data && tar xzf /backup/couchdb-backup.tar.gz"
+```
 
 ## Troubleshooting
 

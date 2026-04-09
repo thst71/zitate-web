@@ -1,6 +1,29 @@
 version: '3.8'
 
 services:
+  # ── CouchDB ────────────────────────────────────────────────
+  couchdb:
+    container_name: zitate-couchdb
+    image: couchdb:3
+    restart: unless-stopped
+    environment:
+      - COUCHDB_USER=${COUCHDB_USER:-admin}
+      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-changeme}
+    ports:
+      - "5984:5984"
+    volumes:
+      - couchdb-data:/opt/couchdb/data
+      - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5984/_up || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    labels:
+      - "com.zitate.app=couchdb"
+
+  # ── Web app (pre-built images) ─────────────────────────────
   zitate-web-1:
     container_name: zitate-web
     image: ghcr.io/thst71/zitate-web:1
@@ -9,6 +32,9 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+    depends_on:
+      couchdb:
+        condition: service_healthy
 
   zitate-web-2:
     container_name: zitate-web-2
@@ -18,6 +44,9 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+    depends_on:
+      couchdb:
+        condition: service_healthy
 
   zitate-web-build:
     container_name: zitate-web-build
@@ -30,6 +59,13 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+    depends_on:
+      couchdb:
+        condition: service_healthy
     labels:
       - "com.zitate.app=web"
       - "com.zitate.version=SNAPSHOT"
+
+volumes:
+  couchdb-data:
+
