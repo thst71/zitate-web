@@ -1,6 +1,19 @@
 = Release Notes: Zitate Web
 :toc:
 
+== v2.1.0 — PouchDB Change Feed
+
+=== Features
+
+* **PouchDB change feed replaces storeSync**: All data hooks (`useEntries`, `useAuthors`, `useLabels`, `useFolders`) now subscribe to PouchDB's live change feed (`db.changes({ live: true, since: 'now' })`) instead of the custom `storeSync` event emitter. This means hooks automatically receive updates from both local writes and future remote CouchDB replication. +
+  _References: FR-6.2_
+
+=== Breaking Changes
+
+* **`storeSync.ts` removed**: The custom `onStoreChange` / `emitStoreChange` API has been deleted. Code that imported from `services/storeSync` must switch to the `useDbChanges` hook.
+
+'''
+
 == v2.0.0 — PouchDB Attachment Migration
 
 === Breaking Changes

@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { dbService, STORES } from '../services/db.service';
-import { onStoreChange, emitStoreChange } from '../services/storeSync';
+import { useDbChanges } from './useDbChanges';
 import type { Author } from '../models';
 import { validateAuthorName } from '../utils/validators';
 
@@ -63,7 +63,6 @@ export function useAuthors() {
       try {
         await dbService.add(STORES.AUTHORS, author);
         setAuthors((prev) => [...prev, author].sort((a, b) => a.name.localeCompare(b.name)));
-        emitStoreChange(AUTHOR_STORE, loadAuthors);
         return author;
       } catch (err) {
         throw new Error(
@@ -71,7 +70,7 @@ export function useAuthors() {
         );
       }
     },
-    [authors, loadAuthors]
+    [authors]
   );
 
   /**
@@ -110,14 +109,13 @@ export function useAuthors() {
         setAuthors((prev) =>
           prev.map((a) => (a.id === id ? updated : a)).sort((a, b) => a.name.localeCompare(b.name))
         );
-        emitStoreChange(AUTHOR_STORE, loadAuthors);
       } catch (err) {
         throw new Error(
           err instanceof Error ? err.message : 'Failed to update author'
         );
       }
     },
-    [authors, loadAuthors]
+    [authors]
   );
 
   /**
@@ -127,13 +125,12 @@ export function useAuthors() {
     try {
       await dbService.delete(STORES.AUTHORS, id);
       setAuthors((prev) => prev.filter((author) => author.id !== id));
-      emitStoreChange(AUTHOR_STORE, loadAuthors);
     } catch (err) {
       throw new Error(
         err instanceof Error ? err.message : 'Failed to delete author'
       );
     }
-  }, [loadAuthors]);
+  }, []);
 
   /**
    * Get author by ID
@@ -162,11 +159,12 @@ export function useAuthors() {
     [authors]
   );
 
-  // Load authors on mount and subscribe to changes from other hook instances
+  // Load authors on mount and subscribe to PouchDB change feed
   useEffect(() => {
     loadAuthors();
-    return onStoreChange(AUTHOR_STORE, loadAuthors);
   }, [loadAuthors]);
+
+  useDbChanges(AUTHOR_STORE, loadAuthors);
 
   return {
     authors,

@@ -1207,13 +1207,23 @@ FR-6.2, NFR-2
 *I want to* use PouchDB's built-in change feed instead of the custom storeSync event emitter +
 *So that* hooks receive updates from both local changes and remote replication
 
+.*Status:* ✅ Implemented (2026-04-09)
+
 .*Acceptance Criteria:*
-- `storeSync.ts` is removed
-- All hooks subscribe to PouchDB `db.changes({ live: true, since: 'now' })` for real-time updates
-- Changes from local writes trigger hook reloads
-- Changes from remote replication trigger hook reloads
-- Hooks filter change events by document type to avoid unnecessary reloads
-- No duplicate reloads when the same hook instance triggers a write
+- [x] `storeSync.ts` is removed
+- [x] All hooks subscribe to PouchDB `db.changes({ live: true, since: 'now' })` for real-time updates
+- [x] Changes from local writes trigger hook reloads
+- [x] Changes from remote replication trigger hook reloads
+- [x] Hooks filter change events by document type to avoid unnecessary reloads
+- [x] No duplicate reloads when the same hook instance triggers a write
+
+.*Implementation Notes:*
+- New `hooks/useDbChanges.ts` hook wraps `db.changes({ live: true, since: 'now' })` and filters by document type prefix (extracted via `extractType()`)
+- `useEntries`, `useAuthors`, `useLabels`, `useFolders` all use `useDbChanges` instead of `onStoreChange`/`emitStoreChange`
+- `emitStoreChange` calls removed — PouchDB fires change events automatically for local writes
+- Unnecessary `loadEntries`/`loadAuthors`/`loadLabels` dependencies removed from useCallback arrays
+- `useFolders` now also reacts to external changes (previously only loaded on mount)
+- Change listener uses a ref (`onChangeRef`) to always call the latest callback without re-subscribing
 
 .*Reference:*
 FR-6.2

@@ -4,22 +4,29 @@ import { useFolders } from './useFolders';
 import type { Entry, SmartFolder } from '../models';
 import { dbService, STORES } from '../services/db.service';
 
-vi.mock('../services/db.service', () => ({
-  dbService: {
-    getAll: vi.fn(),
-    add: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
-  STORES: {
-    ENTRIES: 'entries',
-    AUTHORS: 'authors',
-    LABELS: 'labels',
-    IMAGES: 'images',
-    AUDIO: 'audio',
-    FOLDERS: 'folders',
-  }
-}));
+vi.mock('../services/db.service', () => {
+  const mockChanges = {
+    on: vi.fn().mockReturnThis(),
+    cancel: vi.fn(),
+  };
+  return {
+    dbService: {
+      getAll: vi.fn(),
+      add: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      getDb: vi.fn().mockResolvedValue({
+        changes: vi.fn().mockReturnValue(mockChanges),
+      }),
+    },
+    STORES: {
+      ENTRIES: 'entry',
+      AUTHORS: 'author',
+      LABELS: 'label',
+      FOLDERS: 'folder',
+    },
+  };
+});
 
 describe('useFolders', () => {
   const mockFolders: SmartFolder[] = [

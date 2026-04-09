@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { dbService, STORES } from '../services/db.service';
-import { onStoreChange, emitStoreChange } from '../services/storeSync';
+import { useDbChanges } from './useDbChanges';
 import type { Label } from '../models';
 import { validateLabelName, normalizeLabelName } from '../utils/validators';
 
@@ -62,7 +62,6 @@ export function useLabels() {
       try {
         await dbService.add(STORES.LABELS, label);
         setLabels((prev) => [...prev, label].sort((a, b) => a.name.localeCompare(b.name)));
-        emitStoreChange(LABEL_STORE, loadLabels);
         return label;
       } catch (err) {
         throw new Error(
@@ -70,7 +69,7 @@ export function useLabels() {
         );
       }
     },
-    [labels, loadLabels]
+    [labels]
   );
 
   /**
@@ -80,13 +79,12 @@ export function useLabels() {
     try {
       await dbService.delete(STORES.LABELS, id);
       setLabels((prev) => prev.filter((label) => label.id !== id));
-      emitStoreChange(LABEL_STORE, loadLabels);
     } catch (err) {
       throw new Error(
         err instanceof Error ? err.message : 'Failed to delete label'
       );
     }
-  }, [loadLabels]);
+  }, []);
 
   /**
    * Get labels by IDs
@@ -115,11 +113,12 @@ export function useLabels() {
     [labels]
   );
 
-  // Load labels on mount and subscribe to changes from other hook instances
+  // Load labels on mount and subscribe to PouchDB change feed
   useEffect(() => {
     loadLabels();
-    return onStoreChange(LABEL_STORE, loadLabels);
   }, [loadLabels]);
+
+  useDbChanges(LABEL_STORE, loadLabels);
 
   return {
     labels,

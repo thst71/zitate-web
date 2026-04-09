@@ -8,7 +8,7 @@
 import {useCallback, useEffect, useState} from 'react';
 import {v4 as uuidv4} from 'uuid';
 import {dbService, STORES} from '../services/db.service';
-import {emitStoreChange, onStoreChange} from '../services/storeSync';
+import {useDbChanges} from './useDbChanges';
 import {compressImage} from '../services/image.service';
 import {locationService} from '../services/location.service';
 import type {Entry, EntryLink, ImageAttachmentMeta, ImageAttachmentWithBlob} from '../models';
@@ -152,13 +152,12 @@ export function useEntries() {
           setEntries((prev) =>
             prev.map((e) => (e.id === updated.id ? updated : e))
           );
-          emitStoreChange(ENTRY_STORE, loadEntries);
         }
       } catch (err) {
         void err;
       }
     },
-    [loadEntries]
+    []
   );
 
   /**
@@ -207,7 +206,6 @@ export function useEntries() {
         }
 
         setEntries((prev) => [normalizeEntry(entry), ...prev]);
-        emitStoreChange(ENTRY_STORE, loadEntries);
 
         // Background geocoding if address not already provided
         if (latitude != null && longitude != null && !addressShort) {
@@ -221,7 +219,7 @@ export function useEntries() {
         );
       }
     },
-    [saveImages, loadEntries, geocodeAndPersist, normalizeEntry]
+    [saveImages, geocodeAndPersist, normalizeEntry]
   );
 
   /**
@@ -319,7 +317,6 @@ export function useEntries() {
         setEntries((prev) =>
           prev.map((entry) => (entry.id === id ? normalizeEntry(updatedEntry) : entry))
         );
-        emitStoreChange(ENTRY_STORE, loadEntries);
 
         if (locationChanged && latitude != null && longitude != null && !addressShort) {
           geocodeAndPersist(updatedEntry);
@@ -332,7 +329,7 @@ export function useEntries() {
         );
       }
     },
-    [entries, saveImages, loadEntries, geocodeAndPersist, normalizeEntry]
+    [entries, saveImages, geocodeAndPersist, normalizeEntry]
   );
 
   /**
@@ -342,19 +339,19 @@ export function useEntries() {
     try {
       await dbService.delete(STORES.ENTRIES, id);
       setEntries((prev) => prev.filter((entry) => entry.id !== id));
-      emitStoreChange(ENTRY_STORE, loadEntries);
     } catch (err) {
       throw new Error(
         err instanceof Error ? err.message : 'Failed to delete entry'
       );
     }
-  }, [loadEntries]);
+  }, []);
 
-  // Load entries on mount and subscribe to changes from other hook instances
+  // Load entries on mount and subscribe to PouchDB change feed
   useEffect(() => {
     loadEntries();
-    return onStoreChange(ENTRY_STORE, loadEntries);
   }, [loadEntries]);
+
+  useDbChanges(ENTRY_STORE, loadEntries);
 
   return {
     entries,

@@ -4,8 +4,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { dbService, STORES } from '../services/db.service';
+import { useDbChanges } from './useDbChanges';
 import type { SmartFolder, Entry } from '../models';
 import { validateFolderName } from '../utils/validators';
+
+const FOLDER_STORE = STORES.FOLDERS;
 
 export function useFolders() {
   const [folders, setFolders] = useState<SmartFolder[]>([]);
@@ -192,10 +195,12 @@ export function useFolders() {
     [filterByFolder]
   );
 
-  // Load folders on mount
+  // Load folders on mount and subscribe to PouchDB change feed
   useEffect(() => {
     loadFolders();
   }, [loadFolders]);
+
+  useDbChanges(FOLDER_STORE, loadFolders);
 
   return {
     folders,
