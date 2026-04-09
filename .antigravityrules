@@ -1,0 +1,8 @@
+# Antigravity Instructions Pointer
+
+Before you execute any commands, plan any features, or write any code, you MUST read the following files:
+
+1. `.agent-instructions/skills.md` (Contains our Quality Guidelines, Definition of Done, and Agentic Skills)
+2. `.agent-instructions/models-index.md` (Contains the routing information for model-specific behavior overrides)
+
+Adhere strictly to the guidelines defined in those files.

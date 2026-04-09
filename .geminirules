@@ -1,0 +1,9 @@
+# Gemini Code Assist Instructions
+
+Whenever you are generating code or assisting with planning in this workspace, you MUST first review the project's centralized rule set.
+
+Before proceeding with your task, ensure you have read:
+1. `.agent-instructions/skills.md`
+2. `.agent-instructions/models-index.md`
+
+Adhere strictly to the coding guidelines, definition of done, and any model-specific behavior notes found in those files.
