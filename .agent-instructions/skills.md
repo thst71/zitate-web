@@ -7,7 +7,7 @@ All requirements, technical specifications, and user stories produced by these s
 ### Description languages
 
 - The description language is asciidoctor (adoc)
-- Diagrams in the documentation uses mermaid diagram definitions
+- The asciidoctor-diagram extension is supported and shall be used where appropriate
 
 ### SMART Criteria
 
