@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Header } from './components/layout/Header';
 import { Layout } from './components/layout/Layout';
 import { Modal } from './components/common/Modal';
@@ -19,8 +19,11 @@ import { useSearch } from './hooks/useSearch';
 import { useFolders } from './hooks/useFolders';
 import type { SmartFolder, Entry, EntryLink } from './models';
 import type { SelectedImage } from './components/image/ImageUpload';
+import { migrationService } from './services/migration.service';
+import { dbService } from './services/db.service';
 
 const App: React.FC = () => {
+  const [migrationState, setMigrationState] = useState<{ status: 'checking'|'migrating'|'done'|'error', msg: string }>({ status: 'checking', msg: '' });
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [isDataManagementOpen, setIsDataManagementOpen] = useState(false);
@@ -48,6 +51,22 @@ const App: React.FC = () => {
     filterByFolder,
     getFolderCount,
   } = useFolders();
+
+  useEffect(() => {
+    migrationService.checkLegacyDbExists().then(async exists => {
+      if (exists) {
+        setMigrationState({ status: 'migrating', msg: 'Starting migration...' });
+        try {
+          await migrationService.migrate(dbService, (msg) => setMigrationState({ status: 'migrating', msg }));
+          window.location.reload();
+        } catch {
+          setMigrationState({ status: 'error', msg: 'Migration failed. Please export your data and contact support.' });
+        }
+      } else {
+        setMigrationState({ status: 'done', msg: '' });
+      }
+    });
+  }, []);
 
   const handleCreateEntryClick = () => {
     setIsEntryModalOpen(true);
@@ -141,6 +160,25 @@ const App: React.FC = () => {
     displayEntries = filterByFolder(entries, selectedFolder);
   } else if (isSearching) {
     displayEntries = filteredEntries;
+  }
+
+  if (migrationState.status === 'checking') return null;
+  if (migrationState.status === 'migrating') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', padding: 'var(--spacing-xl)', textAlign: 'center' }}>
+        <h2>Upgrading Database</h2>
+        <p>Please wait while we migrate your old data to the new system. Do not close this tab.</p>
+        <p style={{ color: 'var(--color-primary)' }}><i>{migrationState.msg}</i></p>
+      </div>
+    );
+  }
+  if (migrationState.status === 'error') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', padding: 'var(--spacing-xl)', textAlign: 'center', color: 'red' }}>
+        <h2>Migration Error</h2>
+        <p>{migrationState.msg}</p>
+      </div>
+    );
   }
 
   return (

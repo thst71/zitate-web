@@ -20,6 +20,8 @@
 * **Automatic v2→v3 migration**: On first launch after upgrade, legacy image and audio documents are migrated to PouchDB attachments. No user action required.
 * **Preserved export/import compatibility**: Export files include attachment data as Base64, import restores them as PouchDB attachments. Legacy export files (version ≤ 2) remain importable.
 * **Simpler entry deletion**: Deleting an entry now automatically removes all attached images and audio (PouchDB removes attachments with the document).
+* **Legacy IDB Migration (`migration.service.ts`)**: On first launch after upgrade, the app detects legacy `idb`-based IndexedDB data (`zitate-db`) and migrates all entities (entries, authors, labels, folders, images, and audio) into PouchDB documents and attachments. _References: FR-6.2, NFR-2_
+* **Migration Progress UI**: Added a blocking progress screen during legacy data migration to prevent user interaction and state corruption while data is transferring.
 
 === Fixes
 

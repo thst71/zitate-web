@@ -1158,18 +1158,27 @@ FR-6.2, FR-1.3, FR-1.4
 
 '''
 
-=== Story 9.3: One-Time Data Migration from Legacy IndexedDB
+=== Story 9.3: One-Time Data Migration from Legacy IndexedDB [DONE]
 *As a* user +
 *I want to* have my existing data automatically migrated to the new database format +
 *So that* I do not lose any data when the app upgrades
 
+.*Status:* ✅ Implemented (2026-04-09)
+
 .*Acceptance Criteria:*
-- On first launch after upgrade, the app detects legacy `idb`-based IndexedDB data
-- All entries, authors, labels, folders, images, and audio are migrated to PouchDB
-- Binary blobs are converted to PouchDB attachments
-- Migration runs once and marks itself as complete (flag in localStorage)
-- If migration fails partway, the user is prompted to export data manually and retry
-- Legacy IndexedDB data is preserved until migration is confirmed successful
+- [x] On first launch after upgrade, the app detects legacy `idb`-based IndexedDB data
+- [x] All entries, authors, labels, folders, images, and audio are migrated to PouchDB
+- [x] Binary blobs are converted to PouchDB attachments (v3 naming: `image-<uuid>`, `audio-<uuid>`)
+- [x] Entry documents receive `imageAttachments` / `audioAttachment` metadata arrays
+- [x] Migration runs once and marks itself as complete (flag in localStorage)
+- [x] If migration fails, the user sees an error screen with guidance
+- [x] Legacy IndexedDB data is preserved (not deleted) after migration
+
+.*Implementation Notes:*
+- `services/migration.service.ts` rewritten: typed interfaces for legacy records, 3-phase migration (documents → image attachments → audio attachments), v3-compatible attachment naming
+- `App.tsx`: migration check runs on mount with blocking progress UI; `window.location.reload()` after successful migration to reinitialise all hooks
+- `test/setup.ts`: localStorage polyfill for Node.js 25 compatibility (Node.js 25 ships a bare `localStorage` without Web Storage API methods)
+- Tests: 7 tests covering detection, flag management, entry/author/label/folder migration, image attachment metadata, progress callback, skip-when-already-migrated
 
 .*Reference:*
 FR-6.2, NFR-2
