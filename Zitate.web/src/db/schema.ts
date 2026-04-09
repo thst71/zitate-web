@@ -1,80 +1,119 @@
 /**
- * IndexedDB Schema Definition for Zitate
- * Database: zitate-db
- * Version: 1
+ * PouchDB Schema Definition for Zitate
+ * Documents use a type field and <type>:<uuid> ID pattern.
+ *
+ * DB_VERSION tracks the document schema version.  It is stored on a
+ * dedicated `_local/schema_version` document inside PouchDB and used by:
+ *  - the design-document installer (to detect when views must be refreshed)
+ *  - the export service (to tag export files for forward-compatibility checks)
+ *  - future migration logic (to upgrade documents when the schema evolves)
+ *
+ * Bump DB_VERSION whenever:
+ *  - a document model gains / loses / renames a field
+ *  - a design-document view function changes
+ *  - the export format changes
  */
+export const DB_VERSION = 2;
 
 export const DB_NAME = 'zitate-db';
-export const DB_VERSION = 1;
 
 /**
- * Object store names
+ * Document type prefixes used in PouchDB _id fields.
+ * IDs follow the pattern: "<type>:<uuid>"
  */
 export const STORES = {
-  ENTRIES: 'entries',
-  AUTHORS: 'authors',
-  LABELS: 'labels',
-  IMAGES: 'images',
+  ENTRIES: 'entry',
+  AUTHORS: 'author',
+  LABELS: 'label',
+  IMAGES: 'image',
   AUDIO: 'audio',
-  FOLDERS: 'folders',
+  FOLDERS: 'folder',
 } as const;
 
+export type StoreType = typeof STORES[keyof typeof STORES];
+
 /**
- * Initialize IndexedDB schema
+ * Build a PouchDB document _id from type prefix and uuid.
  */
-export function createSchema(db: IDBDatabase): void {
-  // Entries object store
-  if (!db.objectStoreNames.contains(STORES.ENTRIES)) {
-    const entryStore = db.createObjectStore(STORES.ENTRIES, { keyPath: 'id' });
-    entryStore.createIndex('createdAt', 'createdAt', { unique: false });
-    entryStore.createIndex('updatedAt', 'updatedAt', { unique: false });
-    entryStore.createIndex('latitude', 'latitude', { unique: false });
-    entryStore.createIndex('longitude', 'longitude', { unique: false });
-  }
-
-  // Authors object store
-  if (!db.objectStoreNames.contains(STORES.AUTHORS)) {
-    const authorStore = db.createObjectStore(STORES.AUTHORS, { keyPath: 'id' });
-    authorStore.createIndex('name', 'name', { unique: true });
-  }
-
-  // Labels object store
-  if (!db.objectStoreNames.contains(STORES.LABELS)) {
-    const labelStore = db.createObjectStore(STORES.LABELS, { keyPath: 'id' });
-    labelStore.createIndex('name', 'name', { unique: true });
-  }
-
-  // Images object store
-  if (!db.objectStoreNames.contains(STORES.IMAGES)) {
-    const imageStore = db.createObjectStore(STORES.IMAGES, { keyPath: 'id' });
-    imageStore.createIndex('entryId', 'entryId', { unique: false });
-    imageStore.createIndex('order', 'order', { unique: false });
-  }
-
-  // Audio object store
-  if (!db.objectStoreNames.contains(STORES.AUDIO)) {
-    const audioStore = db.createObjectStore(STORES.AUDIO, { keyPath: 'id' });
-    audioStore.createIndex('entryId', 'entryId', { unique: false });
-  }
-
-  // Folders object store
-  if (!db.objectStoreNames.contains(STORES.FOLDERS)) {
-    const folderStore = db.createObjectStore(STORES.FOLDERS, { keyPath: 'id' });
-    folderStore.createIndex('order', 'order', { unique: false });
-  }
+export function buildId(type: StoreType, uuid: string): string {
+  return `${type}:${uuid}`;
 }
 
 /**
- * Handle database upgrade
+ * Extract the uuid portion from a PouchDB _id.
  */
-export function handleUpgrade(event: IDBVersionChangeEvent): void {
-  const db = (event.target as IDBOpenDBRequest).result;
+export function extractUuid(docId: string): string {
+  const idx = docId.indexOf(':');
+  return idx >= 0 ? docId.substring(idx + 1) : docId;
+}
 
-  // Version 1: Initial schema
-  if (event.oldVersion < 1) {
-    createSchema(db);
-  }
+/**
+ * Extract the type prefix from a PouchDB _id.
+ */
+export function extractType(docId: string): string {
+  const idx = docId.indexOf(':');
+  return idx >= 0 ? docId.substring(0, idx) : docId;
+}
 
-  // Future migrations would go here:
-  // if (event.oldVersion < 2) { ... }
+/**
+ * Create design documents for secondary indexes.
+ * These are installed once on database initialisation.
+ */
+export function getDesignDocuments(): Array<{ _id: string; views: Record<string, { map: string }> }> {
+  return [
+    {
+      _id: '_design/entries',
+      views: {
+        by_createdAt: {
+          map: "function(doc) { if (doc.type === 'entry') emit(doc.createdAt); }",
+        },
+        by_authorId: {
+          map: "function(doc) { if (doc.type === 'entry' && doc.authorId) emit(doc.authorId); }",
+        },
+      },
+    },
+    {
+      _id: '_design/images',
+      views: {
+        by_entryId: {
+          map: "function(doc) { if (doc.type === 'image') emit(doc.entryId); }",
+        },
+      },
+    },
+    {
+      _id: '_design/audio',
+      views: {
+        by_entryId: {
+          map: "function(doc) { if (doc.type === 'audio') emit(doc.entryId); }",
+        },
+      },
+    },
+    {
+      _id: '_design/authors',
+      views: {
+        by_name: {
+          map: "function(doc) { if (doc.type === 'author') emit(doc.name); }",
+        },
+      },
+    },
+    {
+      _id: '_design/labels',
+      views: {
+        by_name: {
+          map: "function(doc) { if (doc.type === 'label') emit(doc.name); }",
+        },
+      },
+    },
+    {
+      _id: '_design/folders',
+      views: {
+        by_name: {
+          map: "function(doc) { if (doc.type === 'folder') emit(doc.name); }",
+        },
+        by_order: {
+          map: "function(doc) { if (doc.type === 'folder') emit(doc.order); }",
+        },
+      },
+    },
+  ];
 }

@@ -6,11 +6,7 @@ import { STORES } from '../db/schema';
 
 describe('useAuthors', () => {
   beforeEach(async () => {
-    // Clear authors before each test
-    const all = await dbService.getAll(STORES.AUTHORS);
-    for (const item of all) {
-      await dbService.delete(STORES.AUTHORS, (item as { id: string }).id);
-    }
+    await dbService.clear(STORES.AUTHORS);
   });
 
   it('should initialize with empty authors array', async () => {

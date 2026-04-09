@@ -6,11 +6,7 @@ import { STORES } from '../db/schema';
 
 describe('useLabels', () => {
   beforeEach(async () => {
-    // Clear labels before each test
-    const all = await dbService.getAll(STORES.LABELS);
-    for (const item of all) {
-      await dbService.delete(STORES.LABELS, (item as { id: string }).id);
-    }
+    await dbService.clear(STORES.LABELS);
   });
 
   it('should initialize with empty labels array', async () => {

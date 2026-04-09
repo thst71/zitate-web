@@ -9,16 +9,9 @@ globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
 
 describe('useEntries', () => {
   beforeEach(async () => {
-    // Clear entries before each test
-    const allEntries = await dbService.getAll(STORES.ENTRIES);
-    for (const item of allEntries) {
-      await dbService.delete(STORES.ENTRIES, (item as { id: string }).id);
-    }
-    // Clear images before each test
-    const allImages = await dbService.getAll(STORES.IMAGES);
-    for (const item of allImages) {
-      await dbService.delete(STORES.IMAGES, (item as { id: string }).id);
-    }
+    // Clear relevant stores before each test
+    await dbService.clear(STORES.ENTRIES);
+    await dbService.clear(STORES.IMAGES);
   });
 
   it('should initialize with empty entries array', async () => {

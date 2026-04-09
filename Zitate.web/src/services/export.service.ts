@@ -1,4 +1,5 @@
 import type { Entry, Author, Label, SmartFolder, ImageAttachment, AudioAttachment } from '../models';
+import { DB_VERSION, STORES } from '../db/schema';
 
 export interface ExportData {
   version: number;
@@ -32,7 +33,6 @@ export interface ImportResult {
 }
 
 class ExportService {
-  private static readonly CURRENT_VERSION = 1;
 
   async exportAllData(): Promise<Blob> {
     try {
@@ -41,14 +41,14 @@ class ExportService {
       
       // Get all data from IndexedDB
       const [entries, authors, labels, folders] = await Promise.all([
-        dbService.getAll<Entry>('entries'),
-        dbService.getAll<Author>('authors'), 
-        dbService.getAll<Label>('labels'),
-        dbService.getAll<SmartFolder>('folders')
+        dbService.getAll<Entry>(STORES.ENTRIES),
+        dbService.getAll<Author>(STORES.AUTHORS),
+        dbService.getAll<Label>(STORES.LABELS),
+        dbService.getAll<SmartFolder>(STORES.FOLDERS)
       ]);
 
       // Get all images and convert to base64
-      const images = await dbService.getAll<ImageAttachment>('images');
+      const images = await dbService.getAll<ImageAttachment>(STORES.IMAGES);
       const imagesData = await Promise.all(
         images.map(async (image) => ({
           id: image.id,
@@ -61,7 +61,7 @@ class ExportService {
       );
 
       // Get all audio and convert to base64
-      const audio = await dbService.getAll<AudioAttachment>('audio');
+      const audio = await dbService.getAll<AudioAttachment>(STORES.AUDIO);
       const audioData = await Promise.all(
         audio.map(async (audioItem) => ({
           id: audioItem.id,
@@ -74,7 +74,7 @@ class ExportService {
       );
 
       const exportData: ExportData = {
-        version: ExportService.CURRENT_VERSION,
+        version: DB_VERSION,
         exportedAt: Date.now(),
         entries,
         authors,
@@ -127,14 +127,13 @@ class ExportService {
       // Import authors first (entries reference them)
       for (const author of importData.authors) {
         if (options.strategy === 'merge') {
-          // Check if author exists
-          const existing = await dbService.query('authors', 'name', author.name);
+          const existing = await dbService.query(STORES.AUTHORS, 'name', author.name);
           if (existing.length === 0) {
-            await dbService.add('authors', author);
+            await dbService.add(STORES.AUTHORS, author);
             stats.authors++;
           }
         } else {
-          await dbService.add('authors', author);
+          await dbService.add(STORES.AUTHORS, author);
           stats.authors++;
         }
       }
@@ -142,13 +141,13 @@ class ExportService {
       // Import labels
       for (const label of importData.labels) {
         if (options.strategy === 'merge') {
-          const existing = await dbService.query('labels', 'name', label.name);
+          const existing = await dbService.query(STORES.LABELS, 'name', label.name);
           if (existing.length === 0) {
-            await dbService.add('labels', label);
+            await dbService.add(STORES.LABELS, label);
             stats.labels++;
           }
         } else {
-          await dbService.add('labels', label);
+          await dbService.add(STORES.LABELS, label);
           stats.labels++;
         }
       }
@@ -165,7 +164,7 @@ class ExportService {
             order: image.order,
             createdAt: image.createdAt
           };
-          await dbService.add('images', imageRecord);
+          await dbService.add(STORES.IMAGES, imageRecord);
           stats.images++;
         }
 
@@ -179,7 +178,7 @@ class ExportService {
             duration: audioItem.duration,
             createdAt: audioItem.createdAt
           };
-          await dbService.add('audio', audioRecord);
+          await dbService.add(STORES.AUDIO, audioRecord);
           stats.audio++;
         }
       }
@@ -187,10 +186,9 @@ class ExportService {
       // Import entries
       for (const entry of importData.entries) {
         if (options.strategy === 'merge') {
-          // For merge, we add all entries (user can delete duplicates manually)
-          await dbService.add('entries', { ...entry, id: this.generateId() });
+          await dbService.add(STORES.ENTRIES, { ...entry, id: this.generateId() });
         } else {
-          await dbService.add('entries', entry);
+          await dbService.add(STORES.ENTRIES, entry);
         }
         stats.entries++;
       }
@@ -198,13 +196,13 @@ class ExportService {
       // Import folders
       for (const folder of importData.folders) {
         if (options.strategy === 'merge') {
-          const existing = await dbService.query('folders', 'name', folder.name);
+          const existing = await dbService.query(STORES.FOLDERS, 'name', folder.name);
           if (existing.length === 0) {
-            await dbService.add('folders', folder);
+            await dbService.add(STORES.FOLDERS, folder);
             stats.folders++;
           }
         } else {
-          await dbService.add('folders', folder);
+          await dbService.add(STORES.FOLDERS, folder);
           stats.folders++;
         }
       }
@@ -246,7 +244,7 @@ class ExportService {
       return { isValid: false, error: 'Missing or invalid version' };
     }
 
-    if (record.version > ExportService.CURRENT_VERSION) {
+    if (record.version > DB_VERSION) {
       return { isValid: false, error: 'File was exported from a newer version of the app' };
     }
 
@@ -284,7 +282,7 @@ class ExportService {
   private async clearAllData() {
     const { dbService } = await import('./db.service');
     
-    const stores = ['entries', 'authors', 'labels', 'folders', 'images', 'audio'];
+    const stores = [STORES.ENTRIES, STORES.AUTHORS, STORES.LABELS, STORES.FOLDERS, STORES.IMAGES, STORES.AUDIO];
     for (const store of stores) {
       const items = await dbService.getAll(store);
       for (const item of items) {

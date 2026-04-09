@@ -5,13 +5,10 @@ import { Entry, Author, Label } from '../models';
 
 describe('DBService', () => {
   beforeEach(async () => {
+    await dbService.init();
     // Clear all stores before each test
-    const stores = Object.values(STORES);
-    for (const store of stores) {
-      const all = await dbService.getAll(store);
-      for (const item of all) {
-        await dbService.delete(store, (item as { id: string }).id);
-      }
+    for (const store of Object.values(STORES)) {
+      await dbService.clear(store);
     }
   });
 
@@ -163,10 +160,11 @@ describe('DBService', () => {
         await dbService.add(STORES.ENTRIES, entry);
       }
 
+      // Query using key range equivalent — entries with createdAt <= now - 1000
       const results = await dbService.query<Entry>(
         STORES.ENTRIES,
         'createdAt',
-        IDBKeyRange.upperBound(now - 1000)
+        { lower: undefined, upper: now - 1000 }
       );
 
       expect(results).toHaveLength(2);
@@ -209,17 +207,34 @@ describe('DBService', () => {
         await dbService.add(STORES.ENTRIES, entry);
       }
 
-      const sorted = await dbService.getAllEntriesSorted();
+      const sorted = await dbService.getAllEntriesSorted<Entry>();
 
       expect(sorted).toHaveLength(3);
-      expect((sorted[0] as Entry).id).toBe('entry-3');
-      expect((sorted[1] as Entry).id).toBe('entry-2');
-      expect((sorted[2] as Entry).id).toBe('entry-1');
+      expect(sorted[0].id).toBe('entry-3');
+      expect(sorted[1].id).toBe('entry-2');
+      expect(sorted[2].id).toBe('entry-1');
     });
 
     it('should return empty array when no entries exist', async () => {
       const sorted = await dbService.getAllEntriesSorted();
       expect(sorted).toEqual([]);
+    });
+  });
+
+  describe('count', () => {
+    it('should return the number of items', async () => {
+      await dbService.add(STORES.LABELS, { id: 'l1', name: 'a' });
+      await dbService.add(STORES.LABELS, { id: 'l2', name: 'b' });
+      expect(await dbService.count(STORES.LABELS)).toBe(2);
+    });
+  });
+
+  describe('clear', () => {
+    it('should remove all items of a given type', async () => {
+      await dbService.add(STORES.LABELS, { id: 'l1', name: 'a' });
+      await dbService.add(STORES.LABELS, { id: 'l2', name: 'b' });
+      await dbService.clear(STORES.LABELS);
+      expect(await dbService.count(STORES.LABELS)).toBe(0);
     });
   });
 });

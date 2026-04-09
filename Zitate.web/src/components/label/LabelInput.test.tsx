@@ -14,10 +14,7 @@ const seedLabels: Label[] = [
 ];
 
 async function clearAndSeed() {
-  const all = await dbService.getAll<Label>(STORES.LABELS);
-  for (const item of all) {
-    await dbService.delete(STORES.LABELS, item.id);
-  }
+  await dbService.clear(STORES.LABELS);
   for (const label of seedLabels) {
     await dbService.add(STORES.LABELS, label);
   }

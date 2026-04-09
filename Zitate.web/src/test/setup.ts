@@ -25,4 +25,3 @@ Object.defineProperty(globalThis.navigator, 'geolocation', {
 
 // jsdom does not implement scrollIntoView
 Element.prototype.scrollIntoView = vi.fn();
-
