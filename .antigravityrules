@@ -6,3 +6,9 @@ Before you execute any commands, plan any features, or write any code, you MUST 
 2. `.agent-instructions/models-index.md` (Contains the routing information for model-specific behavior overrides)
 
 Adhere strictly to the guidelines defined in those files.
+
+### Terminal Execution Environment
+The user relies on `fish` shell and its specific PATH environment variables. Whenever you need to execute a terminal command (e.g., `npm run test` or `npm i`) using the `run_command` tool, you **MUST** wrap and execute the command in a Fish login shell like this:
+`fish -lc "your command here"`
+
+This ensures dependencies like `npm` or `node` are correctly path-resolved.
