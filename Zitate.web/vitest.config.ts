@@ -1,6 +1,11 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react-swc';
 
+// Date formatting follows the default locale and time zone; the test workers inherit these, so
+// results do not depend on the developer's machine.
+process.env.LC_ALL = 'en_US.UTF-8';
+process.env.TZ = 'UTC';
+
 export default defineConfig({
   plugins: [react()],
   define: {
