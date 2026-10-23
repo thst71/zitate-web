@@ -1,0 +1,24 @@
+[[US-6.1]]
+=== US-6.1 Text Search
+
+Effort:: 6 h +
+Traces to:: <<TS-4.1>>, <<FR-4.1>>
+
+As a user, I want to search my entries, so that I can find specific quotes.
+
+.Acceptance criteria
+. Search box on home screen
+. Debounced search (300ms)
+. Case-insensitive partial match
+. Searches text, author, labels
+. Results displayed as cards
+
+.Technical tasks
+. Create components/search/SearchBar.tsx
+. Implement debounced search hook
+. Query IndexedDB with text filter
+. Display results in EntryList
+. Highlight matching terms (optional)
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

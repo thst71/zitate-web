@@ -1,0 +1,25 @@
+[[US-1.2]]
+=== US-1.2 TypeScript Interfaces
+
+Effort:: 3 h +
+Traces to:: <<TS-2.2>>, <<TS-2.3>>, <<TS-2.4>>, <<TS-2.5>>, <<TS-2.6>>, <<TS-2.7>>, <<FR-1.1>>, <<FR-1.3>>, <<FR-1.4>>, <<FR-2.2>>, <<FR-3.1>>, <<FR-4.2>>
+
+As a developer, I want to define TypeScript interfaces for all data models, so that the codebase has type safety.
+
+.Acceptance criteria
+. Entry, Author, Label, ImageAttachment, AudioAttachment, SmartFolder interfaces
+. FolderCriteria nested interface
+. Validation types (ValidationResult)
+. Export all types from models/index.ts
+
+.Technical tasks
+. Create models/Entry.ts interface
+. Create models/Author.ts interface
+. Create models/Label.ts interface
+. Create models/ImageAttachment.ts interface
+. Create models/AudioAttachment.ts interface
+. Create models/SmartFolder.ts interface
+. Export all from models/index.ts
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

@@ -1,0 +1,5 @@
+== Epic 5: Author and Label Management
+
+include::US-5.1-author-creation.adoc[]
+
+include::US-5.2-label-autocomplete.adoc[]

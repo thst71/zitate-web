@@ -1,0 +1,13 @@
+[[FR-3.3]]
+=== FR-3.3 New label creation
+
+The system shall allow users to create new labels on-the-fly during entry editing, with automatic addition to label database.
+
+.Acceptance criteria
+. User can type new label not in suggestions
+. New label added to system on entry save
+. Label name max 50 characters
+. Special characters allowed except comma and semicolon
+
+Stakeholder need:: SPEC.md §3.3 +
+Effort:: not estimated (migrated from the monolithic specification)

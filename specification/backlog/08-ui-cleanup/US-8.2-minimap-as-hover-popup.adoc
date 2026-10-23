@@ -1,0 +1,25 @@
+[[US-8.2]]
+=== US-8.2 MiniMap as Hover Popup
+
+Effort:: 4 h +
+Traces to:: <<TS-3.1>>, <<FR-1.2>>
+
+As a user, I want to see a map preview when I hover over the location text, so that I get visual context without cluttering the entry card.
+
+.Acceptance criteria
+. MiniMap is no longer rendered inline in the entry card
+. Hovering over the location text shows a floating MiniMap popup
+. Popup appears after a short delay (~300ms) to avoid flicker
+. Popup disappears when mouse leaves the location area
+. Touch devices: tap toggles popup
+
+.Technical tasks
+. Create LocationPopover wrapper component
+. Manage hover state with enter/leave + delay
+. Render MiniMap inside an absolutely-positioned popup container
+. Add CSS for popup positioning, shadow, animation
+. Remove inline MiniMap from EntryCard
+. Wrap location text in LocationPopover
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

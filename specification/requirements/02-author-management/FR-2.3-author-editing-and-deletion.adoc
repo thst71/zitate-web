@@ -1,0 +1,18 @@
+[[FR-2.3]]
+=== FR-2.3 Author editing and deletion
+
+The system shall allow users to edit existing author information and delete authors that are not associated with any entries.
+
+.Acceptance criteria
+. User can access author list from home screen icon/button
+. Clicking author in list opens edit form with all author fields
+. Changes to author information update all associated entries
+. Delete button/icon visible on author item (on hover for desktop)
+. Delete option available for authors with zero entries
+. Authors with existing entries cannot be deleted (error message shown)
+. Confirmation prompt before author deletion
+. Deleted authors removed permanently from IndexedDB
+. Optional: Swipe gesture on touch devices reveals delete action
+
+Stakeholder need:: SPEC.md §2.3 +
+Effort:: not estimated (migrated from the monolithic specification)

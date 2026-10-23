@@ -1,0 +1,14 @@
+[[FR-5.3]]
+=== FR-5.3 Card-Based search results
+
+The system shall display search results as scrollable cards showing entry preview (first 160 characters), author name, and primary image thumbnail.
+
+.Acceptance criteria
+. Cards display in vertical scroll list
+. Each card shows: text preview, author, thumbnail, distance/date
+. Card click navigates to detail view
+. Smooth scrolling (CSS scroll-behavior, virtual scrolling for >100 items)
+. Delete button visible on card (on hover for desktop, always visible on mobile)
+
+Stakeholder need:: SPEC.md §5.3 +
+Effort:: not estimated (migrated from the monolithic specification)

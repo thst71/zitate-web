@@ -1,0 +1,26 @@
+[[US-2.5]]
+=== US-2.5 Entry List Display
+
+Effort:: 5 h +
+Traces to:: <<TS-1.2>>, <<FR-5.2>>, <<FR-5.5>>
+
+As a user, I want to see my saved entries on the home screen, so that I can browse my collection.
+
+.Acceptance criteria
+. Entries displayed as cards
+. Shows text preview (first 160 chars), date, location
+. Sorted by creation date (newest first)
+. Empty state when no entries
+. Click card to view details (future story)
+
+.Technical tasks
+. Create components/entry/EntryCard.tsx
+. Create components/entry/EntryList.tsx
+. Fetch entries from IndexedDB in useEffect
+. Map entries to EntryCard components
+. Implement empty state component
+. Add basic styling (card layout, spacing)
+. Test with 0 entries, 1 entry, many entries
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

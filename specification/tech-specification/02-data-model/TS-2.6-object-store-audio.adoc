@@ -1,0 +1,18 @@
+[[TS-2.6]]
+=== TS-2.6 Object store audio
+
+Implements <<FR-1.4>>.
+
+[source,typescript]
+----
+interface AudioAttachment {
+  id: string;                    // UUID v4
+  entryId: string;               // FK to entries
+  blob: Blob;                    // Audio data
+  mimeType: string;              // audio/webm, audio/ogg, etc.
+  duration: number;              // Seconds (max 300)
+  createdAt: number;             // Unix timestamp
+}
+
+// Indexes: entryId
+----

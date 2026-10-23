@@ -1,0 +1,8 @@
+[[TS-2.1]]
+=== TS-2.1 Database configuration
+
+Implements <<NFR-2>>.
+
+- *Database Name:* `zitate-db`
+- *Current Version:* 1
+- *Migration Strategy:* Version-based upgrades

@@ -1,0 +1,13 @@
+[[FR-2.1]]
+=== FR-2.1 Author assignment
+
+The system shall allow optional assignment of an author to each entry, with author selection from existing authors or creation of new author records.
+
+.Acceptance criteria
+. Author field is optional on entry creation
+. Dropdown/select shows existing authors (alphabetically sorted)
+. "Create New Author" option available
+. No duplicate author names allowed (case-insensitive comparison)
+
+Stakeholder need:: SPEC.md §2.1 +
+Effort:: not estimated (migrated from the monolithic specification)

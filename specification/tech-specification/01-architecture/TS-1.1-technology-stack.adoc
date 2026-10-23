@@ -1,0 +1,19 @@
+[[TS-1.1]]
+=== TS-1.1 Technology stack
+
+Implements <<NFR-3>> and <<NFR-6>>.
+
+==== Primary Technologies
+- *Platform:* Web (Desktop and Mobile Browsers)
+- *Language:* TypeScript ES2020+
+- *UI Framework:* React 18
+- *Build Tool:* Vite 7
+- *Package Manager:* npm
+
+==== Core Browser APIs
+- *IndexedDB:* Local database and persistence
+- *Service Worker:* Offline capability and PWA
+- *Geolocation API:* GPS coordinates
+- *MediaRecorder API:* Audio recording
+- *MediaDevices API:* Camera access
+- *File API:* Image upload

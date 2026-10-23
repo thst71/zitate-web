@@ -1,0 +1,26 @@
+[[US-2.1]]
+=== US-2.1 Entry Creation Form Component
+
+Effort:: 6 h +
+Traces to:: <<TS-1.2>>, <<FR-1.5>>
+
+As a user, I want to click a plus button to create a new entry, so that I can add a new quote to my collection.
+
+.Acceptance criteria
+. Plus button visible on home screen (header or FAB)
+. Clicking opens modal or navigates to entry form
+. Form includes: text area, location display
+. Text field is required
+. Cancel and Save buttons
+
+.Technical tasks
+. Create components/entry/EntryForm.tsx
+. Create components/common/Modal.tsx (if modal approach)
+. Add form state management (useState or form library)
+. Add plus button to Header component
+. Implement open/close modal logic
+. Style form (mobile responsive)
+. Add keyboard navigation (Escape to close)
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

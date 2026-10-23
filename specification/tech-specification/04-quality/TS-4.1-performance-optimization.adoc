@@ -1,0 +1,37 @@
+[[TS-4.1]]
+=== TS-4.1 Performance optimization
+
+Implements <<NFR-1>>.
+
+==== IndexedDB
+- Indexes on frequently queried fields (createdAt, name, etc.)
+- Cursor-based pagination for large result sets
+- Batch operations for multiple inserts/updates
+- Transaction management (readwrite vs readonly)
+
+==== UI
+- Virtual scrolling for lists >100 items (react-window, vue-virtual-scroller)
+- Lazy loading images (IntersectionObserver)
+- Debounced search (300ms)
+- Code splitting by route (React.lazy, dynamic imports)
+- Memoization for expensive computations (useMemo, computed)
+
+==== Bundle Size
+- Tree shaking (Vite/Webpack)
+- Dynamic imports for heavy features (maps, image compression)
+- Minification and compression (gzip/brotli)
+- Target: <500KB initial bundle (gzipped)
+
+==== Caching Strategy (Service Worker)
+
+[source,javascript]
+----
+// Cache-first for static assets
+self.addEventListener('fetch', (event) => {
+  if (isStaticAsset(event.request.url)) {
+    event.respondWith(cacheFirst(event.request));
+  } else {
+    event.respondWith(networkFirst(event.request));
+  }
+});
+----

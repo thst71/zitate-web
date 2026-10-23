@@ -1,0 +1,34 @@
+[[TS-5.1]]
+=== TS-5.1 Build configuration
+
+Implements <<NFR-1>> and <<NFR-6>>.
+
+[source,typescript]
+----
+// vite.config.ts
+export default defineConfig({
+  build: {
+    target: 'es2020',
+    outDir: 'dist',
+    minify: 'terser',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom'],
+          'maps': ['leaflet'],  // Dynamic import only when needed
+        }
+      }
+    }
+  },
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: {
+        // ... manifest config
+      }
+    })
+  ]
+});
+----

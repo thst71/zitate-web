@@ -1,0 +1,18 @@
+[[TS-4.5]]
+=== TS-4.5 Accessibility
+
+Implements <<FR-5.1>>.
+
+==== Requirements
+- Semantic HTML5 elements (header, nav, main, article, etc.)
+- ARIA labels and roles where needed
+- Keyboard navigation (Tab, Enter, Escape)
+- Focus management (visible focus indicators)
+- Color contrast ratio ≥4.5:1 (text), ≥3:1 (UI components)
+- Alt text for images
+- Screen reader announcements for dynamic content
+
+==== Testing Tools
+- axe DevTools
+- Lighthouse accessibility audit
+- NVDA / JAWS / VoiceOver testing

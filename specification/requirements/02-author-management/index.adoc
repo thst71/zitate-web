@@ -1,0 +1,7 @@
+== Author Management
+
+include::FR-2.1-author-assignment.adoc[]
+
+include::FR-2.2-author-information-storage.adoc[]
+
+include::FR-2.3-author-editing-and-deletion.adoc[]

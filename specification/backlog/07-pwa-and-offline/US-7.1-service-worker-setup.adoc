@@ -1,0 +1,24 @@
+[[US-7.1]]
+=== US-7.1 Service Worker Setup
+
+Effort:: 6 h +
+Traces to:: <<TS-4.3>>, <<NFR-6>>
+
+As a developer, I want to implement a service worker, so that the app works offline.
+
+.Acceptance criteria
+. Service worker caches app shell
+. Offline functionality for all features
+. Install prompt (A2HS)
+
+.Technical tasks
+. Create public/service-worker.js
+. Implement cache-first strategy for assets
+. Implement network-first for data (IndexedDB)
+. Register service worker in main.tsx
+. Create manifest.json
+. Test offline mode
+. Test install to home screen
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

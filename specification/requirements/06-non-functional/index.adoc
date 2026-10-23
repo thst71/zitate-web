@@ -1,0 +1,13 @@
+== Non-Functional Requirements
+
+include::NFR-1-performance.adoc[]
+
+include::NFR-2-data-persistence.adoc[]
+
+include::NFR-3-browser-support.adoc[]
+
+include::NFR-4-privacy.adoc[]
+
+include::NFR-5-data-portability.adoc[]
+
+include::NFR-6-offline-capability.adoc[]

@@ -1,0 +1,25 @@
+[[TS-3.3]]
+=== TS-3.3 URL attachment and favicon handling
+
+Implements <<FR-1.7>>, <<FR-1.8>> and <<FR-5.6>>.
+
+Attached URLs are managed as embedded `EntryLink` objects on the `Entry` record.
+
+==== Entry Form Behavior
+- Entry form provides add/remove controls for multiple URLs
+- Each URL is validated using the browser `URL` constructor before save
+- Each newly added URL receives a generated `id` and `addedAt` timestamp
+- `citationDate` is initialized to the entry creation date and may be edited independently
+
+==== Favicon Resolution Strategy
+- Favicon is derived at render time from the URL origin, typically `<origin>/favicon.ico`
+- Favicon URLs are not persisted in IndexedDB because they are derivable from the attached URL
+- If favicon loading fails, the UI falls back to a bundled default favicon asset
+- Favicon loading failure must not block rendering of the attached URL list
+
+==== Entry Card URL UI
+- Entry cards render a dedicated link icon in the top-right area of the text block when `links.length > 0`
+- Activating the icon opens a compact dropdown or popover containing all attached URLs
+- Each row shows favicon, URL label/text, and the stored per-link attachment date
+- The URL list must be keyboard accessible and support mouse and touch interaction
+- Selecting a URL opens it in a new browser tab/window using standard browser navigation

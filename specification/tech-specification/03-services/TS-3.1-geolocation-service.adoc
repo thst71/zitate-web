@@ -1,0 +1,20 @@
+[[TS-3.1]]
+=== TS-3.1 Geolocation service
+
+Implements <<FR-1.2>>.
+
+[source,typescript]
+----
+class LocationService {
+  async getCurrentPosition(): Promise<GeolocationPosition>;
+  async reverseGeocode(lat: number, lon: number): Promise<ReverseGeocodeResult>;
+  calculateDistance(from: Coords, to: Coords): number;
+}
+
+interface ReverseGeocodeResult {
+  short: string;   // e.g. "Berlin"
+  full: string;    // e.g. "Berlin, Germany"
+}
+----
+
+Reverse geocoding uses OpenStreetMap Nominatim API. Results are persisted on the Entry (`addressShort`, `addressFull`) to avoid repeated API calls. Legacy entries without persisted addresses fall back to on-demand geocoding with caching in component state.

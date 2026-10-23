@@ -1,0 +1,7 @@
+== Search and Organization
+
+include::FR-4.1-text-search.adoc[]
+
+include::FR-4.2-smart-folders.adoc[]
+
+include::FR-4.3-smart-folder-management.adoc[]

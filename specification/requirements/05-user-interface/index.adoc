@@ -1,0 +1,13 @@
+== User Interface
+
+include::FR-5.1-web-design-standards-compliance.adoc[]
+
+include::FR-5.2-home-screen-layout.adoc[]
+
+include::FR-5.3-card-based-search-results.adoc[]
+
+include::FR-5.4-folder-contents-view.adoc[]
+
+include::FR-5.5-empty-state-handling.adoc[]
+
+include::FR-5.6-url-display-on-entry-cards.adoc[]

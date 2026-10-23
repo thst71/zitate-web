@@ -1,0 +1,17 @@
+[[FR-1.6]]
+=== FR-1.6 Entry deletion
+
+The system shall allow users to delete entries via delete button or context menu, with confirmation prompt before permanent deletion.
+
+.Acceptance criteria
+. Delete button/icon visible on entry card (on hover for desktop, always visible on mobile)
+. Clicking delete shows confirmation dialog
+. Confirmation dialog shows entry preview (first 50 characters)
+. User can confirm or cancel deletion
+. Confirmed deletion removes entry permanently from IndexedDB
+. Deletion removes associated images and audio blobs
+. No undo after confirmation
+. Optional: Swipe gesture on touch devices reveals delete action
+
+Stakeholder need:: SPEC.md §1.6 +
+Effort:: not estimated (migrated from the monolithic specification)

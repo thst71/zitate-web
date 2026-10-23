@@ -1,0 +1,19 @@
+[[FR-1.2]]
+=== FR-1.2 Location association and modification
+
+The system shall attempt to capture and store browser geolocation coordinates (latitude/longitude) for each entry at the time of creation, and allow users to modify the location during entry creation or later during editing.
+
+.Acceptance criteria
+. Geolocation coordinates requested via browser Geolocation API
+. Browser permission prompt appears on first location request
+. Coordinates stored with each entry (accuracy varies by browser/device)
+. Location displayed as coordinates or address (if geocoding service available)
+. Location field is clickable to open interactive map interface
+. User can click new location on map or search for address
+. Map shows both original and new location before confirmation
+. User can cancel location change without saving
+. Location modification available during initial creation and subsequent editing
+. App functions fully if geolocation permission denied (location optional)
+
+Stakeholder need:: SPEC.md §1.2 +
+Effort:: not estimated (migrated from the monolithic specification)

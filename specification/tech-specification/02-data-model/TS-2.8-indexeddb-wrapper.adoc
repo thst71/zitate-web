@@ -1,0 +1,21 @@
+[[TS-2.8]]
+=== TS-2.8 IndexedDB wrapper
+
+Implements <<NFR-2>>.
+
+[source,typescript]
+----
+class DBService {
+  private db: IDBDatabase;
+
+  async init(): Promise<void>;
+  async get<T>(store: string, id: string): Promise<T>;
+  async getAll<T>(store: string): Promise<T[]>;
+  async add<T>(store: string, data: T): Promise<string>;
+  async update<T>(store: string, data: T): Promise<void>;
+  async delete(store: string, id: string): Promise<void>;
+  async query<T>(store: string, index: string, value: any): Promise<T[]>;
+}
+----
+
+The `entries` object store keeps URLs and citation dates embedded on the `Entry` record. No dedicated object store is required for URLs because they are always owned by a single entry and are loaded together with the entry payload.

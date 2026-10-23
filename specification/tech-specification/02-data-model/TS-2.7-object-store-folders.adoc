@@ -1,0 +1,35 @@
+[[TS-2.7]]
+=== TS-2.7 Object store folders
+
+Implements <<FR-4.2>>.
+
+[source,typescript]
+----
+interface SmartFolder {
+  id: string;                    // UUID v4
+  name: string;                  // Max 100 chars
+  criteria: FolderCriteria;      // Nested object
+  order: number;                 // User-defined order
+  createdAt: number;             // Unix timestamp
+}
+
+interface FolderCriteria {
+  labels?: {
+    values: string[];            // Label IDs
+    operator: 'AND' | 'OR';
+  };
+  authorId?: string;
+  dateRange?: {
+    start?: number;              // Unix timestamp
+    end?: number;                // Unix timestamp
+  };
+  location?: {
+    latitude: number;
+    longitude: number;
+    radiusKm: number;
+  };
+  textMatch?: string;
+}
+
+// Indexes: order
+----

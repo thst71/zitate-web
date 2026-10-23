@@ -1,0 +1,22 @@
+[[TS-5.3]]
+=== TS-5.3 Testing strategy
+
+Implements <<NFR-1>> and <<FR-5.1>>.
+
+==== Unit Tests (Vitest)
+- Service functions
+- Utility functions
+- IndexedDB operations (with fake-indexeddb)
+- Validation logic
+- Custom hook logic (renderHook)
+
+==== Component Tests (React Testing Library)
+- Component rendering
+- User interactions (keyboard, mouse, touch)
+- ARIA accessibility attributes
+- Async state updates
+
+==== Performance Tests
+- Lighthouse CI (target score >90)
+- Bundle size limits
+- IndexedDB query performance

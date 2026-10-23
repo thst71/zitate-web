@@ -1,0 +1,15 @@
+[[NFR-1]]
+=== NFR-1 Performance
+
+The system shall load home screen with up to 1,000 entries within 2 seconds on modern desktop browsers and within 4 seconds on mobile browsers.
+
+.Acceptance criteria
+. Measured load time <2s (desktop), <4s (mobile) with 1,000 entries
+. IndexedDB queries optimized with indexes
+. Images lazy-loaded as user scrolls (IntersectionObserver)
+. Virtual scrolling for lists with >100 items
+. Bundle size <500KB (gzipped) for initial load
+. Lighthouse performance score >90
+
+Stakeholder need:: SPEC.md §6.1 +
+Effort:: not estimated (migrated from the monolithic specification)

@@ -1,0 +1,100 @@
+[[TS-1.2]]
+=== TS-1.2 Component architecture and project structure
+
+Implements <<NFR-2>>.
+
+==== Component-Based Architecture
+- *Components:* Reusable React UI components
+- *Hooks:* Custom React hooks for shared logic and state management
+- *Services:* Singleton business logic services (db.service, location.service)
+- *Models:* TypeScript interfaces for type safety
+
+==== State Management
+- *Local State:* Component state (useState)
+- *Persistent State:* IndexedDB via custom hooks (useEntries, useAuthors, useLabels, useFolders)
+- *Cross-instance sync:* Custom event emitter (storeSync) to keep multiple hook instances in sync
+- *Derived State:* Computed values from IndexedDB queries (useCallback, useMemo)
+
+==== Data Flow
+
+[source]
+----
+User Interaction → Component → Hook → Service → IndexedDB
+                    ↑                              ↓
+                    └────── State Update ←─────────┘
+----
+
+==== Directory Layout (React/TypeScript Example)
+
+[source]
+----
+zitate-web/
+├── public/
+│   ├── index.html
+│   ├── manifest.json              # PWA manifest
+│   └── service-worker.js          # Service worker
+├── src/
+│   ├── main.tsx                   # App entry point
+│   ├── App.tsx                    # Root component
+│   ├── db/                        # IndexedDB layer
+│   │   ├── schema.ts              # DB schema definition
+│   │   ├── migrations.ts          # Schema migrations
+│   │   └── queries.ts             # DB query functions
+│   ├── models/                    # TypeScript interfaces
+│   │   ├── Entry.ts
+│   │   ├── Author.ts
+│   │   ├── Label.ts
+│   │   └── SmartFolder.ts
+│   ├── hooks/                     # React hooks (or composables for Vue)
+│   │   ├── useEntries.ts
+│   │   ├── useAuthors.ts
+│   │   ├── useLocation.ts
+│   │   ├── useMediaRecorder.ts
+│   │   └── useIndexedDB.ts
+│   ├── components/                # UI components
+│   │   ├── common/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   └── Input.tsx
+│   │   ├── entry/
+│   │   │   ├── EntryCard.tsx
+│   │   │   ├── EntryForm.tsx
+│   │   │   ├── EntryDetail.tsx
+│   │   │   └── EntryList.tsx
+│   │   ├── author/
+│   │   │   ├── AuthorList.tsx
+│   │   │   └── AuthorForm.tsx
+│   │   ├── folder/
+│   │   │   ├── FolderList.tsx
+│   │   │   ├── FolderForm.tsx
+│   │   │   └── CriteriaBuilder.tsx
+│   │   ├── search/
+│   │   │   └── SearchResults.tsx
+│   │   └── layout/
+│   │       ├── Header.tsx
+│   │       ├── Footer.tsx
+│   │       └── HomeScreen.tsx
+│   ├── services/                  # Business logic
+│   │   ├── db.service.ts          # IndexedDB wrapper
+│   │   ├── location.service.ts    # Geolocation
+│   │   ├── media.service.ts       # Camera/Audio
+│   │   ├── search.service.ts      # Search/filter logic
+│   │   ├── export.service.ts      # Data export/import
+│   │   └── storage.service.ts     # Storage quota management
+│   ├── utils/                     # Utility functions
+│   │   ├── validators.ts
+│   │   ├── formatters.ts
+│   │   ├── constants.ts
+│   │   └── compression.ts
+│   ├── styles/                    # CSS/SCSS
+│   │   ├── global.css
+│   │   ├── variables.css          # CSS custom properties
+│   │   └── themes.css             # Light/dark themes
+│   └── types/                     # TypeScript type definitions
+│       └── index.d.ts
+├── package.json
+├── tsconfig.json                  # TypeScript config
+├── vite.config.ts                 # Vite config
+└── README.md
+----

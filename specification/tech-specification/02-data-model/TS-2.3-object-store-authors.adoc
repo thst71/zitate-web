@@ -1,0 +1,18 @@
+[[TS-2.3]]
+=== TS-2.3 Object store authors
+
+Implements <<FR-2.2>>.
+
+[source,typescript]
+----
+interface Author {
+  id: string;                    // UUID v4
+  name: string;                  // Required, unique, max 200 chars
+  dateOfBirth?: number;          // Unix timestamp
+  locationOfBirth?: string;      // Max 200 chars
+  dateOfDeath?: number;          // Unix timestamp
+  wikipediaURL?: string;         // URL string
+}
+
+// Indexes: name (unique)
+----

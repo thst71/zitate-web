@@ -1,0 +1,22 @@
+[[US-8.6]]
+=== US-8.6 Citation Date Display in Entry Lists and Cards
+
+Effort:: 3 h +
+Traces to:: <<TS-2.2>>, <<TS-3.3>>, <<FR-1.8>>
+
+As a user, I want to see the citation date instead of only the entry creation date, so that the UI reflects when the quote belongs historically.
+
+.Acceptance criteria
+. Entry cards display `citationDate` where the quote date is shown
+. Search and folder result cards display `citationDate` consistently
+. Legacy entries without an explicit citation date fall back to their creation date
+. Existing compact author/date line formatting remains intact
+
+.Technical tasks
+. Update entry date formatting helpers to prefer `citationDate`
+. Update `EntryCard` and related list views
+. Add fallback behavior for legacy entries
+. Add tests for display and fallback behavior
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

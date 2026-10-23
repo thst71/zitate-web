@@ -1,0 +1,28 @@
+[[TS-3.5]]
+=== TS-3.5 Export and import service
+
+Implements <<NFR-5>>, <<FR-1.7>> and <<FR-1.8>>.
+
+[source,typescript]
+----
+interface ExportData {
+  version: number;
+  exportedAt: number;
+  entries: Entry[];
+  authors: Author[];
+  labels: Label[];
+  folders: SmartFolder[];
+  media: {
+    images: { id: string; data: string }[];  // Base64
+    audio: { id: string; data: string }[];   // Base64
+  };
+}
+
+class ExportService {
+  async exportData(): Promise<Blob>;        // JSON blob
+  async importData(file: File): Promise<void>;
+  async validateImport(data: any): boolean;
+}
+----
+
+Because URLs and citation dates are stored directly on `Entry`, export/import preserves them automatically as part of the serialized `entries` array. Derived favicon URLs are not exported.

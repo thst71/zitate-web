@@ -1,0 +1,18 @@
+[[FR-4.3]]
+=== FR-4.3 Smart folder management
+
+The system shall provide UI for creating, editing, and deleting smart folders with structured criteria builder.
+
+.Acceptance criteria
+. First card in smart folders list displays plus icon for creating new folder
+. Clicking plus card opens folder creation form
+. Folder creation form includes name field (required, max 100 characters)
+. Criteria builder allows selecting: labels (AND/OR logic), author, date range, location+radius, text-match
+. Edit button on folder card opens folder form with current criteria
+. Delete button on folder card shows confirmation prompt with folder name
+. Deleting folder removes folder but not the entries within it
+. Folders can be reordered by drag-and-drop (desktop) or long-press drag (mobile)
+. Optional: Swipe gestures on touch devices for quick actions
+
+Stakeholder need:: SPEC.md §4.3 +
+Effort:: not estimated (migrated from the monolithic specification)

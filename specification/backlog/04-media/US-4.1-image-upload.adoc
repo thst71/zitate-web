@@ -1,0 +1,26 @@
+[[US-4.1]]
+=== US-4.1 Image Upload
+
+Effort:: 6 h +
+Traces to:: <<TS-2.5>>, <<TS-3.2>>, <<FR-1.3>>
+
+As a user, I want to attach images to my entries, so that I can add visual context.
+
+.Acceptance criteria
+. File input allows image selection
+. Up to 10 images per entry
+. Images compressed to max 2MB
+. Thumbnails displayed
+. Images stored as Blobs in IndexedDB
+
+.Technical tasks
+. Add file input to EntryForm
+. Create services/media.service.ts
+. Implement image compression (browser-image-compression library)
+. Store images in IndexedDB 'images' object store
+. Link images to entry via entryId
+. Display thumbnails in form
+. Test with various image formats (JPEG, PNG, HEIC)
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

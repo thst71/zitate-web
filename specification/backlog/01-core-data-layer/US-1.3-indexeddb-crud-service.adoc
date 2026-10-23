@@ -1,0 +1,26 @@
+[[US-1.3]]
+=== US-1.3 IndexedDB CRUD Service
+
+Effort:: 8 h +
+Traces to:: <<TS-2.8>>, <<NFR-2>>
+
+As a developer, I want to create a service wrapper for IndexedDB operations, so that components can easily interact with the database.
+
+.Acceptance criteria
+. DBService class with methods: get, getAll, add, update, delete, query
+. Transaction management (readonly vs readwrite)
+. Error handling and logging
+. Promise-based API
+. Cursor support for pagination
+
+.Technical tasks
+. Create services/db.service.ts
+. Implement init() method
+. Implement CRUD methods
+. Add query method with index support
+. Add cursor-based pagination
+. Add error handling
+. Write unit tests
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

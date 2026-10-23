@@ -1,0 +1,28 @@
+[[US-2.4]]
+=== US-2.4 Entry Save to IndexedDB
+
+Effort:: 4 h +
+Traces to:: <<TS-2.2>>, <<TS-2.8>>, <<FR-1.5>>
+
+As a user, I want to save my completed entry, so that it's stored in my collection.
+
+.Acceptance criteria
+. Save button creates entry in IndexedDB
+. Entry appears immediately in lists/searches
+. Form resets after save
+. Modal closes or navigates away
+. Error handling if save fails
+
+.Technical tasks
+. Create hooks/useEntries.ts hook
+. Implement addEntry function
+. Generate UUID for new entry
+. Store entry with timestamp
+. Call DBService.add('entries', entry)
+. Handle errors (quota exceeded, etc.)
+. Reset form on success
+. Close modal/navigate
+. Write integration tests
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

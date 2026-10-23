@@ -1,0 +1,14 @@
+[[FR-3.2]]
+=== FR-3.2 Label autocomplete
+
+The system shall suggest existing labels as user types, showing top 10 matches alphabetically.
+
+.Acceptance criteria
+. Suggestions appear after 1 character typed
+. Matches based on prefix (case-insensitive)
+. Maximum 10 suggestions shown
+. User can select from suggestions or create new label
+. Suggestions displayed in dropdown/datalist
+
+Stakeholder need:: SPEC.md §3.2 +
+Effort:: not estimated (migrated from the monolithic specification)

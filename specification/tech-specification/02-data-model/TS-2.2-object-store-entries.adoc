@@ -1,0 +1,32 @@
+[[TS-2.2]]
+=== TS-2.2 Object store entries
+
+Implements <<FR-1.1>>, <<FR-1.2>>, <<FR-1.7>>, <<FR-1.8>>, <<FR-2.1>> and <<FR-3.1>>.
+
+[source,typescript]
+----
+interface EntryLink {
+  id: string;                    // UUID v4
+  url: string;                   // Absolute URL
+  addedAt: number;               // Unix timestamp when the URL was attached
+}
+
+interface Entry {
+  id: string;                    // UUID v4
+  text: string;                  // 1-10,000 chars
+  latitude?: number;             // WGS84
+  longitude?: number;            // WGS84
+  authorId?: string;             // FK to authors
+  labelIds: string[];            // FK array to labels
+  imageIds: string[];            // FK array to images
+  audioId?: string;              // FK to audio
+  citationDate: number;          // Quote/citation date
+  links: EntryLink[];            // Attached URLs with per-link metadata
+  addressShort?: string;         // Reverse-geocoded short address (city)
+  addressFull?: string;          // Reverse-geocoded full address
+  createdAt: number;             // Unix timestamp
+  updatedAt: number;             // Unix timestamp
+}
+
+// Indexes: createdAt, updatedAt, latitude, longitude, text (fulltext)
+----

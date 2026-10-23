@@ -1,0 +1,25 @@
+[[US-4.7]]
+=== US-4.7 Image Management in Edit Mode – Replace Image
+
+Effort:: 3 h +
+Traces to:: <<TS-3.4>>, <<FR-1.3>>
+
+As a user, I want to replace an existing image with a new one, so that I can update a photo without changing the entry structure.
+
+.Acceptance criteria
+. Replace button on each existing image thumbnail in edit mode
+. Opens file picker for a single image
+. Old image is deleted from IndexedDB, new image is compressed and stored
+. Entry's imageIds is updated: old ID replaced with new ID at the same position
+. Preview updates immediately
+
+.Technical tasks
+. Add replace button to ImageEditor thumbnails
+. Open file picker (single file mode) on click
+. Validate and compress replacement image
+. Track replacements as map (oldId → SelectedImage) in EntryForm state
+. Extend updateEntry to accept imageReplacements
+. On save: delete old image, store new image, update entry.imageIds
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

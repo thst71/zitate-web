@@ -1,0 +1,24 @@
+[[US-7.2]]
+=== US-7.2 Data Export
+
+Effort:: 5 h +
+Traces to:: <<TS-3.5>>, <<NFR-5>>
+
+As a user, I want to export my data, so that I can back it up.
+
+.Acceptance criteria
+. Export button in settings
+. Downloads JSON file with all data
+. Includes media as Base64
+. Schema version included
+
+.Technical tasks
+. Create services/export.service.ts
+. Query all data from IndexedDB
+. Convert Blobs to Base64
+. Create JSON structure
+. Trigger download
+. Add export button to UI
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

@@ -1,0 +1,24 @@
+[[US-2.7]]
+=== US-2.7 Citation Date Input
+
+Effort:: 4 h +
+Traces to:: <<TS-2.2>>, <<TS-3.3>>, <<FR-1.8>>
+
+As a user, I want to set the date of the quote independently from the entry creation timestamp, so that I can capture when the quote was originally said or published.
+
+.Acceptance criteria
+. Entry form includes a citation date input
+. Citation date defaults to the current entry creation date for new entries
+. Citation date can be changed during entry creation
+. Citation date can be edited later without changing `createdAt`
+. Validation and save flow handle citation date correctly
+
+.Technical tasks
+. Extend `Entry` model with `citationDate`
+. Add citation date field to `EntryForm`
+. Default citation date to entry creation date for new entries
+. Update `useEntries` add/update logic to persist `citationDate`
+. Add tests for defaulting and editing behavior
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

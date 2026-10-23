@@ -1,0 +1,13 @@
+== Release v1.10.0 (unreleased)
+
+Built with agent-skills v0.3.0.
+
+=== Fixes
+
+* The tests of the entry card dates pass on machines with any locale and time zone.
+
+=== Documentation
+
+* The specification follows the modular layout of agent-skills: one file per requirement,
+  technical specification and user story, with anchors and checked traceability; the
+  stakeholder input is `SPEC.md`.

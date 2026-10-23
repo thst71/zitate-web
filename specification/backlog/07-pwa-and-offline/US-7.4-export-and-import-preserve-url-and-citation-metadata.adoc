@@ -1,0 +1,22 @@
+[[US-7.4]]
+=== US-7.4 Export and Import Preserve URL and Citation Metadata
+
+Effort:: 3 h +
+Traces to:: <<TS-3.5>>, <<FR-1.7>>, <<FR-1.8>>, <<NFR-5>>
+
+As a user, I want to keep citation dates and attached URLs when exporting and importing data, so that backups fully preserve the meaning and provenance of my entries.
+
+.Acceptance criteria
+. Exported entry data includes `citationDate` and attached URL metadata
+. Imported data restores `citationDate` and attached URL metadata correctly
+. Per-URL attachment dates are preserved through export/import
+. Import validation rejects malformed URL metadata structures
+
+.Technical tasks
+. Extend export schema for enriched `Entry` records
+. Update import validation rules
+. Restore URL metadata and citation dates during import
+. Add regression tests for round-trip export/import
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

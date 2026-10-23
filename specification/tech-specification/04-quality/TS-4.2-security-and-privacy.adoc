@@ -1,0 +1,21 @@
+[[TS-4.2]]
+=== TS-4.2 Security and privacy
+
+Implements <<NFR-4>>.
+
+==== Data Protection
+- All data stored locally in browser (IndexedDB)
+- No server communication (no API calls)
+- No cookies or tracking
+- Content Security Policy (CSP) headers
+
+==== Input Validation
+- Client-side validation for all user inputs
+- XSS prevention (sanitize HTML, use framework escaping)
+- SQL injection N/A (no SQL database)
+
+==== Permissions
+- Geolocation: Requested with user-friendly prompt
+- Camera: Requested on first image capture
+- Microphone: Requested on first audio recording
+- Storage: Automatic with quota management

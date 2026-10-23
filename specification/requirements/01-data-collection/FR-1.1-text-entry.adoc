@@ -1,0 +1,12 @@
+[[FR-1.1]]
+=== FR-1.1 Text entry
+
+The system shall allow users to create entries containing text content with a minimum length of 1 character and maximum of 10,000 characters.
+
+.Acceptance criteria
+. User can input text via keyboard
+. Text field validates input length
+. Entry saves to IndexedDB
+
+Stakeholder need:: SPEC.md §1.1 +
+Effort:: not estimated (migrated from the monolithic specification)

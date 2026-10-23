@@ -1,0 +1,53 @@
+[[TS-4.3]]
+=== TS-4.3 Offline capability
+
+Implements <<NFR-6>>.
+
+==== Service Worker Strategy
+
+[source,javascript]
+----
+// Cache static assets on install
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open('v1').then((cache) => {
+      return cache.addAll([
+        '/',
+        '/index.html',
+        '/main.js',
+        '/styles.css',
+        '/manifest.json'
+      ]);
+    })
+  );
+});
+
+// Network first, cache fallback for data
+// Cache first for static assets
+----
+
+==== PWA Manifest
+
+[source,json]
+----
+{
+  "name": "Zitate - Quote Collection",
+  "short_name": "Zitate",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+----

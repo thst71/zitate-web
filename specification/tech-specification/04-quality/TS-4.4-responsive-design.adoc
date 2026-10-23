@@ -1,0 +1,36 @@
+[[TS-4.4]]
+=== TS-4.4 Responsive design
+
+Implements <<FR-5.1>> and <<NFR-3>>.
+
+==== Breakpoints
+- Mobile: 320px - 767px
+- Tablet: 768px - 1023px
+- Desktop: 1024px+
+
+==== Layout Strategy
+- CSS Grid for main layouts
+- Flexbox for component layouts
+- Mobile-first approach
+- Touch targets min 44px on mobile
+
+==== CSS Architecture
+
+[source,css]
+----
+/* CSS Custom Properties for theming */
+:root {
+  --color-primary: #3b82f6;
+  --color-bg: #ffffff;
+  --color-text: #1f2937;
+  --spacing-unit: 8px;
+  --border-radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1f2937;
+    --color-text: #f9fafb;
+  }
+}
+----

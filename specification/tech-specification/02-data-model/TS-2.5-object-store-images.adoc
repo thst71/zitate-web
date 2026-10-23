@@ -1,0 +1,19 @@
+[[TS-2.5]]
+=== TS-2.5 Object store images
+
+Implements <<FR-1.3>>.
+
+[source,typescript]
+----
+interface ImageAttachment {
+  id: string;                    // UUID v4
+  entryId: string;               // FK to entries
+  blob: Blob;                    // Image data
+  mimeType: string;              // image/jpeg, image/png, etc.
+  size: number;                  // Bytes (max 2MB)
+  order: number;                 // Display order
+  createdAt: number;             // Unix timestamp
+}
+
+// Indexes: entryId
+----

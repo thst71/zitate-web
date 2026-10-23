@@ -1,0 +1,23 @@
+[[US-5.2]]
+=== US-5.2 Label Autocomplete
+
+Effort:: 5 h +
+Traces to:: <<TS-2.4>>, <<FR-3.2>>, <<FR-3.3>>
+
+As a user, I want to see label suggestions as I type, so that I can reuse existing labels.
+
+.Acceptance criteria
+. Suggestions appear after 1 character
+. Shows top 10 matches (prefix-based)
+. User can select or create new
+
+.Technical tasks
+. Create label input component with autocomplete
+. Query IndexedDB for matching labels
+. Display suggestions (datalist or custom dropdown)
+. Allow selection from list
+. Allow creation of new labels
+. Store labels in lowercase
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

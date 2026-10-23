@@ -1,0 +1,25 @@
+[[US-2.8]]
+=== US-2.8 URL Attachment Input
+
+Effort:: 5 h +
+Traces to:: <<TS-3.3>>, <<FR-1.7>>
+
+As a user, I want to attach one or more URLs to an entry, so that I can keep source and reference links together with the quote.
+
+.Acceptance criteria
+. Entry form supports adding multiple URLs
+. Each URL is validated before save
+. Individual URLs can be removed before saving
+. Editing an entry allows adding and removing URLs
+. Each attached URL stores its own attachment timestamp
+
+.Technical tasks
+. Define `EntryLink` type for URL metadata
+. Add URL list input UI to `EntryForm`
+. Reuse or extend URL validation utilities
+. Implement add/remove URL interactions
+. Generate metadata (`id`, attachment timestamp) for each URL
+. Add tests for valid, invalid, add, and remove flows
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

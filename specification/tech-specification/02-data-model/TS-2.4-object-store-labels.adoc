@@ -1,0 +1,14 @@
+[[TS-2.4]]
+=== TS-2.4 Object store labels
+
+Implements <<FR-3.1>> and <<FR-3.3>>.
+
+[source,typescript]
+----
+interface Label {
+  id: string;                    // UUID v4
+  name: string;                  // Required, unique, lowercase, max 50 chars
+}
+
+// Indexes: name (unique)
+----
