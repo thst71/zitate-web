@@ -1,13 +1,17 @@
+# Quality gate and Docker build for pull requests; a manual run pushes an image tagged with the
+# commit. Releases (signed tag v<semver>) are built and published by release.yml.
 name: Build and Publish Web Docker Image
 
 on:
-  push:
-    tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "main" ]
     paths:
       - 'Zitate.web/**'
       - '.github/workflows/docker-publish.yml'
+      - '.agents/**'
+      - 'specification/**'
+      - '*.adoc'
+      - 'SPEC.md'
   workflow_dispatch:
 
 env:
@@ -33,13 +37,13 @@ jobs:
         working-directory: ./Zitate.web
         run: npm ci
 
-      - name: Run linting
+      - name: Run the quality gate
         working-directory: ./Zitate.web
-        run: npm run lint
+        run: npm run check
 
-      - name: Run tests
+      - name: Report test coverage
         working-directory: ./Zitate.web
-        run: npm run test -- --coverage
+        run: npm run test:coverage
 
       - name: Run security audit
         working-directory: ./Zitate.web
@@ -63,11 +67,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
-            type=sha,prefix=,format=short,enable=${{ github.ref_type != 'tag' }}
+            type=sha,prefix=,format=short
 
   build:
     needs: [metadata]
@@ -160,6 +160,7 @@ jobs:
         env:
           DOCKER_METADATA_OUTPUT_JSON: ${{ needs.metadata.outputs.json }}
         run: |
+          # shellcheck disable=SC2046 # the tag and digest lists are meant to be split
           docker buildx imagetools create \
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
