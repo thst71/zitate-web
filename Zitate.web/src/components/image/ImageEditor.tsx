@@ -50,16 +50,20 @@ export function ImageEditor({
     });
   }, [existingImages]);
 
-  // Sync changes up to parent
+  // Sync changes up to parent. The latest onChange is read from a ref, so that a new callback
+  // from the parent does not trigger the sync (and with it an infinite render loop).
+  const onChangeRef = useRef(onChange);
   useEffect(() => {
-    onChange({
+    onChangeRef.current = onChange;
+  });
+  useEffect(() => {
+    onChangeRef.current({
       imagesToAdd,
       imagesToDelete,
       imageIdsOrder: workingImageIds,
       imageReplacements,
     });
   }, [imagesToAdd, imagesToDelete, workingImageIds, imageReplacements]);
-  // Note: onChange intentionally excluded from deps to avoid infinite loops
 
   // Visible existing images (excluding deleted ones)
   const visibleExistingImages = workingImageIds
