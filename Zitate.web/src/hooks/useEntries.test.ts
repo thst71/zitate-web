@@ -276,6 +276,10 @@ describe("useEntries", () => {
       });
 
       const entryId = result.current.entries[0].id;
+      // Adding and updating may fall into the same millisecond; the update happens later.
+      const now = vi
+        .spyOn(Date, "now")
+        .mockReturnValue(result.current.entries[0].createdAt + 1000);
 
       await act(async () => {
         await result.current.updateEntry(
@@ -288,6 +292,7 @@ describe("useEntries", () => {
           2.35,
         );
       });
+      now.mockRestore();
 
       const updated = result.current.entries[0];
       expect(updated.text).toBe("Updated text");
