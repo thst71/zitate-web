@@ -2,12 +2,16 @@
  * ImageEditor Component - Manage images in entry edit mode
  * Supports: add, delete, reorder, replace existing images
  */
-import { useState, useEffect, useRef, ChangeEvent } from 'react';
-import { ImageThumbnail } from './ImageThumbnail';
-import { ImageUpload, type SelectedImage } from './ImageUpload';
-import { isValidImageType, isValidImageSize, readFileAsDataURL } from '../../services/image.service';
-import type { ImageAttachment } from '../../models';
-import './ImageEditor.css';
+import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { ImageThumbnail } from "./ImageThumbnail";
+import { ImageUpload, type SelectedImage } from "./ImageUpload";
+import {
+  isValidImageType,
+  isValidImageSize,
+  readFileAsDataURL,
+} from "../../services/image.service";
+import type { ImageAttachment } from "../../models";
+import "./ImageEditor.css";
 
 export interface ImageChanges {
   imagesToAdd: SelectedImage[];
@@ -29,11 +33,13 @@ export function ImageEditor({
 }: ImageEditorProps) {
   // Local working copy of existing image IDs (reflects reorder/delete)
   const [workingImageIds, setWorkingImageIds] = useState<string[]>(
-    existingImages.map((img) => img.id)
+    existingImages.map((img) => img.id),
   );
   const [imagesToAdd, setImagesToAdd] = useState<SelectedImage[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
-  const [imageReplacements, setImageReplacements] = useState<Map<string, SelectedImage>>(new Map());
+  const [imageReplacements, setImageReplacements] = useState<
+    Map<string, SelectedImage>
+  >(new Map());
   const [replaceError, setReplaceError] = useState<string | null>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const [replacingImageId, setReplacingImageId] = useState<string | null>(null);
@@ -122,11 +128,13 @@ export function ImageEditor({
     if (!file || !replacingImageId) return;
 
     if (!isValidImageType(file)) {
-      setReplaceError('Invalid file type. Only JPEG, PNG, HEIC, and WebP are supported.');
+      setReplaceError(
+        "Invalid file type. Only JPEG, PNG, HEIC, and WebP are supported.",
+      );
       return;
     }
     if (!isValidImageSize(file, 10)) {
-      setReplaceError('File too large (max 10MB before compression).');
+      setReplaceError("File too large (max 10MB before compression).");
       return;
     }
 
@@ -144,13 +152,13 @@ export function ImageEditor({
       });
       setReplaceError(null);
     } catch {
-      setReplaceError('Failed to load image preview.');
+      setReplaceError("Failed to load image preview.");
     }
 
     // Reset
     setReplacingImageId(null);
     if (replaceInputRef.current) {
-      replaceInputRef.current.value = '';
+      replaceInputRef.current.value = "";
     }
   };
 
@@ -190,10 +198,7 @@ export function ImageEditor({
                     />
                   </div>
                 ) : (
-                  <ImageThumbnail
-                    blob={image.blob}
-                    alt={`Image ${idx + 1}`}
-                  />
+                  <ImageThumbnail blob={image.blob} alt={`Image ${idx + 1}`} />
                 )}
 
                 <div className="image-editor-actions">
@@ -271,9 +276,10 @@ export function ImageEditor({
       )}
 
       {remainingSlots <= 0 && imagesToAdd.length === 0 && (
-        <p className="form-hint">Maximum number of images reached ({maxImages}).</p>
+        <p className="form-hint">
+          Maximum number of images reached ({maxImages}).
+        </p>
       )}
     </div>
   );
 }
-

@@ -1,8 +1,11 @@
 /**
  * useLocation hook - Manages geolocation state
  */
-import { useState, useEffect } from 'react';
-import { locationService, type GeolocationCoords } from '../services/location.service';
+import { useState, useEffect } from "react";
+import {
+  locationService,
+  type GeolocationCoords,
+} from "../services/location.service";
 
 interface UseLocationOptions {
   autoFetch?: boolean;
@@ -16,7 +19,7 @@ export function useLocation(options: UseLocationOptions = {}) {
 
   const fetchLocation = async () => {
     if (!locationService.isAvailable()) {
-      setError('Geolocation not available');
+      setError("Geolocation not available");
       return;
     }
 
@@ -27,7 +30,7 @@ export function useLocation(options: UseLocationOptions = {}) {
       const position = await locationService.getCurrentPosition();
       setCoords(position);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get location');
+      setError(err instanceof Error ? err.message : "Failed to get location");
     } finally {
       setLoading(false);
     }
@@ -40,7 +43,7 @@ export function useLocation(options: UseLocationOptions = {}) {
   }, [autoFetch]);
 
   const formatCoords = () => {
-    if (!coords) return '';
+    if (!coords) return "";
     return locationService.formatCoordinates(coords.latitude, coords.longitude);
   };
 

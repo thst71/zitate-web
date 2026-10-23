@@ -1,8 +1,8 @@
 /// <reference types="@testing-library/jest-dom" />
-import { expect, afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
-import 'fake-indexeddb/auto';
+import { expect, afterEach, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+import * as matchers from "@testing-library/jest-dom/matchers";
+import "fake-indexeddb/auto";
 
 // Extend Vitest's expect with jest-dom matchers
 expect.extend(matchers);
@@ -18,11 +18,10 @@ const mockGeolocation = {
   clearWatch: vi.fn(),
 };
 
-Object.defineProperty(globalThis.navigator, 'geolocation', {
+Object.defineProperty(globalThis.navigator, "geolocation", {
   value: mockGeolocation,
   writable: true,
 });
 
 // jsdom does not implement scrollIntoView
 Element.prototype.scrollIntoView = vi.fn();
-

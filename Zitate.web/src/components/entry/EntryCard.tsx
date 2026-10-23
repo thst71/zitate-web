@@ -1,23 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { Entry, EntryLink, ImageAttachment } from '../../models';
-import { formatCoordinates, locationService, type ReverseGeocodeResult } from '../../services/location.service';
-import { useAuthors } from '../../hooks/useAuthors';
-import { useLabels } from '../../hooks/useLabels';
-import { useEntries } from '../../hooks/useEntries';
-import { formatLabelForDisplay } from '../../utils/validators';
-import { ImageGrid } from '../image/ImageGrid';
-import { ImageViewer } from '../image/ImageViewer';
-import { LocationPopover } from '../map/LocationPopover';
-import './EntryCard.css';
+import React, { useState, useEffect } from "react";
+import { Entry, EntryLink, ImageAttachment } from "../../models";
+import {
+  formatCoordinates,
+  locationService,
+  type ReverseGeocodeResult,
+} from "../../services/location.service";
+import { useAuthors } from "../../hooks/useAuthors";
+import { useLabels } from "../../hooks/useLabels";
+import { useEntries } from "../../hooks/useEntries";
+import { formatLabelForDisplay } from "../../utils/validators";
+import { ImageGrid } from "../image/ImageGrid";
+import { ImageViewer } from "../image/ImageViewer";
+import { LocationPopover } from "../map/LocationPopover";
+import "./EntryCard.css";
 
 interface EntryCardProps {
   entry: Entry;
   onEdit?: (entry: Entry) => void;
   onDelete?: (id: string) => void;
-  onLocationClick?: (latitude: number, longitude: number, address?: string, title?: string) => void;
+  onLocationClick?: (
+    latitude: number,
+    longitude: number,
+    address?: string,
+    title?: string,
+  ) => void;
 }
 
-export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, onLocationClick }) => {
+export const EntryCard: React.FC<EntryCardProps> = ({
+  entry,
+  onEdit,
+  onDelete,
+  onLocationClick,
+}) => {
   const { getAuthorById } = useAuthors();
   const { getLabelsByIds } = useLabels();
   const { getImagesForEntry } = useEntries();
@@ -26,8 +40,10 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
   const [viewerIndex, setViewerIndex] = useState(0);
   const [linksOpen, setLinksOpen] = useState(false);
   // Fallback geocoding only for legacy entries without persisted address
-  const [fallbackGeo, setFallbackGeo] = useState<ReverseGeocodeResult | null | undefined>(
-    entry.addressShort ? undefined : undefined // will be set by effect
+  const [fallbackGeo, setFallbackGeo] = useState<
+    ReverseGeocodeResult | null | undefined
+  >(
+    entry.addressShort ? undefined : undefined, // will be set by effect
   );
 
   const author = entry.authorId ? getAuthorById(entry.authorId) : undefined;
@@ -40,12 +56,14 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
     }
   }, [entry.id, entry.imageIds, getImagesForEntry]);
 
-  const hasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
+  const hasLocation =
+    entry.latitude !== undefined && entry.longitude !== undefined;
 
   // Use persisted address if available; otherwise fallback-geocode for legacy entries
   const addressShort = entry.addressShort ?? fallbackGeo?.short;
   const addressFull = entry.addressFull ?? fallbackGeo?.full;
-  const addressLoading = hasLocation && !entry.addressShort && fallbackGeo === undefined;
+  const addressLoading =
+    hasLocation && !entry.addressShort && fallbackGeo === undefined;
 
   useEffect(() => {
     // Only geocode if entry has location but no persisted address (legacy data)
@@ -56,16 +74,20 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
 
     let cancelled = false;
     setFallbackGeo(undefined); // loading
-    locationService.reverseGeocode(entry.latitude!, entry.longitude!).then((result) => {
-      if (!cancelled) {
-        setFallbackGeo(result ?? null);
-      }
-    });
-    return () => { cancelled = true; };
+    locationService
+      .reverseGeocode(entry.latitude!, entry.longitude!)
+      .then((result) => {
+        if (!cancelled) {
+          setFallbackGeo(result ?? null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [hasLocation, entry.latitude, entry.longitude, entry.addressShort]);
   const formatDate = (timestamp: number | undefined): string => {
     if (timestamp === undefined) {
-      return '';
+      return "";
     }
     const date = new Date(timestamp);
     const now = new Date();
@@ -73,22 +95,22 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
-      return 'Today';
+      return "Today";
     } else if (diffDays === 1) {
-      return 'Yesterday';
+      return "Yesterday";
     } else if (diffDays < 7) {
       return `${diffDays} days ago`;
     } else {
       return date.toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
     }
   };
 
   const handleDelete = () => {
-    if (onDelete && confirm('Are you sure you want to delete this entry?')) {
+    if (onDelete && confirm("Are you sure you want to delete this entry?")) {
       onDelete(entry.id);
     }
   };
@@ -100,9 +122,9 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
 
   const formatLinkDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -110,7 +132,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
     try {
       return `${new URL(link.url).origin}/favicon.ico`;
     } catch {
-      return '/favicon.ico';
+      return "/favicon.ico";
     }
   };
 
@@ -120,18 +142,37 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
 
     // Case 1: Author, Citation Date, Creation Date
     if (author && citationStr) {
-      return <>{author.name}, {citationStr} <span className="added-date">(added {creationStr})</span></>;
+      return (
+        <>
+          {author.name}, {citationStr}{" "}
+          <span className="added-date">(added {creationStr})</span>
+        </>
+      );
     }
     // Case 2: No Author, Citation Date, Creation Date
     if (!author && citationStr) {
-      return <>{citationStr} <span className="added-date">(added {creationStr})</span></>;
+      return (
+        <>
+          {citationStr}{" "}
+          <span className="added-date">(added {creationStr})</span>
+        </>
+      );
     }
     // Case 4: Author, No Citation Date, Creation Date
     if (author && !citationStr) {
-      return <>{author.name} <span className="added-date">(added {creationStr})</span></>;
+      return (
+        <>
+          {author.name}{" "}
+          <span className="added-date">(added {creationStr})</span>
+        </>
+      );
     }
     // Case 3: No Author, No Citation Date, Creation Date
-    return <><span className="added-date">added {creationStr}</span></>;
+    return (
+      <>
+        <span className="added-date">added {creationStr}</span>
+      </>
+    );
   };
 
   return (
@@ -165,7 +206,11 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
               </button>
 
               {linksOpen && (
-                <div className="entry-links-dropdown" role="menu" aria-label="Attached URLs">
+                <div
+                  className="entry-links-dropdown"
+                  role="menu"
+                  aria-label="Attached URLs"
+                >
                   {links.map((link) => (
                     <a
                       key={link.id}
@@ -180,16 +225,20 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
                         alt=""
                         aria-hidden="true"
                         onError={(e) => {
-                          if (e.currentTarget.dataset.fallbackApplied === 'true') {
+                          if (
+                            e.currentTarget.dataset.fallbackApplied === "true"
+                          ) {
                             return;
                           }
-                          e.currentTarget.dataset.fallbackApplied = 'true';
-                          e.currentTarget.src = '/favicon.ico';
+                          e.currentTarget.dataset.fallbackApplied = "true";
+                          e.currentTarget.src = "/favicon.ico";
                         }}
                       />
                       <span className="entry-link-content">
                         <span className="entry-link-url">{link.url}</span>
-                        <span className="entry-link-date">Added {formatLinkDate(link.addedAt)}</span>
+                        <span className="entry-link-date">
+                          Added {formatLinkDate(link.addedAt)}
+                        </span>
                       </span>
                     </a>
                   ))}
@@ -199,9 +248,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
           )}
         </div>
 
-        <div className="entry-author">
-          — {renderAuthorLine()}
-        </div>
+        <div className="entry-author">— {renderAuthorLine()}</div>
 
         {images.length > 0 && (
           <ImageGrid
@@ -218,12 +265,17 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
               <LocationPopover
                 latitude={entry.latitude!}
                 longitude={entry.longitude!}
-                onClick={onLocationClick ? () => onLocationClick(
-                  entry.latitude!,
-                  entry.longitude!,
-                  addressFull,
-                  `Quote from ${formatDate(entry.createdAt)}`
-                ) : undefined}
+                onClick={
+                  onLocationClick
+                    ? () =>
+                        onLocationClick(
+                          entry.latitude!,
+                          entry.longitude!,
+                          addressFull,
+                          `Quote from ${formatDate(entry.createdAt)}`,
+                        )
+                    : undefined
+                }
               >
                 <svg
                   className="location-icon"
@@ -241,9 +293,14 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit, onDelete, o
                 </svg>
                 <span className="location-text-content">
                   {addressLoading ? (
-                    <span className="location-loading-text">Loading location…</span>
+                    <span className="location-loading-text">
+                      Loading location…
+                    </span>
                   ) : addressShort ? (
-                    <>{addressShort} ({formatCoordinates(entry.latitude!, entry.longitude!)})</>
+                    <>
+                      {addressShort} (
+                      {formatCoordinates(entry.latitude!, entry.longitude!)})
+                    </>
                   ) : (
                     formatCoordinates(entry.latitude!, entry.longitude!)
                   )}

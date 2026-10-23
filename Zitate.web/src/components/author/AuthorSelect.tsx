@@ -4,10 +4,10 @@
  * Supports keyboard navigation (Arrow keys, Tab, Enter, Escape),
  * mouse click, and touch tap for selecting from the suggestion list.
  */
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useAuthors } from '../../hooks/useAuthors';
-import type { Author } from '../../models';
-import './AuthorSelect.css';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useAuthors } from "../../hooks/useAuthors";
+import type { Author } from "../../models";
+import "./AuthorSelect.css";
 
 interface AuthorSelectProps {
   selectedAuthorId?: string;
@@ -19,7 +19,7 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
   onSelect,
 }) => {
   const { loading, addAuthor, getAuthorById, searchAuthors } = useAuthors();
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState<Author[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -30,14 +30,16 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Resolve selected author name for display
-  const selectedAuthor = selectedAuthorId ? getAuthorById(selectedAuthorId) : undefined;
+  const selectedAuthor = selectedAuthorId
+    ? getAuthorById(selectedAuthorId)
+    : undefined;
 
   // Sync input value with selected author when selection changes externally
   useEffect(() => {
     if (selectedAuthor) {
       setInputValue(selectedAuthor.name);
     } else if (!showSuggestions) {
-      setInputValue('');
+      setInputValue("");
     }
   }, [selectedAuthor, showSuggestions]);
 
@@ -48,7 +50,7 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
       setSuggestions(matches);
       setHighlightedIndex(-1);
     },
-    [searchAuthors]
+    [searchAuthors],
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,7 +73,7 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
 
   /** Whether the current input exactly matches an existing author */
   const exactMatch = suggestions.find(
-    (a) => a.name.toLowerCase() === inputValue.trim().toLowerCase()
+    (a) => a.name.toLowerCase() === inputValue.trim().toLowerCase(),
   );
 
   /** Total items: suggestions + optional "create" item */
@@ -90,7 +92,7 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
   const handleCreateAuthor = async () => {
     const name = inputValue.trim();
     if (!name) {
-      setCreateError('Author name cannot be empty');
+      setCreateError("Author name cannot be empty");
       return;
     }
 
@@ -99,7 +101,9 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
       const author = await addAuthor(name);
       selectAuthor(author);
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Failed to create author');
+      setCreateError(
+        err instanceof Error ? err.message : "Failed to create author",
+      );
     }
   };
 
@@ -115,7 +119,7 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
 
   const handleClear = () => {
     onSelect(undefined);
-    setInputValue('');
+    setInputValue("");
     setSuggestions([]);
     setShowSuggestions(false);
     setHighlightedIndex(-1);
@@ -125,8 +129,8 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
   // ---------- Keyboard navigation ----------
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions && e.key !== 'Escape') {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    if (!showSuggestions && e.key !== "Escape") {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         updateSuggestions(inputValue);
         setShowSuggestions(true);
         e.preventDefault();
@@ -135,21 +139,21 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
     }
 
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
         setHighlightedIndex((prev) => (prev + 1) % totalItems);
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
         setHighlightedIndex((prev) => (prev <= 0 ? totalItems - 1 : prev - 1));
         break;
-      case 'Tab':
+      case "Tab":
         if (showSuggestions && highlightedIndex >= 0) {
           e.preventDefault();
           handleSelectHighlighted();
         }
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         if (showSuggestions && highlightedIndex >= 0) {
           handleSelectHighlighted();
@@ -161,7 +165,7 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
           }
         }
         break;
-      case 'Escape':
+      case "Escape":
         setShowSuggestions(false);
         setHighlightedIndex(-1);
         break;
@@ -171,15 +175,20 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
   // Scroll highlighted item into view
   useEffect(() => {
     if (highlightedIndex >= 0 && listRef.current) {
-      const item = listRef.current.children[highlightedIndex] as HTMLElement | undefined;
-      item?.scrollIntoView({ block: 'nearest' });
+      const item = listRef.current.children[highlightedIndex] as
+        | HTMLElement
+        | undefined;
+      item?.scrollIntoView({ block: "nearest" });
     }
   }, [highlightedIndex]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setShowSuggestions(false);
         setHighlightedIndex(-1);
         if (selectedAuthor) {
@@ -188,11 +197,11 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [selectedAuthor]);
 
-  const listboxId = 'author-listbox';
+  const listboxId = "author-listbox";
 
   return (
     <div className="author-select" ref={containerRef}>
@@ -210,14 +219,20 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
-          placeholder={loading ? 'Loading authors...' : 'Type to search or create author...'}
+          placeholder={
+            loading
+              ? "Loading authors..."
+              : "Type to search or create author..."
+          }
           disabled={loading}
           autoComplete="off"
           role="combobox"
           aria-expanded={showSuggestions}
           aria-controls={listboxId}
           aria-activedescendant={
-            highlightedIndex >= 0 ? `author-option-${highlightedIndex}` : undefined
+            highlightedIndex >= 0
+              ? `author-option-${highlightedIndex}`
+              : undefined
           }
           aria-autocomplete="list"
           maxLength={200}
@@ -249,7 +264,7 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
               id={`author-option-${index}`}
               role="option"
               aria-selected={highlightedIndex === index}
-              className={`author-suggestion${highlightedIndex === index ? ' highlighted' : ''}${author.id === selectedAuthorId ? ' selected' : ''}`}
+              className={`author-suggestion${highlightedIndex === index ? " highlighted" : ""}${author.id === selectedAuthorId ? " selected" : ""}`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 selectAuthor(author);
@@ -264,7 +279,7 @@ export const AuthorSelect: React.FC<AuthorSelectProps> = ({
               id={`author-option-${suggestions.length}`}
               role="option"
               aria-selected={highlightedIndex === suggestions.length}
-              className={`author-suggestion create${highlightedIndex === suggestions.length ? ' highlighted' : ''}`}
+              className={`author-suggestion create${highlightedIndex === suggestions.length ? " highlighted" : ""}`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 handleCreateAuthor();

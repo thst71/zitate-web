@@ -34,14 +34,16 @@
   transform: translateX(-50%);
   z-index: 100;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 1px 4px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    0 1px 4px rgba(0, 0, 0, 0.1);
   animation: popover-fade-in 0.15s ease-out;
   pointer-events: auto;
 }
 
 /* Arrow pointing down */
 .location-popover::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%;
   left: 50%;
@@ -83,11 +85,12 @@
 
 @media (prefers-color-scheme: dark) {
   .location-popover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.4),
+      0 1px 4px rgba(0, 0, 0, 0.3);
   }
 
   .location-popover::after {
     border-top-color: var(--color-border, #374151);
   }
 }
-

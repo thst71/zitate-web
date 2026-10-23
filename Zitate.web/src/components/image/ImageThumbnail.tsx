@@ -1,9 +1,9 @@
 /**
  * ImageThumbnail Component - Individual image thumbnail
  */
-import { useState, useEffect } from 'react';
-import { createImageURL, revokeImageURL } from '../../services/image.service';
-import './ImageThumbnail.css';
+import { useState, useEffect } from "react";
+import { createImageURL, revokeImageURL } from "../../services/image.service";
+import "./ImageThumbnail.css";
 
 interface ImageThumbnailProps {
   blob: Blob;
@@ -12,8 +12,13 @@ interface ImageThumbnailProps {
   onClick?: () => void;
 }
 
-export function ImageThumbnail({ blob, alt = 'Image', onDelete, onClick }: ImageThumbnailProps) {
-  const [imageUrl, setImageUrl] = useState<string>('');
+export function ImageThumbnail({
+  blob,
+  alt = "Image",
+  onDelete,
+  onClick,
+}: ImageThumbnailProps) {
+  const [imageUrl, setImageUrl] = useState<string>("");
 
   useEffect(() => {
     // Create object URL for the blob
@@ -41,7 +46,7 @@ export function ImageThumbnail({ blob, alt = 'Image', onDelete, onClick }: Image
 
   return (
     <div
-      className={`image-thumbnail ${onClick ? 'clickable' : ''}`}
+      className={`image-thumbnail ${onClick ? "clickable" : ""}`}
       onClick={handleClick}
     >
       {imageUrl && (

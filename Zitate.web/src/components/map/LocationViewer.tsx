@@ -1,14 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
-import { Map as LeafletMap, TileLayer, Marker } from 'leaflet';
-import { locationService } from '../../services/location.service';
-import 'leaflet/dist/leaflet.css';
-import './LocationViewer.css';
+import { useState, useEffect, useRef } from "react";
+import { Map as LeafletMap, TileLayer, Marker } from "leaflet";
+import { locationService } from "../../services/location.service";
+import "leaflet/dist/leaflet.css";
+import "./LocationViewer.css";
 
 // Fix Leaflet default markers
-import L from 'leaflet';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import markerIconRetina from 'leaflet/dist/images/marker-icon-2x.png';
+import L from "leaflet";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import markerIconRetina from "leaflet/dist/images/marker-icon-2x.png";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -30,12 +30,14 @@ export const LocationViewer = ({
   latitude,
   longitude,
   address,
-  title = 'Location',
-  onClose
+  title = "Location",
+  onClose,
 }: LocationViewerProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<LeafletMap | null>(null);
-  const [resolvedAddress, setResolvedAddress] = useState<string | undefined>(address);
+  const [resolvedAddress, setResolvedAddress] = useState<string | undefined>(
+    address,
+  );
 
   // If no address was passed, fetch it ourselves
   useEffect(() => {
@@ -49,16 +51,21 @@ export const LocationViewer = ({
         setResolvedAddress(result.full);
       }
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [latitude, longitude, address]);
 
   useEffect(() => {
     if (!mapRef.current || leafletMapRef.current) return;
 
-    const map = new LeafletMap(mapRef.current).setView([latitude, longitude], 15);
+    const map = new LeafletMap(mapRef.current).setView(
+      [latitude, longitude],
+      15,
+    );
 
-    new TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+    new TileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
     // Add marker at the specified location
@@ -76,15 +83,15 @@ export const LocationViewer = ({
 
     // Handle ESC key
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
       map.remove();
       leafletMapRef.current = null;
     };
@@ -97,8 +104,8 @@ export const LocationViewer = ({
   };
 
   return (
-    <div 
-      className="location-viewer-overlay" 
+    <div
+      className="location-viewer-overlay"
       onClick={handleOverlayClick}
       role="dialog"
       aria-labelledby="location-viewer-title"
@@ -107,8 +114,8 @@ export const LocationViewer = ({
       <div className="location-viewer-modal">
         <div className="location-viewer-header">
           <h3 id="location-viewer-title">{title}</h3>
-          <button 
-            className="close-button" 
+          <button
+            className="close-button"
             onClick={onClose}
             aria-label="Close location viewer"
           >
@@ -121,7 +128,8 @@ export const LocationViewer = ({
 
           <div className="location-info">
             <div className="coordinates">
-              <strong>Coordinates:</strong> {latitude.toFixed(6)}, {longitude.toFixed(6)}
+              <strong>Coordinates:</strong> {latitude.toFixed(6)},{" "}
+              {longitude.toFixed(6)}
             </div>
             {resolvedAddress && (
               <div className="address">
@@ -132,11 +140,11 @@ export const LocationViewer = ({
         </div>
 
         <div className="location-viewer-actions">
-          <button 
+          <button
             className="btn btn-secondary"
             onClick={() => {
               const url = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}&zoom=15`;
-              window.open(url, '_blank', 'noopener,noreferrer');
+              window.open(url, "_blank", "noopener,noreferrer");
             }}
             aria-label="Open location in OpenStreetMap"
           >

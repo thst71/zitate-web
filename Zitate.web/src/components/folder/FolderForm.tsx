@@ -1,15 +1,15 @@
 /**
  * FolderForm Component - Form for creating/editing smart folders
  */
-import React, { useState } from 'react';
-import { SmartFolder } from '../../models';
-import { validateFolderName } from '../../utils/validators';
-import { AuthorSelect } from '../author/AuthorSelect';
-import { LabelInput } from '../label/LabelInput';
-import './FolderForm.css';
+import React, { useState } from "react";
+import { SmartFolder } from "../../models";
+import { validateFolderName } from "../../utils/validators";
+import { AuthorSelect } from "../author/AuthorSelect";
+import { LabelInput } from "../label/LabelInput";
+import "./FolderForm.css";
 
 interface FolderFormProps {
-  onSave: (name: string, criteria: SmartFolder['criteria']) => Promise<void>;
+  onSave: (name: string, criteria: SmartFolder["criteria"]) => Promise<void>;
   onCancel: () => void;
   initialFolder?: SmartFolder;
 }
@@ -19,18 +19,18 @@ export const FolderForm: React.FC<FolderFormProps> = ({
   onCancel,
   initialFolder,
 }) => {
-  const [name, setName] = useState(initialFolder?.name || '');
+  const [name, setName] = useState(initialFolder?.name || "");
   const [authorId, setAuthorId] = useState<string | undefined>(
-    initialFolder?.criteria.authorId
+    initialFolder?.criteria.authorId,
   );
   const [labelIds, setLabelIds] = useState<string[]>(
-    initialFolder?.criteria.labels?.values || []
+    initialFolder?.criteria.labels?.values || [],
   );
   const [textMatch, setTextMatch] = useState(
-    initialFolder?.criteria.textMatch || ''
+    initialFolder?.criteria.textMatch || "",
   );
   const [hasLocation, setHasLocation] = useState<boolean | undefined>(
-    initialFolder?.criteria.hasLocation
+    initialFolder?.criteria.hasLocation,
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +48,11 @@ export const FolderForm: React.FC<FolderFormProps> = ({
     setSaving(true);
     setError(null);
 
-    const criteria: SmartFolder['criteria'] = {
-      labels: labelIds.length > 0 ? { values: labelIds, operator: 'OR' as const } : undefined,
+    const criteria: SmartFolder["criteria"] = {
+      labels:
+        labelIds.length > 0
+          ? { values: labelIds, operator: "OR" as const }
+          : undefined,
       authorId: authorId || undefined,
       textMatch: textMatch.trim() || undefined,
       hasLocation: hasLocation,
@@ -58,7 +61,7 @@ export const FolderForm: React.FC<FolderFormProps> = ({
     try {
       await onSave(name, criteria);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save folder');
+      setError(err instanceof Error ? err.message : "Failed to save folder");
       setSaving(false);
     }
   };
@@ -72,7 +75,7 @@ export const FolderForm: React.FC<FolderFormProps> = ({
         <input
           id="folder-name"
           type="text"
-          className={`form-input ${!isValid && name ? 'invalid' : ''}`}
+          className={`form-input ${!isValid && name ? "invalid" : ""}`}
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter folder name..."
@@ -87,8 +90,8 @@ export const FolderForm: React.FC<FolderFormProps> = ({
       <div className="form-section">
         <h3 className="form-section-title">Filter Criteria</h3>
         <p className="form-section-hint">
-          Select criteria to automatically include entries in this folder.
-          Leave empty to match all entries.
+          Select criteria to automatically include entries in this folder. Leave
+          empty to match all entries.
         </p>
 
         <AuthorSelect selectedAuthorId={authorId} onSelect={setAuthorId} />
@@ -120,7 +123,9 @@ export const FolderForm: React.FC<FolderFormProps> = ({
                 checked={hasLocation === undefined}
                 onChange={() => setHasLocation(undefined)}
               />
-              <label htmlFor="location-any">Any (with or without location)</label>
+              <label htmlFor="location-any">
+                Any (with or without location)
+              </label>
             </div>
             <div className="radio-option">
               <input
@@ -144,7 +149,6 @@ export const FolderForm: React.FC<FolderFormProps> = ({
             </div>
           </div>
         </div>
-
       </div>
 
       {error && (
@@ -167,7 +171,11 @@ export const FolderForm: React.FC<FolderFormProps> = ({
           className="btn btn-primary"
           disabled={!isValid || saving}
         >
-          {saving ? 'Saving...' : initialFolder ? 'Update Folder' : 'Create Folder'}
+          {saving
+            ? "Saving..."
+            : initialFolder
+              ? "Update Folder"
+              : "Create Folder"}
         </button>
       </div>
     </form>

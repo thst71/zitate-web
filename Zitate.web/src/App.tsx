@@ -1,24 +1,24 @@
-import React, { useState, useRef } from 'react';
-import { Header } from './components/layout/Header';
-import { Layout } from './components/layout/Layout';
-import { Modal } from './components/common/Modal';
-import { ConfirmDialog } from './components/common/ConfirmDialog';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { OfflineIndicator } from './components/common/OfflineIndicator';
-import { InstallPrompt } from './components/common/InstallPrompt';
-import { DataManagement } from './components/common/DataManagement';
-import { LocationPicker } from './components/map/LocationPicker';
-import { LocationViewer } from './components/map/LocationViewer';
-import { EntryForm } from './components/entry/EntryForm';
-import { EntryList } from './components/entry/EntryList';
-import { SearchBar } from './components/search/SearchBar';
-import { FolderList } from './components/folder/FolderList';
-import { FolderForm } from './components/folder/FolderForm';
-import { useEntries } from './hooks/useEntries';
-import { useSearch } from './hooks/useSearch';
-import { useFolders } from './hooks/useFolders';
-import type { SmartFolder, Entry, EntryLink } from './models';
-import type { SelectedImage } from './components/image/ImageUpload';
+import React, { useState, useRef } from "react";
+import { Header } from "./components/layout/Header";
+import { Layout } from "./components/layout/Layout";
+import { Modal } from "./components/common/Modal";
+import { ConfirmDialog } from "./components/common/ConfirmDialog";
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
+import { OfflineIndicator } from "./components/common/OfflineIndicator";
+import { InstallPrompt } from "./components/common/InstallPrompt";
+import { DataManagement } from "./components/common/DataManagement";
+import { LocationPicker } from "./components/map/LocationPicker";
+import { LocationViewer } from "./components/map/LocationViewer";
+import { EntryForm } from "./components/entry/EntryForm";
+import { EntryList } from "./components/entry/EntryList";
+import { SearchBar } from "./components/search/SearchBar";
+import { FolderList } from "./components/folder/FolderList";
+import { FolderForm } from "./components/folder/FolderForm";
+import { useEntries } from "./hooks/useEntries";
+import { useSearch } from "./hooks/useSearch";
+import { useFolders } from "./hooks/useFolders";
+import type { SmartFolder, Entry, EntryLink } from "./models";
+import type { SelectedImage } from "./components/image/ImageUpload";
 
 const App: React.FC = () => {
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
@@ -26,28 +26,34 @@ const App: React.FC = () => {
   const [isDataManagementOpen, setIsDataManagementOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
-  const [selectedFolder, setSelectedFolder] = useState<SmartFolder | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<SmartFolder | null>(
+    null,
+  );
   const [locationPicker, setLocationPicker] = useState<{
     isOpen: boolean;
     latitude?: number;
     longitude?: number;
   } | null>(null);
-  const locationPickerCallbackRef = useRef<((lat: number, lng: number, addressShort?: string, addressFull?: string) => void) | null>(null);
+  const locationPickerCallbackRef = useRef<
+    | ((
+        lat: number,
+        lng: number,
+        addressShort?: string,
+        addressFull?: string,
+      ) => void)
+    | null
+  >(null);
   const [locationViewer, setLocationViewer] = useState<{
     latitude: number;
     longitude: number;
     address?: string;
     title?: string;
   } | null>(null);
-  const { entries, loading, error, addEntry, updateEntry, deleteEntry } = useEntries();
+  const { entries, loading, error, addEntry, updateEntry, deleteEntry } =
+    useEntries();
   const { filteredEntries, handleSearch, isSearching } = useSearch(entries);
-  const {
-    folders,
-    addFolder,
-    deleteFolder,
-    filterByFolder,
-    getFolderCount,
-  } = useFolders();
+  const { folders, addFolder, deleteFolder, filterByFolder, getFolderCount } =
+    useFolders();
 
   const handleCreateEntryClick = () => {
     setIsEntryModalOpen(true);
@@ -79,17 +85,38 @@ const App: React.FC = () => {
     imageReplacements?: Map<string, SelectedImage>,
     addressShort?: string,
     addressFull?: string,
-    links?: EntryLink[]
+    links?: EntryLink[],
   ) => {
     if (editingEntry) {
       await updateEntry(
-        editingEntry.id, text, citationDate, authorId, labelIds, latitude, longitude,
-        selectedImages, imagesToDelete, imageIdsOrder, imageReplacements,
-        addressShort, addressFull, links
+        editingEntry.id,
+        text,
+        citationDate,
+        authorId,
+        labelIds,
+        latitude,
+        longitude,
+        selectedImages,
+        imagesToDelete,
+        imageIdsOrder,
+        imageReplacements,
+        addressShort,
+        addressFull,
+        links,
       );
     } else {
-      await addEntry(text, citationDate, latitude, longitude, authorId, labelIds, selectedImages,
-        addressShort, addressFull, links);
+      await addEntry(
+        text,
+        citationDate,
+        latitude,
+        longitude,
+        authorId,
+        labelIds,
+        selectedImages,
+        addressShort,
+        addressFull,
+        links,
+      );
     }
     setIsEntryModalOpen(false);
     setEditingEntry(null);
@@ -117,7 +144,7 @@ const App: React.FC = () => {
 
   const handleSaveFolder = async (
     name: string,
-    criteria: SmartFolder['criteria']
+    criteria: SmartFolder["criteria"],
   ) => {
     await addFolder(name, criteria);
     setIsFolderModalOpen(false);
@@ -147,15 +174,15 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <OfflineIndicator />
       <InstallPrompt />
-      
+
       <Layout>
         <ErrorBoundary fallback={<div>Header failed to load</div>}>
-          <Header 
+          <Header
             onCreateClick={handleCreateEntryClick}
             onDataManagementClick={() => setIsDataManagementOpen(true)}
           />
         </ErrorBoundary>
-        
+
         <ErrorBoundary fallback={<div>Search failed to load</div>}>
           <SearchBar onSearch={handleSearch} />
         </ErrorBoundary>
@@ -173,16 +200,27 @@ const App: React.FC = () => {
         )}
 
         {selectedFolder && (
-          <div style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+          <div
+            style={{
+              padding: "var(--spacing-lg)",
+              borderBottom: "1px solid var(--color-border)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--spacing-md)",
+              }}
+            >
               <button
                 onClick={handleClearFolderFilter}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 'var(--spacing-xs)',
-                  color: 'var(--color-primary)',
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "var(--spacing-xs)",
+                  color: "var(--color-primary)",
                 }}
               >
                 ← Back
@@ -199,7 +237,7 @@ const App: React.FC = () => {
             error={error}
             onEditEntry={handleEditEntry}
             onDeleteEntry={handleDeleteEntryClick}
-            onLocationClick={(latitude, longitude, address, title) => 
+            onLocationClick={(latitude, longitude, address, title) =>
               setLocationViewer({ latitude, longitude, address, title })
             }
           />
@@ -208,21 +246,21 @@ const App: React.FC = () => {
         <button
           onClick={handleCreateFolderClick}
           style={{
-            position: 'fixed',
-            bottom: 'var(--spacing-xl)',
-            right: 'calc(var(--spacing-xl) + 60px)',
-            width: '56px',
-            height: '56px',
-            borderRadius: '50%',
-            background: 'var(--color-primary)',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: 'var(--shadow-lg)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '24px',
+            position: "fixed",
+            bottom: "var(--spacing-xl)",
+            right: "calc(var(--spacing-xl) + 60px)",
+            width: "56px",
+            height: "56px",
+            borderRadius: "50%",
+            background: "var(--color-primary)",
+            color: "white",
+            border: "none",
+            cursor: "pointer",
+            boxShadow: "var(--shadow-lg)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "24px",
           }}
           title="Create smart folder"
         >
@@ -232,7 +270,7 @@ const App: React.FC = () => {
         <Modal
           isOpen={isEntryModalOpen}
           onClose={handleCloseEntryModal}
-          title={editingEntry ? 'Edit Entry' : 'New Entry'}
+          title={editingEntry ? "Edit Entry" : "New Entry"}
         >
           <ErrorBoundary fallback={<div>Entry form failed to load</div>}>
             <EntryForm
@@ -241,7 +279,11 @@ const App: React.FC = () => {
               initialEntry={editingEntry ?? undefined}
               onLocationEdit={(lat, lng, onSelect) => {
                 locationPickerCallbackRef.current = onSelect;
-                setLocationPicker({ isOpen: true, latitude: lat, longitude: lng });
+                setLocationPicker({
+                  isOpen: true,
+                  latitude: lat,
+                  longitude: lng,
+                });
               }}
             />
           </ErrorBoundary>
@@ -276,7 +318,12 @@ const App: React.FC = () => {
             initialLatitude={locationPicker.latitude}
             initialLongitude={locationPicker.longitude}
             onLocationSelect={(lat, lng, addrShort, addrFull) => {
-              locationPickerCallbackRef.current?.(lat, lng, addrShort, addrFull);
+              locationPickerCallbackRef.current?.(
+                lat,
+                lng,
+                addrShort,
+                addrFull,
+              );
               locationPickerCallbackRef.current = null;
               setLocationPicker(null);
             }}
@@ -304,13 +351,16 @@ const App: React.FC = () => {
           message={
             deletingEntryId
               ? `Are you sure you want to delete this entry? "${
-                  entries.find((e) => e.id === deletingEntryId)?.text.slice(0, 100) || ''
+                  entries
+                    .find((e) => e.id === deletingEntryId)
+                    ?.text.slice(0, 100) || ""
                 }${
-                  (entries.find((e) => e.id === deletingEntryId)?.text.length ?? 0) > 100
-                    ? '...'
-                    : ''
+                  (entries.find((e) => e.id === deletingEntryId)?.text.length ??
+                    0) > 100
+                    ? "..."
+                    : ""
                 }"`
-              : ''
+              : ""
           }
           confirmText="Delete"
           cancelText="Cancel"

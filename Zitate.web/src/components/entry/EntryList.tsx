@@ -1,7 +1,7 @@
-import React from 'react';
-import { Entry } from '../../models';
-import { EntryCard } from './EntryCard';
-import './EntryList.css';
+import React from "react";
+import { Entry } from "../../models";
+import { EntryCard } from "./EntryCard";
+import "./EntryList.css";
 
 interface EntryListProps {
   entries: Entry[];
@@ -9,7 +9,12 @@ interface EntryListProps {
   error?: string | null;
   onEditEntry?: (entry: Entry) => void;
   onDeleteEntry?: (id: string) => void;
-  onLocationClick?: (latitude: number, longitude: number, address?: string, title?: string) => void;
+  onLocationClick?: (
+    latitude: number,
+    longitude: number,
+    address?: string,
+    title?: string,
+  ) => void;
 }
 
 export const EntryList: React.FC<EntryListProps> = ({

@@ -1,8 +1,8 @@
 /**
  * IndexedDB Service - Wrapper for database operations
  */
-import { openDB, type IDBPDatabase } from 'idb';
-import { DB_NAME, DB_VERSION, STORES, handleUpgrade } from '../db/schema';
+import { openDB, type IDBPDatabase } from "idb";
+import { DB_NAME, DB_VERSION, STORES, handleUpgrade } from "../db/schema";
 
 class DBService {
   private db: IDBPDatabase | null = null;
@@ -81,10 +81,10 @@ class DBService {
   async query<T>(
     storeName: string,
     indexName: string,
-    value: IDBValidKey | IDBKeyRange
+    value: IDBValidKey | IDBKeyRange,
   ): Promise<T[]> {
     const db = await this.init();
-    const tx = db.transaction(storeName, 'readonly');
+    const tx = db.transaction(storeName, "readonly");
     const index = tx.objectStore(storeName).index(indexName);
     return index.getAll(value);
   }
@@ -110,13 +110,13 @@ class DBService {
    */
   async getAllEntriesSorted<T>(): Promise<T[]> {
     const db = await this.init();
-    const tx = db.transaction(STORES.ENTRIES, 'readonly');
+    const tx = db.transaction(STORES.ENTRIES, "readonly");
     const store = tx.objectStore(STORES.ENTRIES);
-    const index = store.index('createdAt');
+    const index = store.index("createdAt");
 
     // Get all entries via cursor for sorting
     const entries: T[] = [];
-    let cursor = await index.openCursor(null, 'prev'); // 'prev' for descending order
+    let cursor = await index.openCursor(null, "prev"); // 'prev' for descending order
 
     while (cursor) {
       entries.push(cursor.value);

@@ -21,17 +21,25 @@ export const VALIDATION_LIMITS = {
 /**
  * Validate entry text
  */
-export function validateEntryText(text: string | undefined | null): ValidationResult {
+export function validateEntryText(
+  text: string | undefined | null,
+): ValidationResult {
   if (!text || text.trim().length === 0) {
-    return { isValid: false, error: 'Text cannot be empty' };
+    return { isValid: false, error: "Text cannot be empty" };
   }
 
   if (text.length < VALIDATION_LIMITS.TEXT_MIN) {
-    return { isValid: false, error: `Text must be at least ${VALIDATION_LIMITS.TEXT_MIN} character` };
+    return {
+      isValid: false,
+      error: `Text must be at least ${VALIDATION_LIMITS.TEXT_MIN} character`,
+    };
   }
 
   if (text.length > VALIDATION_LIMITS.TEXT_MAX) {
-    return { isValid: false, error: `Text cannot exceed ${VALIDATION_LIMITS.TEXT_MAX} characters` };
+    return {
+      isValid: false,
+      error: `Text cannot exceed ${VALIDATION_LIMITS.TEXT_MAX} characters`,
+    };
   }
 
   return { isValid: true };
@@ -40,13 +48,18 @@ export function validateEntryText(text: string | undefined | null): ValidationRe
 /**
  * Validate author name
  */
-export function validateAuthorName(name: string | undefined | null): ValidationResult {
+export function validateAuthorName(
+  name: string | undefined | null,
+): ValidationResult {
   if (!name || name.trim().length === 0) {
-    return { isValid: false, error: 'Author name cannot be empty' };
+    return { isValid: false, error: "Author name cannot be empty" };
   }
 
   if (name.length > VALIDATION_LIMITS.AUTHOR_NAME_MAX) {
-    return { isValid: false, error: `Author name cannot exceed ${VALIDATION_LIMITS.AUTHOR_NAME_MAX} characters` };
+    return {
+      isValid: false,
+      error: `Author name cannot exceed ${VALIDATION_LIMITS.AUTHOR_NAME_MAX} characters`,
+    };
   }
 
   return { isValid: true };
@@ -55,18 +68,26 @@ export function validateAuthorName(name: string | undefined | null): ValidationR
 /**
  * Validate label name
  */
-export function validateLabelName(name: string | undefined | null): ValidationResult {
+export function validateLabelName(
+  name: string | undefined | null,
+): ValidationResult {
   if (!name || name.trim().length === 0) {
-    return { isValid: false, error: 'Label name cannot be empty' };
+    return { isValid: false, error: "Label name cannot be empty" };
   }
 
   if (name.length > VALIDATION_LIMITS.LABEL_NAME_MAX) {
-    return { isValid: false, error: `Label name cannot exceed ${VALIDATION_LIMITS.LABEL_NAME_MAX} characters` };
+    return {
+      isValid: false,
+      error: `Label name cannot exceed ${VALIDATION_LIMITS.LABEL_NAME_MAX} characters`,
+    };
   }
 
   // Check for disallowed characters
-  if (name.includes(',') || name.includes(';')) {
-    return { isValid: false, error: 'Label name cannot contain commas or semicolons' };
+  if (name.includes(",") || name.includes(";")) {
+    return {
+      isValid: false,
+      error: "Label name cannot contain commas or semicolons",
+    };
   }
 
   return { isValid: true };
@@ -84,20 +105,25 @@ export function validateURL(url: string | undefined | null): ValidationResult {
     new URL(url);
     return { isValid: true };
   } catch {
-    return { isValid: false, error: 'Invalid URL format' };
+    return { isValid: false, error: "Invalid URL format" };
   }
 }
 
 /**
  * Validate folder name
  */
-export function validateFolderName(name: string | undefined | null): ValidationResult {
+export function validateFolderName(
+  name: string | undefined | null,
+): ValidationResult {
   if (!name || name.trim().length === 0) {
-    return { isValid: false, error: 'Folder name cannot be empty' };
+    return { isValid: false, error: "Folder name cannot be empty" };
   }
 
   if (name.length > VALIDATION_LIMITS.FOLDER_NAME_MAX) {
-    return { isValid: false, error: `Folder name cannot exceed ${VALIDATION_LIMITS.FOLDER_NAME_MAX} characters` };
+    return {
+      isValid: false,
+      error: `Folder name cannot exceed ${VALIDATION_LIMITS.FOLDER_NAME_MAX} characters`,
+    };
   }
 
   return { isValid: true };

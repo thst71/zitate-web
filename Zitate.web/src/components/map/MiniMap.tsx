@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
-import './MiniMap.css';
+import { useState, useMemo } from "react";
+import "./MiniMap.css";
 
 interface MiniMapProps {
   latitude: number;
   longitude: number;
-  size?: 'small' | 'medium';
+  size?: "small" | "medium";
   onClick?: () => void;
   className?: string;
 }
@@ -20,7 +20,8 @@ function latLngToTile(lat: number, lng: number, zoom: number) {
   const n = Math.pow(2, zoom);
   const x = ((lng + 180) / 360) * n;
   const latRad = (lat * Math.PI) / 180;
-  const y = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n;
+  const y =
+    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n;
   return {
     tileX: Math.floor(x),
     tileY: Math.floor(y),
@@ -29,22 +30,26 @@ function latLngToTile(lat: number, lng: number, zoom: number) {
   };
 }
 
-export const MiniMap = ({ 
-  latitude, 
-  longitude, 
-  size = 'medium',
+export const MiniMap = ({
+  latitude,
+  longitude,
+  size = "medium",
   onClick,
-  className = ''
+  className = "",
 }: MiniMapProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const zoom = size === 'small' ? 13 : 15;
+  const zoom = size === "small" ? 13 : 15;
 
   // Build a 3x3 grid of tiles centered on the tile that contains the pin.
   // Then shift the whole grid so the pin ends up at the container center.
   const tileData = useMemo(() => {
-    const { tileX, tileY, fracX, fracY } = latLngToTile(latitude, longitude, zoom);
+    const { tileX, tileY, fracX, fracY } = latLngToTile(
+      latitude,
+      longitude,
+      zoom,
+    );
     const n = Math.pow(2, zoom);
 
     // Pin position within the center tile (row=1, col=1 in the 3x3 grid)
@@ -59,8 +64,8 @@ export const MiniMap = ({
         tiles.push({
           x: (tileX + col + n) % n,
           y: tileY + row,
-          col: col + 1,  // 0, 1, 2
-          row: row + 1,  // 0, 1, 2
+          col: col + 1, // 0, 1, 2
+          row: row + 1, // 0, 1, 2
         });
       }
     }
@@ -75,7 +80,7 @@ export const MiniMap = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+    if ((e.key === "Enter" || e.key === " ") && onClick) {
       e.preventDefault();
       onClick();
     }
@@ -83,13 +88,13 @@ export const MiniMap = ({
 
   if (imageError) {
     return (
-      <div 
-        className={`mini-map mini-map-${size} mini-map-error ${className} ${onClick ? 'clickable' : ''}`}
+      <div
+        className={`mini-map mini-map-${size} mini-map-error ${className} ${onClick ? "clickable" : ""}`}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         tabIndex={onClick ? 0 : undefined}
-        role={onClick ? 'button' : undefined}
-        aria-label={onClick ? 'Open location on map' : 'Location coordinates'}
+        role={onClick ? "button" : undefined}
+        aria-label={onClick ? "Open location on map" : "Location coordinates"}
       >
         <div className="mini-map-error-content">
           <span className="mini-map-icon">📍</span>
@@ -102,19 +107,19 @@ export const MiniMap = ({
   }
 
   return (
-    <div 
-      className={`mini-map mini-map-${size} ${className} ${onClick ? 'clickable' : ''} ${!imageLoaded ? 'loading' : ''}`}
+    <div
+      className={`mini-map mini-map-${size} ${className} ${onClick ? "clickable" : ""} ${!imageLoaded ? "loading" : ""}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       tabIndex={onClick ? 0 : undefined}
-      role={onClick ? 'button' : undefined}
-      aria-label={onClick ? 'Open location on map' : 'Location map'}
+      role={onClick ? "button" : undefined}
+      aria-label={onClick ? "Open location on map" : "Location map"}
     >
       {/* 3x3 tile grid, shifted so the pin is at the container center */}
       <div
         className="mini-map-tiles"
         style={{
-          position: 'absolute',
+          position: "absolute",
           width: TILE_SIZE * 3,
           height: TILE_SIZE * 3,
           left: `calc(50% - ${tileData.pinX}px)`,
@@ -127,7 +132,7 @@ export const MiniMap = ({
             src={`https://tile.openstreetmap.org/${zoom}/${tile.x}/${tile.y}.png`}
             alt=""
             style={{
-              position: 'absolute',
+              position: "absolute",
               left: tile.col * TILE_SIZE,
               top: tile.row * TILE_SIZE,
               width: TILE_SIZE,
@@ -144,13 +149,13 @@ export const MiniMap = ({
       <div className="mini-map-marker">
         <span className="marker-icon">📍</span>
       </div>
-      
+
       {!imageLoaded && !imageError && (
         <div className="mini-map-loading">
           <div className="loading-spinner"></div>
         </div>
       )}
-      
+
       {onClick && (
         <div className="mini-map-overlay">
           <span className="mini-map-hover-text">Click to view</span>
