@@ -1,0 +1,19 @@
+== Epic 2: Entry Management (Basic)
+
+include::US-2.1-entry-creation-form-component.adoc[]
+
+include::US-2.2-text-input-with-validation.adoc[]
+
+include::US-2.3-geolocation-integration.adoc[]
+
+include::US-2.4-entry-save-to-indexeddb.adoc[]
+
+include::US-2.5-entry-list-display.adoc[]
+
+include::US-2.6-entry-deletion.adoc[]
+
+include::US-2.7-citation-date-input.adoc[]
+
+include::US-2.8-url-attachment-input.adoc[]
+
+include::US-2.9-persist-citation-date-and-urls.adoc[]

@@ -1,10 +1,10 @@
 /**
  * FolderList Component - Display list of smart folders
  */
-import React from 'react';
-import { SmartFolder, Entry } from '../../models';
-import { FolderCard } from './FolderCard';
-import './FolderList.css';
+import React from "react";
+import { SmartFolder, Entry } from "../../models";
+import { FolderCard } from "./FolderCard";
+import "./FolderList.css";
 
 interface FolderListProps {
   folders: SmartFolder[];

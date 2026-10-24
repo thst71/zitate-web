@@ -1,0 +1,16 @@
+[[FR-1.7]]
+=== FR-1.7 URL attachment
+
+The system shall allow users to attach one or more URLs to each entry and store them as part of the entry data.
+
+.Acceptance criteria
+. User can add multiple URLs to an entry during creation and editing
+. URL fields are optional
+. Each entered URL is validated as a syntactically valid URL before saving
+. Attached URLs are stored with the entry in IndexedDB
+. User can remove individual URLs before saving or while editing an existing entry
+. Export and import preserve attached URLs together with their entries
+. The date associated with each attached URL is preserved and displayed in the user interface
+
+Stakeholder need:: SPEC.md §1.7 +
+Effort:: not estimated (migrated from the monolithic specification)

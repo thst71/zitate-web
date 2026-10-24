@@ -1,0 +1,24 @@
+[[US-2.9]]
+=== US-2.9 Persist Citation Date and URLs
+
+Effort:: 5 h +
+Traces to:: <<TS-2.2>>, <<FR-1.7>>, <<FR-1.8>>
+
+As a user, I want to have citation dates and attached URLs saved with each entry, so that this metadata is available across sessions and later edits.
+
+.Acceptance criteria
+. IndexedDB entry records include `citationDate` and attached URLs
+. Existing add/update entry flows persist the new fields
+. Existing entry loading returns citation date and URLs correctly
+. Schema migration or backward-compatible defaults handle older entries
+. Older entries without the new fields remain readable
+
+.Technical tasks
+. Extend IndexedDB `entries` schema with backward-compatible handling
+. Update `createEntry` defaults
+. Update `useEntries` serialization/deserialization
+. Add fallback logic for legacy entries missing the new fields
+. Add tests for persistence and backward compatibility
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

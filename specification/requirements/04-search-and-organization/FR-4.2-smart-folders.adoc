@@ -1,0 +1,13 @@
+[[FR-4.2]]
+=== FR-4.2 Smart folders
+
+The system shall allow users to create custom folders based on combinations of entry attributes (labels, author, date range, location radius, text-match).
+
+.Acceptance criteria
+. User can create unlimited folders
+. Folder criteria include: labels (AND/OR), author, date range, location+radius, text-match
+. Folders update dynamically as entries change
+. Folders persist in IndexedDB across browser sessions
+
+Stakeholder need:: SPEC.md §4.2 +
+Effort:: not estimated (migrated from the monolithic specification)

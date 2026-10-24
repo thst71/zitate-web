@@ -1,0 +1,26 @@
+[[US-3.1]]
+=== US-3.1 App Shell and Layout
+
+Effort:: 5 h +
+Traces to:: <<TS-4.4>>, <<FR-5.1>>
+
+As a user, I want to have a consistent app layout, so that navigation is intuitive.
+
+.Acceptance criteria
+. Header with app name and actions
+. Main content area
+. Footer with links (optional)
+. Responsive on mobile/tablet/desktop
+. Navigation works on all screen sizes
+
+.Technical tasks
+. Create components/layout/Header.tsx
+. Create components/layout/Footer.tsx
+. Create components/layout/Layout.tsx wrapper
+. Add responsive CSS (mobile-first)
+. Implement CSS Grid for layout
+. Add logo/branding
+. Test on 320px, 768px, 1024px+ viewports
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

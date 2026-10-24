@@ -1,0 +1,21 @@
+[[US-4.6]]
+=== US-4.6 Image Management in Edit Mode – Reorder Images
+
+Effort:: 3 h +
+Traces to:: <<TS-3.4>>, <<FR-1.3>>
+
+As a user, I want to reorder images when editing an entry, so that the most important image appears first.
+
+.Acceptance criteria
+. Move-up / move-down buttons on each image thumbnail in edit mode
+. Reordering updates the display immediately
+. On save, the new order is persisted (imageIds order + ImageAttachment.order)
+
+.Technical tasks
+. Add move-up/move-down buttons to ImageEditor thumbnails
+. Track imageIdsOrder state in EntryForm
+. Extend updateEntry to accept imageIdsOrder: string[]
+. On save: update entry.imageIds order and ImageAttachment.order fields in IndexedDB
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

@@ -1,0 +1,14 @@
+[[FR-4.1]]
+=== FR-4.1 Text search
+
+The system shall provide a search text field on home screen that filters entries by text content matching (case-insensitive, partial match).
+
+.Acceptance criteria
+. Search text field visible on home screen
+. Entering text filters/navigates to search results view
+. Results update as user types (debounced 300ms)
+. Matches entry text, author name, and labels
+. Search highlights matching terms in results
+
+Stakeholder need:: SPEC.md §4.1 +
+Effort:: not estimated (migrated from the monolithic specification)

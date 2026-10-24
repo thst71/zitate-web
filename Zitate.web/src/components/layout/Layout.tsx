@@ -1,8 +1,8 @@
 /**
  * Layout Component - Main app shell
  */
-import { ReactNode } from 'react';
-import './Layout.css';
+import { ReactNode } from "react";
+import "./Layout.css";
 
 interface LayoutProps {
   children: ReactNode;

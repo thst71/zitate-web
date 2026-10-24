@@ -1,0 +1,16 @@
+[[NFR-3]]
+=== NFR-3 Browser support
+
+The system shall support modern evergreen browsers on desktop and mobile platforms.
+
+.Acceptance criteria
+. Chrome 90+ (desktop and mobile)
+. Firefox 88+ (desktop and mobile)
+. Safari 14+ (desktop and mobile)
+. Edge 90+ (desktop)
+. Responsive design works on mobile (320px+), tablet (768px+), desktop (1024px+)
+. Progressive Web App (PWA) installable on supported browsers
+. Graceful feature degradation if APIs unavailable (camera, geolocation, MediaRecorder)
+
+Stakeholder need:: SPEC.md §6.3 +
+Effort:: not estimated (migrated from the monolithic specification)

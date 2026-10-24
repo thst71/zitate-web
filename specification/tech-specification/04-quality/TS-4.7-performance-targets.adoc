@@ -1,0 +1,20 @@
+[[TS-4.7]]
+=== TS-4.7 Performance targets
+
+Implements <<NFR-1>>.
+
+==== Load Times
+- Initial load: <2s (desktop), <4s (mobile)
+- Time to Interactive: <3s (desktop), <5s (mobile)
+- First Contentful Paint: <1.5s
+
+==== Runtime Performance
+- Search response: <300ms
+- IndexedDB query: <100ms
+- UI interactions: 60fps
+- Virtual scroll: Smooth at 60fps
+
+==== Resource Usage
+- Memory: <100MB typical usage
+- Storage: ~10MB per 100 entries (excluding media)
+- IndexedDB: Monitor quota, warn at 80%

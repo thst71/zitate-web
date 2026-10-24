@@ -1,0 +1,30 @@
+[[TS-3.1]]
+=== TS-3.1 Geolocation service
+
+Implements <<FR-1.2>>.
+
+`services/location.service.ts`, singleton `locationService`:
+
+[source,typescript]
+----
+class LocationService {
+  isAvailable(): boolean;                                   // Geolocation API present
+  getCurrentPosition(): Promise<GeolocationCoords>;         // rejects with a readable message
+  getCurrentPositionWithAddress(): Promise<LocationResult>; // position plus reverse geocoding
+  reverseGeocode(lat: number, lon: number): Promise<ReverseGeocodeResult | undefined>;
+  searchAddress(query: string): Promise<AddressResult[]>;   // address search for the picker
+  formatCoordinates(lat: number, lon: number): string;
+  calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number; // km
+  formatDistance(km: number): string;
+}
+
+interface ReverseGeocodeResult {
+  short: string;   // most specific name + city, e.g. "Alexanderplatz, Berlin"
+  full: string;    // Nominatim display_name
+}
+----
+
+- Reverse geocoding and address search use the OpenStreetMap Nominatim API. A failed request returns `undefined`, and the UI shows the coordinates.
+- Results are persisted on the Entry (`addressShort`, `addressFull`) to avoid repeated API calls. Legacy entries without persisted addresses fall back to on-demand geocoding with caching in component state.
+- `useLocation` wraps the service for components (coordinates, loading and error state).
+- Map UI (`components/map/`): `LocationPicker` (Leaflet map to set or change the location, with address search), `LocationViewer` (full map in a modal), `MiniMap` (static preview from OpenStreetMap tiles), `LocationPopover` (shows the `MiniMap` 300 ms after the pointer enters the location text; a click, tap, Enter or Space opens the `LocationViewer`). The tap toggle of the popover on touch devices (<<US-8.2>>) is not implemented.

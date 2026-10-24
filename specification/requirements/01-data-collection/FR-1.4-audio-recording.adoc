@@ -1,0 +1,16 @@
+[[FR-1.4]]
+=== FR-1.4 Audio recording
+
+The system shall allow users to record and attach audio clips up to 5 minutes duration per entry using browser MediaRecorder API, and remove audio recordings.
+
+.Acceptance criteria
+. Browser microphone permission requested on first recording attempt
+. Audio recorded using MediaRecorder API in WebM/Opus format (browser-dependent)
+. Maximum duration 5 minutes per clip
+. Audio playback available in entry detail view using HTML5 audio element
+. User can remove audio via delete button in audio player control
+. Audio stored as Blob in IndexedDB
+. Fallback message if browser doesn't support MediaRecorder API
+
+Stakeholder need:: SPEC.md §1.4 +
+Effort:: not estimated (migrated from the monolithic specification)

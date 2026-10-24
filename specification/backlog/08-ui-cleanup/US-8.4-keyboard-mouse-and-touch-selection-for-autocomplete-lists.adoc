@@ -1,0 +1,35 @@
+[[US-8.4]]
+=== US-8.4 Keyboard, Mouse and Touch Selection for Autocomplete Lists
+
+Effort:: 6 h +
+Traces to:: <<TS-2.3>>, <<TS-4.5>>, <<FR-2.1>>, <<FR-2.2>>
+
+As a user, I want to select entries from the suggestion/oracle lists in labels and authors using keyboard cursor + Tab/Enter, mouse click, or tap on touch devices, so that I can conveniently reuse existing authors and labels without retyping.
+
+.Acceptance criteria
+. AuthorSelect is replaced with an autocomplete combobox (text input with dropdown suggestions)
+. Typing in the author field filters existing authors by prefix match
+. A "Create new author" option appears when the typed text doesn't match an existing author exactly
+. Arrow keys (↑/↓) navigate through the suggestion list with visual highlight
+. Tab or Enter selects the highlighted suggestion
+. Escape closes the dropdown without selecting
+. Mouse click on a suggestion selects it
+. Touch tap on a suggestion selects it on mobile devices
+. LabelInput suggestions support Arrow key navigation (↑/↓) with visual highlight
+. Tab or Enter in LabelInput selects the highlighted suggestion
+. Both components follow WAI-ARIA combobox pattern (role, aria-activedescendant, aria-expanded)
+. Existing "No author" / clear functionality is preserved
+. Existing "Create new author" inline flow is preserved
+
+.Technical tasks
+. Add `searchAuthors` method to useAuthors hook
+. Rewrite AuthorSelect as autocomplete combobox with text input and dropdown
+. Add keyboard navigation (Arrow keys, Tab, Enter, Escape) to AuthorSelect
+. Add ARIA attributes for accessibility (combobox pattern)
+. Add keyboard navigation (Arrow keys, Tab, Enter) to LabelInput suggestions
+. Add highlighted-item tracking state to both components
+. Update CSS for highlight styles and dropdown appearance
+. Write/update tests for keyboard and mouse interaction
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

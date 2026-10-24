@@ -1,7 +1,7 @@
 /**
  * Image Service - Handles image compression and processing
  */
-import imageCompression from 'browser-image-compression';
+import imageCompression from "browser-image-compression";
 
 export interface CompressionOptions {
   maxSizeMB?: number;
@@ -25,7 +25,7 @@ const DEFAULT_OPTIONS: CompressionOptions = {
  */
 export async function compressImage(
   file: File,
-  options: CompressionOptions = {}
+  options: CompressionOptions = {},
 ): Promise<Blob> {
   const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
 
@@ -34,7 +34,7 @@ export async function compressImage(
     return compressedFile;
   } catch (error) {
     throw new Error(
-      `Failed to compress image: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to compress image: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
@@ -45,7 +45,13 @@ export async function compressImage(
  * @returns true if valid image type
  */
 export function isValidImageType(file: File): boolean {
-  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic'];
+  const validTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+  ];
   return validTypes.includes(file.type.toLowerCase());
 }
 
@@ -86,7 +92,7 @@ export function readFileAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsDataURL(file);
   });
 }

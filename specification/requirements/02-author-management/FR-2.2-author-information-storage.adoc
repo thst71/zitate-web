@@ -1,0 +1,14 @@
+[[FR-2.2]]
+=== FR-2.2 Author information storage
+
+The system shall store author metadata including name (required), date of birth (optional), location of birth (optional), date of death (optional), and Wikipedia URL (optional).
+
+.Acceptance criteria
+. Name field required, max 200 characters
+. Date fields use HTML5 date input
+. Location stored as text, max 200 characters
+. Wikipedia URL validated as proper URL format
+. All optional fields can be left blank
+
+Stakeholder need:: SPEC.md §2.2 +
+Effort:: not estimated (migrated from the monolithic specification)

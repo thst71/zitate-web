@@ -1,0 +1,16 @@
+[[FR-1.5]]
+=== FR-1.5 Entry creation workflow
+
+The system shall provide a "plus" button on the home screen that initiates the creation of a new entry with all data fields (text, location, images, audio, author, labels).
+
+.Acceptance criteria
+. Plus button visible and accessible on home screen
+. Clicking plus button opens entry creation form (modal or route)
+. Form includes all entry fields: text, citation date, location, images, audio, author, labels, URLs
+. Text field is required; all other fields optional
+. Location auto-requested on form open (if permission previously granted)
+. User can save entry or cancel without saving
+. Saved entry immediately appears in IndexedDB and search results
+
+Stakeholder need:: SPEC.md §1.5 +
+Effort:: not estimated (migrated from the monolithic specification)

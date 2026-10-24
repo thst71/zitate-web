@@ -1,0 +1,27 @@
+[[US-2.6]]
+=== US-2.6 Entry Deletion
+
+Effort:: 4 h +
+Traces to:: <<TS-2.8>>, <<FR-1.6>>
+
+As a user, I want to delete an entry, so that I can remove quotes I no longer want.
+
+.Acceptance criteria
+. Delete button visible on entry card (hover on desktop)
+. Clicking shows confirmation dialog
+. Confirmation shows entry preview
+. Deletion removes from IndexedDB
+. UI updates immediately
+
+.Technical tasks
+. Add delete button to EntryCard
+. Create components/common/ConfirmDialog.tsx
+. Implement deleteEntry in useEntries hook
+. Show confirmation before delete
+. Remove from IndexedDB
+. Update local state to re-render list
+. Add toast/notification for success
+. Test deletion flow
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

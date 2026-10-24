@@ -1,0 +1,15 @@
+[[NFR-5]]
+=== NFR-5 Data portability
+
+The system shall allow users to export and import their complete data set.
+
+.Acceptance criteria
+. Export button generates JSON file with all entries, authors, labels, folders
+. Media files included as Base64 in export or separate files in ZIP
+. Import validates JSON structure before restoring data
+. Import offers merge or replace options
+. Export includes schema version for compatibility
+. Export/import handles large datasets (>1000 entries) without freezing UI (use Web Workers)
+
+Stakeholder need:: SPEC.md §6.5 +
+Effort:: not estimated (migrated from the monolithic specification)

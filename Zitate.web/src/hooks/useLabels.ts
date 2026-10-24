@@ -1,12 +1,12 @@
 /**
  * useLabels hook - Manages label CRUD operations
  */
-import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { dbService, STORES } from '../services/db.service';
-import { onStoreChange, emitStoreChange } from '../services/storeSync';
-import type { Label } from '../models';
-import { validateLabelName, normalizeLabelName } from '../utils/validators';
+import { useState, useEffect, useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { dbService, STORES } from "../services/db.service";
+import { onStoreChange, emitStoreChange } from "../services/storeSync";
+import type { Label } from "../models";
+import { validateLabelName, normalizeLabelName } from "../utils/validators";
 
 const LABEL_STORE = STORES.LABELS;
 
@@ -28,7 +28,7 @@ export function useLabels() {
       allLabels.sort((a, b) => a.name.localeCompare(b.name));
       setLabels(allLabels);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load labels');
+      setError(err instanceof Error ? err.message : "Failed to load labels");
     } finally {
       setLoading(false);
     }
@@ -61,32 +61,37 @@ export function useLabels() {
 
       try {
         await dbService.add(STORES.LABELS, label);
-        setLabels((prev) => [...prev, label].sort((a, b) => a.name.localeCompare(b.name)));
+        setLabels((prev) =>
+          [...prev, label].sort((a, b) => a.name.localeCompare(b.name)),
+        );
         emitStoreChange(LABEL_STORE, loadLabels);
         return label;
       } catch (err) {
         throw new Error(
-          err instanceof Error ? err.message : 'Failed to save label'
+          err instanceof Error ? err.message : "Failed to save label",
         );
       }
     },
-    [labels, loadLabels]
+    [labels, loadLabels],
   );
 
   /**
    * Delete a label
    */
-  const deleteLabel = useCallback(async (id: string): Promise<void> => {
-    try {
-      await dbService.delete(STORES.LABELS, id);
-      setLabels((prev) => prev.filter((label) => label.id !== id));
-      emitStoreChange(LABEL_STORE, loadLabels);
-    } catch (err) {
-      throw new Error(
-        err instanceof Error ? err.message : 'Failed to delete label'
-      );
-    }
-  }, [loadLabels]);
+  const deleteLabel = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        await dbService.delete(STORES.LABELS, id);
+        setLabels((prev) => prev.filter((label) => label.id !== id));
+        emitStoreChange(LABEL_STORE, loadLabels);
+      } catch (err) {
+        throw new Error(
+          err instanceof Error ? err.message : "Failed to delete label",
+        );
+      }
+    },
+    [loadLabels],
+  );
 
   /**
    * Get labels by IDs
@@ -95,7 +100,7 @@ export function useLabels() {
     (ids: string[]): Label[] => {
       return labels.filter((l) => ids.includes(l.id));
     },
-    [labels]
+    [labels],
   );
 
   /**
@@ -112,7 +117,7 @@ export function useLabels() {
         .filter((l) => l.name.startsWith(normalizedQuery))
         .slice(0, 10); // Return top 10 matches
     },
-    [labels]
+    [labels],
   );
 
   // Load labels on mount and subscribe to changes from other hook instances

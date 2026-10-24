@@ -1,0 +1,23 @@
+[[US-4.5]]
+=== US-4.5 Image Management in Edit Mode – Delete Images
+
+Effort:: 3 h +
+Traces to:: <<TS-3.4>>, <<FR-1.3>>
+
+As a user, I want to remove existing images when editing an entry, so that I can clean up unwanted attachments.
+
+.Acceptance criteria
+. Each existing image thumbnail shows a delete (×) button in edit mode
+. Deleting marks the image for removal (applied on save)
+. Deleted images are removed from IndexedDB and entry.imageIds on save
+. Visual feedback: deleted thumbnails shown with strikethrough/dimmed or removed immediately
+
+.Technical tasks
+. Track imagesToDelete state in EntryForm
+. Show existing images in ImageEditor with delete buttons
+. Extend updateEntry to accept imagesToDelete: string[]
+. On save: delete images from IndexedDB, remove IDs from entry.imageIds
+. Update remaining image order fields
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

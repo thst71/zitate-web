@@ -1,0 +1,22 @@
+[[US-4.2]]
+=== US-4.2 Image Deletion
+
+Effort:: 2 h +
+Traces to:: <<TS-2.5>>, <<FR-1.3>>
+
+As a user, I want to remove individual images, so that I can manage my attachments.
+
+.Acceptance criteria
+. Delete button (X) on each thumbnail
+. Clicking removes image from entry and IndexedDB
+. Immediate UI update
+
+.Technical tasks
+. Add delete button to thumbnail component
+. Implement removeImage in useEntries hook
+. Delete from IndexedDB 'images' store
+. Remove from entry.imageIds array
+. Update UI state
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

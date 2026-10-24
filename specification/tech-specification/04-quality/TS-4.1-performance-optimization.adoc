@@ -1,0 +1,22 @@
+[[TS-4.1]]
+=== TS-4.1 Performance optimization
+
+Implements <<NFR-1>>.
+
+==== IndexedDB
+- Indexes on frequently queried fields (TS-2.2 to TS-2.7)
+- `getAllEntriesSorted` reads entries with a cursor on `createdAt`, newest first
+- Read-only transactions for reads, read-write for writes
+
+==== UI
+- Debounced search: `SearchBar` passes the input on after 300 ms (`useDebounce`); `useSearch` filters the loaded entries in memory
+- Images and map tiles load lazily (`loading="lazy"`)
+- Object URLs of image blobs are revoked when no longer shown
+- `VirtualScrollList` (fixed item height) exists for lists of more than 100 items; the entry lists do not use it yet
+- Memoization with `useMemo` and `useCallback`
+
+==== Bundle Size
+- Tree shaking and terser minification (TS-5.1)
+- Separate chunks for `react`/`react-dom` (`vendor`) and `leaflet` (`maps`)
+- Target: <500KB initial bundle (gzipped)
+- No route-based code splitting: the app has no router

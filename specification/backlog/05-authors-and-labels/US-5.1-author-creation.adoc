@@ -1,0 +1,24 @@
+[[US-5.1]]
+=== US-5.1 Author Creation
+
+Effort:: 5 h +
+Traces to:: <<TS-2.3>>, <<FR-2.1>>, <<FR-2.2>>
+
+As a user, I want to create authors, so that I can attribute quotes.
+
+.Acceptance criteria
+. Author form with name (required) and optional fields
+. Duplicate name validation
+. Save to IndexedDB
+. Accessible from entry form
+
+.Technical tasks
+. Create components/author/AuthorForm.tsx
+. Implement form validation
+. Create hooks/useAuthors.ts
+. Check for duplicate names (case-insensitive)
+. Save to IndexedDB 'authors' store
+. Integrate into entry form (dropdown)
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

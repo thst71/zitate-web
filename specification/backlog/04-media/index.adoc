@@ -1,0 +1,15 @@
+== Epic 4: Media Features
+
+include::US-4.1-image-upload.adoc[]
+
+include::US-4.2-image-deletion.adoc[]
+
+include::US-4.4-image-management-in-edit-mode-add-images.adoc[]
+
+include::US-4.5-image-management-in-edit-mode-delete-images.adoc[]
+
+include::US-4.6-image-management-in-edit-mode-reorder-images.adoc[]
+
+include::US-4.7-image-management-in-edit-mode-replace-image.adoc[]
+
+include::US-4.3-audio-recording.adoc[]

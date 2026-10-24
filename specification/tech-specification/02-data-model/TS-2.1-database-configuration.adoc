@@ -1,0 +1,9 @@
+[[TS-2.1]]
+=== TS-2.1 Database configuration
+
+Implements <<NFR-2>>.
+
+- *Database Name:* `zitate-db` (`DB_NAME` in `db/schema.ts`)
+- *Current Version:* 1 (`DB_VERSION`)
+- *Migration Strategy:* version-based upgrades in `handleUpgrade`: each step runs when `event.oldVersion` is below its version; version 1 creates all object stores with `createSchema`
+- Fields added after version 1 (`citationDate`, `links`, `addressShort`, `addressFull`) need no schema version: they are optional on the record. `useEntries` normalizes loaded entries (`labelIds`, `links` and `imageIds` default to `[]`); an entry without `citationDate` shows only its creation date (`EntryCard`), and the form starts such an entry's citation date at the current time

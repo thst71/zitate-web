@@ -1,0 +1,36 @@
+[[TS-4.3]]
+=== TS-4.3 Offline capability
+
+Implements <<NFR-6>>.
+
+==== Service Worker Strategy
+`vite-plugin-pwa` generates the service worker with Workbox at build time (`vite.config.ts`):
+
+- `registerType: 'autoUpdate'`: a new version is installed and activated when the app is online
+- Precache: all built assets matching `**/*.{js,css,html,ico,png,svg,woff2}`
+- Runtime cache `openstreetmap-tiles`: tiles from `tile.openstreetmap.org`, `CacheFirst`, at most 500 tiles for 30 days
+- Nominatim requests are not cached; offline, the UI shows coordinates instead of addresses
+
+==== PWA Manifest
+
+[source,json]
+----
+{
+  "name": "Zitate - Quote Collection",
+  "short_name": "Zitate",
+  "description": "Collect and organize quotes with rich metadata including location, images, and smart folders",
+  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    { "src": "pwa-192x192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "pwa-512x512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
+----
+
+==== UI
+- `OfflineIndicator` shows when the browser is offline (`navigator.onLine`, `online`/`offline` events)
+- `InstallPrompt` offers the installation when the browser fires `beforeinstallprompt`

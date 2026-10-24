@@ -1,0 +1,25 @@
+[[US-3.3]]
+=== US-3.3 Keyboard Navigation
+
+Effort:: 3 h +
+Traces to:: <<TS-4.5>>, <<FR-5.1>>
+
+As a user, I want to navigate the app with keyboard, so that I can use it without a mouse.
+
+.Acceptance criteria
+. Tab order is logical
+. Enter/Space activate buttons
+. Escape closes modals
+. Focus indicators visible
+. No keyboard traps
+
+.Technical tasks
+. Set tabindex on interactive elements
+. Add keyboard event handlers
+. Implement focus management for modals
+. Add visible :focus styles
+. Test with Tab, Enter, Space, Escape keys
+. Test with screen reader (NVDA/JAWS/VoiceOver)
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

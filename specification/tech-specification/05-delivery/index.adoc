@@ -1,0 +1,7 @@
+== Build, Test and Delivery
+
+include::TS-5.1-build-configuration.adoc[]
+
+include::TS-5.2-deployment-and-release-pipeline.adoc[]
+
+include::TS-5.3-testing-strategy.adoc[]

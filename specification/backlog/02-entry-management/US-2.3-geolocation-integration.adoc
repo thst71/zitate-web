@@ -1,0 +1,27 @@
+[[US-2.3]]
+=== US-2.3 Geolocation Integration
+
+Effort:: 6 h +
+Traces to:: <<TS-3.1>>, <<FR-1.2>>
+
+As a user, I want to have my current location automatically captured, so that I don't have to manually enter it.
+
+.Acceptance criteria
+. Browser geolocation permission requested on form open
+. GPS coordinates captured and displayed
+. Address displayed if reverse geocoding available
+. Fallback to coordinates if geocoding fails
+. App works if permission denied (location optional)
+
+.Technical tasks
+. Create services/location.service.ts
+. Implement getCurrentPosition using Geolocation API
+. Handle permission request and denial
+. Optional: Implement reverse geocoding (OpenStreetMap Nominatim)
+. Create hooks/useLocation.ts hook
+. Integrate into EntryForm
+. Display coordinates or address
+. Test permission flows (granted, denied, prompt)
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

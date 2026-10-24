@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import './ErrorBoundary.css';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import "./ErrorBoundary.css";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -13,31 +13,34 @@ interface ErrorBoundaryProps {
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Log error to console in development
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
 
     // Call optional error handler
     this.props.onError?.(error, errorInfo);
@@ -47,7 +50,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
   };
 
@@ -68,8 +71,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <div className="error-boundary-content">
             <div className="error-icon">⚠️</div>
             <h2>Something went wrong</h2>
-            <p>We're sorry, but something unexpected happened. You can try the following:</p>
-            
+            <p>
+              We're sorry, but something unexpected happened. You can try the
+              following:
+            </p>
+
             <div className="error-actions">
               <button className="btn btn-primary" onClick={this.handleRetry}>
                 Try Again
@@ -85,14 +91,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 <div className="error-stack">
                   <h4>Error:</h4>
                   <pre>{this.state.error.toString()}</pre>
-                  
+
                   {this.state.errorInfo?.componentStack && (
                     <>
                       <h4>Component Stack:</h4>
                       <pre>{this.state.errorInfo.componentStack}</pre>
                     </>
                   )}
-                  
+
                   {this.state.error.stack && (
                     <>
                       <h4>Stack Trace:</h4>
@@ -116,21 +122,27 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 export const withErrorBoundary = <P extends object>(
   Component: React.ComponentType<P>,
   fallback?: ReactNode,
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
+  onError?: (error: Error, errorInfo: ErrorInfo) => void,
 ) => {
   const WrappedComponent = (props: P) => (
     <ErrorBoundary fallback={fallback} onError={onError}>
       <Component {...props} />
     </ErrorBoundary>
   );
-  
+
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-  
+
   return WrappedComponent;
 };
 
 // Specific error boundary for async operations
-export const AsyncErrorBoundary = ({ children, onError }: { children: ReactNode; onError?: (error: Error) => void }) => {
+export const AsyncErrorBoundary = ({
+  children,
+  onError,
+}: {
+  children: ReactNode;
+  onError?: (error: Error) => void;
+}) => {
   return (
     <ErrorBoundary
       fallback={
@@ -138,8 +150,8 @@ export const AsyncErrorBoundary = ({ children, onError }: { children: ReactNode;
           <div className="async-error-content">
             <span className="error-icon">⚠️</span>
             <span>Failed to load content</span>
-            <button 
-              className="btn btn-sm btn-secondary" 
+            <button
+              className="btn btn-sm btn-secondary"
               onClick={() => window.location.reload()}
             >
               Retry

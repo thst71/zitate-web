@@ -1,11 +1,11 @@
 /**
  * useFolders hook - Manages smart folder CRUD and filtering
  */
-import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { dbService, STORES } from '../services/db.service';
-import type { SmartFolder, Entry } from '../models';
-import { validateFolderName } from '../utils/validators';
+import { useState, useEffect, useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { dbService, STORES } from "../services/db.service";
+import type { SmartFolder, Entry } from "../models";
+import { validateFolderName } from "../utils/validators";
 
 export function useFolders() {
   const [folders, setFolders] = useState<SmartFolder[]>([]);
@@ -25,7 +25,7 @@ export function useFolders() {
       allFolders.sort((a, b) => a.name.localeCompare(b.name));
       setFolders(allFolders);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load folders');
+      setError(err instanceof Error ? err.message : "Failed to load folders");
     } finally {
       setLoading(false);
     }
@@ -35,7 +35,10 @@ export function useFolders() {
    * Add a new folder
    */
   const addFolder = useCallback(
-    async (name: string, criteria: SmartFolder['criteria']): Promise<SmartFolder> => {
+    async (
+      name: string,
+      criteria: SmartFolder["criteria"],
+    ): Promise<SmartFolder> => {
       // Validate name
       const validation = validateFolderName(name);
       if (!validation.isValid) {
@@ -45,11 +48,11 @@ export function useFolders() {
       // Check for duplicates (case-insensitive)
       const normalizedName = name.trim();
       const duplicate = folders.find(
-        (f) => f.name.toLowerCase() === normalizedName.toLowerCase()
+        (f) => f.name.toLowerCase() === normalizedName.toLowerCase(),
       );
 
       if (duplicate) {
-        throw new Error('A folder with this name already exists');
+        throw new Error("A folder with this name already exists");
       }
 
       const now = Date.now();
@@ -63,22 +66,28 @@ export function useFolders() {
 
       try {
         await dbService.add(STORES.FOLDERS, folder);
-        setFolders((prev) => [...prev, folder].sort((a, b) => a.name.localeCompare(b.name)));
+        setFolders((prev) =>
+          [...prev, folder].sort((a, b) => a.name.localeCompare(b.name)),
+        );
         return folder;
       } catch (err) {
         throw new Error(
-          err instanceof Error ? err.message : 'Failed to save folder'
+          err instanceof Error ? err.message : "Failed to save folder",
         );
       }
     },
-    [folders]
+    [folders],
   );
 
   /**
    * Update an existing folder
    */
   const updateFolder = useCallback(
-    async (id: string, name: string, criteria: SmartFolder['criteria']): Promise<void> => {
+    async (
+      id: string,
+      name: string,
+      criteria: SmartFolder["criteria"],
+    ): Promise<void> => {
       // Validate name
       const validation = validateFolderName(name);
       if (!validation.isValid) {
@@ -88,16 +97,17 @@ export function useFolders() {
       // Check for duplicates (case-insensitive), excluding current folder
       const normalizedName = name.trim();
       const duplicate = folders.find(
-        (f) => f.id !== id && f.name.toLowerCase() === normalizedName.toLowerCase()
+        (f) =>
+          f.id !== id && f.name.toLowerCase() === normalizedName.toLowerCase(),
       );
 
       if (duplicate) {
-        throw new Error('A folder with this name already exists');
+        throw new Error("A folder with this name already exists");
       }
 
       const folder = folders.find((f) => f.id === id);
       if (!folder) {
-        throw new Error('Folder not found');
+        throw new Error("Folder not found");
       }
 
       const updated: SmartFolder = {
@@ -109,15 +119,17 @@ export function useFolders() {
       try {
         await dbService.update(STORES.FOLDERS, updated);
         setFolders((prev) =>
-          prev.map((f) => (f.id === id ? updated : f)).sort((a, b) => a.name.localeCompare(b.name))
+          prev
+            .map((f) => (f.id === id ? updated : f))
+            .sort((a, b) => a.name.localeCompare(b.name)),
         );
       } catch (err) {
         throw new Error(
-          err instanceof Error ? err.message : 'Failed to update folder'
+          err instanceof Error ? err.message : "Failed to update folder",
         );
       }
     },
-    [folders]
+    [folders],
   );
 
   /**
@@ -129,7 +141,7 @@ export function useFolders() {
       setFolders((prev) => prev.filter((folder) => folder.id !== id));
     } catch (err) {
       throw new Error(
-        err instanceof Error ? err.message : 'Failed to delete folder'
+        err instanceof Error ? err.message : "Failed to delete folder",
       );
     }
   }, []);
@@ -144,8 +156,8 @@ export function useFolders() {
 
         // Filter by labels
         if (criteria.labels && criteria.labels.values.length > 0) {
-          const hasMatchingLabel = criteria.labels.values.some((labelId: string) =>
-            entry.labelIds.includes(labelId)
+          const hasMatchingLabel = criteria.labels.values.some(
+            (labelId: string) => entry.labelIds.includes(labelId),
           );
           if (!hasMatchingLabel) return false;
         }
@@ -165,7 +177,8 @@ export function useFolders() {
 
         // Filter by location
         if (criteria.location) {
-          const entryHasLocation = entry.latitude !== undefined && entry.longitude !== undefined;
+          const entryHasLocation =
+            entry.latitude !== undefined && entry.longitude !== undefined;
           if (!entryHasLocation) return false;
           // Note: Distance calculation could be added here if needed
         }
@@ -179,7 +192,7 @@ export function useFolders() {
         return true;
       });
     },
-    []
+    [],
   );
 
   /**
@@ -189,7 +202,7 @@ export function useFolders() {
     (entries: Entry[], folder: SmartFolder): number => {
       return filterByFolder(entries, folder).length;
     },
-    [filterByFolder]
+    [filterByFolder],
   );
 
   // Load folders on mount

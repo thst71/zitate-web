@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { useAuthors } from './useAuthors';
-import { dbService } from '../services/db.service';
-import { STORES } from '../db/schema';
+import { describe, it, expect, beforeEach } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { useAuthors } from "./useAuthors";
+import { dbService } from "../services/db.service";
+import { STORES } from "../db/schema";
 
-describe('useAuthors', () => {
+describe("useAuthors", () => {
   beforeEach(async () => {
     // Clear authors before each test
     const all = await dbService.getAll(STORES.AUTHORS);
@@ -13,7 +13,7 @@ describe('useAuthors', () => {
     }
   });
 
-  it('should initialize with empty authors array', async () => {
+  it("should initialize with empty authors array", async () => {
     const { result } = renderHook(() => useAuthors());
 
     await waitFor(() => {
@@ -24,7 +24,7 @@ describe('useAuthors', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should add a new author', async () => {
+  it("should add a new author", async () => {
     const { result } = renderHook(() => useAuthors());
 
     await waitFor(() => {
@@ -32,14 +32,14 @@ describe('useAuthors', () => {
     });
 
     await act(async () => {
-      await result.current.addAuthor('Albert Einstein');
+      await result.current.addAuthor("Albert Einstein");
     });
 
     expect(result.current.authors).toHaveLength(1);
-    expect(result.current.authors[0].name).toBe('Albert Einstein');
+    expect(result.current.authors[0].name).toBe("Albert Einstein");
   });
 
-  it('should reject duplicate author names (case-insensitive)', async () => {
+  it("should reject duplicate author names (case-insensitive)", async () => {
     const { result } = renderHook(() => useAuthors());
 
     await waitFor(() => {
@@ -47,17 +47,17 @@ describe('useAuthors', () => {
     });
 
     await act(async () => {
-      await result.current.addAuthor('John Doe');
+      await result.current.addAuthor("John Doe");
     });
 
     await expect(
       act(async () => {
-        await result.current.addAuthor('john doe');
-      })
-    ).rejects.toThrow('An author with this name already exists');
+        await result.current.addAuthor("john doe");
+      }),
+    ).rejects.toThrow("An author with this name already exists");
   });
 
-  it('should update an existing author', async () => {
+  it("should update an existing author", async () => {
     const { result } = renderHook(() => useAuthors());
 
     await waitFor(() => {
@@ -65,19 +65,19 @@ describe('useAuthors', () => {
     });
 
     await act(async () => {
-      await result.current.addAuthor('Original Name');
+      await result.current.addAuthor("Original Name");
     });
 
     const authorId = result.current.authors[0].id;
 
     await act(async () => {
-      await result.current.updateAuthor(authorId, 'Updated Name');
+      await result.current.updateAuthor(authorId, "Updated Name");
     });
 
-    expect(result.current.authors[0].name).toBe('Updated Name');
+    expect(result.current.authors[0].name).toBe("Updated Name");
   });
 
-  it('should delete an author', async () => {
+  it("should delete an author", async () => {
     const { result } = renderHook(() => useAuthors());
 
     await waitFor(() => {
@@ -85,7 +85,7 @@ describe('useAuthors', () => {
     });
 
     await act(async () => {
-      await result.current.addAuthor('To Delete');
+      await result.current.addAuthor("To Delete");
     });
 
     const authorId = result.current.authors[0].id;
@@ -97,7 +97,7 @@ describe('useAuthors', () => {
     expect(result.current.authors).toHaveLength(0);
   });
 
-  it('should get author by ID', async () => {
+  it("should get author by ID", async () => {
     const { result } = renderHook(() => useAuthors());
 
     await waitFor(() => {
@@ -105,17 +105,17 @@ describe('useAuthors', () => {
     });
 
     await act(async () => {
-      await result.current.addAuthor('Test Author');
+      await result.current.addAuthor("Test Author");
     });
 
     const authorId = result.current.authors[0].id;
     const author = result.current.getAuthorById(authorId);
 
     expect(author).toBeDefined();
-    expect(author?.name).toBe('Test Author');
+    expect(author?.name).toBe("Test Author");
   });
 
-  it('should sort authors alphabetically', async () => {
+  it("should sort authors alphabetically", async () => {
     const { result } = renderHook(() => useAuthors());
 
     await waitFor(() => {
@@ -123,29 +123,29 @@ describe('useAuthors', () => {
     });
 
     await act(async () => {
-      await result.current.addAuthor('Zebra');
-      await result.current.addAuthor('Apple');
-      await result.current.addAuthor('Banana');
+      await result.current.addAuthor("Zebra");
+      await result.current.addAuthor("Apple");
+      await result.current.addAuthor("Banana");
     });
 
-    expect(result.current.authors[0].name).toBe('Apple');
-    expect(result.current.authors[1].name).toBe('Banana');
-    expect(result.current.authors[2].name).toBe('Zebra');
+    expect(result.current.authors[0].name).toBe("Apple");
+    expect(result.current.authors[1].name).toBe("Banana");
+    expect(result.current.authors[2].name).toBe("Zebra");
   });
 
-  it('should validate author name length', async () => {
+  it("should validate author name length", async () => {
     const { result } = renderHook(() => useAuthors());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
-    const longName = 'a'.repeat(201);
+    const longName = "a".repeat(201);
 
     await expect(
       act(async () => {
         await result.current.addAuthor(longName);
-      })
+      }),
     ).rejects.toThrow();
   });
 });

@@ -1,0 +1,19 @@
+[[TS-4.8]]
+=== TS-4.8 Technical risks and mitigations
+
+Implements <<NFR-1>>, <<NFR-2>> and <<NFR-3>>.
+
+==== Risk: IndexedDB Quota Limits
+- *Mitigation:* Monitor storage usage, provide export before limits reached, warn user
+
+==== Risk: Browser Compatibility Issues
+- *Mitigation:* Feature detection, graceful degradation, clear browser requirements
+
+==== Risk: Data Loss
+- *Mitigation:* Automatic export prompts, periodic backup reminders, import/export functionality
+
+==== Risk: Performance with Large Datasets
+- *Mitigation:* Virtual scrolling, pagination, IndexedDB cursors, lazy loading
+
+==== Risk: Media Storage Limits
+- *Mitigation:* Image compression, size limits, warn before adding large files

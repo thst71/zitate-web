@@ -1,16 +1,16 @@
 /**
  * EntryForm Component - Form for creating/editing entries
  */
-import { useState, useEffect, FormEvent } from 'react';
-import { useLocation } from '../../hooks/useLocation';
-import { useEntries } from '../../hooks/useEntries';
-import { validateEntryText, validateURL } from '../../utils/validators';
-import { AuthorSelect } from '../author/AuthorSelect';
-import { LabelInput } from '../label/LabelInput';
-import { ImageUpload, type SelectedImage } from '../image/ImageUpload';
-import { ImageEditor, type ImageChanges } from '../image/ImageEditor';
-import type { Entry, EntryLink, ImageAttachment } from '../../models';
-import './EntryForm.css';
+import { useState, useEffect, FormEvent } from "react";
+import { useLocation } from "../../hooks/useLocation";
+import { useEntries } from "../../hooks/useEntries";
+import { validateEntryText, validateURL } from "../../utils/validators";
+import { AuthorSelect } from "../author/AuthorSelect";
+import { LabelInput } from "../label/LabelInput";
+import { ImageUpload, type SelectedImage } from "../image/ImageUpload";
+import { ImageEditor, type ImageChanges } from "../image/ImageEditor";
+import type { Entry, EntryLink, ImageAttachment } from "../../models";
+import "./EntryForm.css";
 
 interface EntryFormProps {
   onSave: (
@@ -26,24 +26,46 @@ interface EntryFormProps {
     imageReplacements?: Map<string, SelectedImage>,
     addressShort?: string,
     addressFull?: string,
-    links?: EntryLink[]
+    links?: EntryLink[],
   ) => Promise<void>;
   onCancel: () => void;
   initialEntry?: Entry;
-  onLocationEdit?: (lat: number, lng: number, onSelect: (lat: number, lng: number, addressShort?: string, addressFull?: string) => void) => void;
+  onLocationEdit?: (
+    lat: number,
+    lng: number,
+    onSelect: (
+      lat: number,
+      lng: number,
+      addressShort?: string,
+      addressFull?: string,
+    ) => void,
+  ) => void;
 }
 
-export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: EntryFormProps) {
-  const createLink = (url = ''): EntryLink => ({
-    id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+export function EntryForm({
+  onSave,
+  onCancel,
+  initialEntry,
+  onLocationEdit,
+}: EntryFormProps) {
+  const createLink = (url = ""): EntryLink => ({
+    id:
+      globalThis.crypto?.randomUUID?.() ??
+      `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     url,
     addedAt: Date.now(),
   });
 
-  const [text, setText] = useState(initialEntry?.text || '');
-  const [citationDate, setCitationDate] = useState(initialEntry?.citationDate || Date.now());
-  const [authorId, setAuthorId] = useState<string | undefined>(initialEntry?.authorId);
-  const [labelIds, setLabelIds] = useState<string[]>(initialEntry?.labelIds || []);
+  const [text, setText] = useState(initialEntry?.text || "");
+  const [citationDate, setCitationDate] = useState(
+    initialEntry?.citationDate || Date.now(),
+  );
+  const [authorId, setAuthorId] = useState<string | undefined>(
+    initialEntry?.authorId,
+  );
+  const [labelIds, setLabelIds] = useState<string[]>(
+    initialEntry?.labelIds || [],
+  );
   const [links, setLinks] = useState<EntryLink[]>(initialEntry?.links ?? []);
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [existingImages, setExistingImages] = useState<ImageAttachment[]>([]);
@@ -53,8 +75,8 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   const [editedLocation, setEditedLocation] = useState<{
     latitude: number;
     longitude: number;
-    address?: string;       // full address from LocationPicker
-    addressShort?: string;  // short address (will be geocoded if not set)
+    address?: string; // full address from LocationPicker
+    addressShort?: string; // short address (will be geocoded if not set)
   } | null>(null);
 
   const isEditing = !!initialEntry;
@@ -79,20 +101,32 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   const characterCount = text.length;
   const isValid = validation.isValid;
   const activeLinks = links.filter((link) => link.url.trim().length > 0);
-  const linkValidationErrors = activeLinks.map((link) => validateURL(link.url.trim()));
-  const invalidLinkError = linkValidationErrors.find((result) => !result.isValid);
+  const linkValidationErrors = activeLinks.map((link) =>
+    validateURL(link.url.trim()),
+  );
+  const invalidLinkError = linkValidationErrors.find(
+    (result) => !result.isValid,
+  );
   const hasInvalidLinks = Boolean(invalidLinkError);
 
   // Use edited location if available, then existing location when editing, or new location when creating
-  const latitude = editedLocation?.latitude ?? (isEditing ? initialEntry.latitude : coords?.latitude);
-  const longitude = editedLocation?.longitude ?? (isEditing ? initialEntry.longitude : coords?.longitude);
+  const latitude =
+    editedLocation?.latitude ??
+    (isEditing ? initialEntry.latitude : coords?.latitude);
+  const longitude =
+    editedLocation?.longitude ??
+    (isEditing ? initialEntry.longitude : coords?.longitude);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!isValid || hasInvalidLinks) {
       if (hasInvalidLinks) {
-        setError(invalidLinkError?.isValid === false ? invalidLinkError.error : 'Invalid URL format');
+        setError(
+          invalidLinkError?.isValid === false
+            ? invalidLinkError.error
+            : "Invalid URL format",
+        );
       }
       return;
     }
@@ -111,22 +145,40 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
 
       if (isEditing && imageChanges) {
         await onSave(
-          text, citationDate, latitude, longitude, authorId, labelIds,
+          text,
+          citationDate,
+          latitude,
+          longitude,
+          authorId,
+          labelIds,
           imageChanges.imagesToAdd,
           imageChanges.imagesToDelete,
           imageChanges.imageIdsOrder,
           imageChanges.imageReplacements,
           addrShort,
           addrFull,
-          normalizedLinks
+          normalizedLinks,
         );
       } else {
-        await onSave(text, citationDate, latitude, longitude, authorId, labelIds, selectedImages,
-          undefined, undefined, undefined, addrShort, addrFull, normalizedLinks);
+        await onSave(
+          text,
+          citationDate,
+          latitude,
+          longitude,
+          authorId,
+          labelIds,
+          selectedImages,
+          undefined,
+          undefined,
+          undefined,
+          addrShort,
+          addrFull,
+          normalizedLinks,
+        );
       }
       // Form will be closed by parent
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save entry');
+      setError(err instanceof Error ? err.message : "Failed to save entry");
       setSaving(false);
     }
   };
@@ -136,7 +188,9 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
   };
 
   const handleChangeLink = (id: string, url: string) => {
-    setLinks((prev) => prev.map((link) => (link.id === id ? { ...link, url } : link)));
+    setLinks((prev) =>
+      prev.map((link) => (link.id === id ? { ...link, url } : link)),
+    );
     if (error) {
       setError(null);
     }
@@ -151,9 +205,9 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
 
   const formatLinkAddedAt = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -165,7 +219,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
         </label>
         <textarea
           id="entry-text"
-          className={`form-textarea ${!isValid && text ? 'invalid' : ''}`}
+          className={`form-textarea ${!isValid && text ? "invalid" : ""}`}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Enter your quote, saying, or citation..."
@@ -173,7 +227,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
           autoFocus
         />
         <div className="form-meta">
-          <span className={`char-count ${!isValid ? 'invalid' : ''}`}>
+          <span className={`char-count ${!isValid ? "invalid" : ""}`}>
             {characterCount} / 10,000
           </span>
           {!isValid && text && (
@@ -183,12 +237,14 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
       </div>
 
       <div className="form-group">
-        <label htmlFor="citation-date" className="form-label">Citation Date</label>
+        <label htmlFor="citation-date" className="form-label">
+          Citation Date
+        </label>
         <input
           id="citation-date"
           type="date"
           className="form-input"
-          value={new Date(citationDate).toISOString().split('T')[0]}
+          value={new Date(citationDate).toISOString().split("T")[0]}
           onChange={(e) => setCitationDate(new Date(e.target.value).getTime())}
         />
       </div>
@@ -212,7 +268,9 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
             {editedLocation ? (
               // Show edited location
               <span className="location-coords">
-                {editedLocation.addressShort || editedLocation.address || `${editedLocation.latitude.toFixed(6)}, ${editedLocation.longitude.toFixed(6)}`}
+                {editedLocation.addressShort ||
+                  editedLocation.address ||
+                  `${editedLocation.latitude.toFixed(6)}, ${editedLocation.longitude.toFixed(6)}`}
               </span>
             ) : isEditing ? (
               // Show existing location when editing
@@ -252,9 +310,18 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
               type="button"
               className="location-edit"
               onClick={() => {
-                onLocationEdit(latitude, longitude, (newLat, newLng, addrShort, addrFull) => {
-                  setEditedLocation({ latitude: newLat, longitude: newLng, address: addrFull, addressShort: addrShort });
-                });
+                onLocationEdit(
+                  latitude,
+                  longitude,
+                  (newLat, newLng, addrShort, addrFull) => {
+                    setEditedLocation({
+                      latitude: newLat,
+                      longitude: newLng,
+                      address: addrFull,
+                      addressShort: addrShort,
+                    });
+                  },
+                );
               }}
             >
               Edit Location
@@ -264,7 +331,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
         <p className="form-hint">
           {isEditing
             ? 'Click "Edit Location" to modify the location on a map'
-            : 'Location is optional. Grant permission to auto-capture.'}
+            : "Location is optional. Grant permission to auto-capture."}
         </p>
       </div>
 
@@ -285,27 +352,38 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
         </div>
 
         {links.length === 0 ? (
-          <p className="form-hint">Add source or reference links for this quote.</p>
+          <p className="form-hint">
+            Add source or reference links for this quote.
+          </p>
         ) : (
           <div className="entry-links-editor">
             {links.map((link) => {
               const trimmedUrl = link.url.trim();
-              const validationResult = trimmedUrl.length > 0 ? validateURL(trimmedUrl) : { isValid: true as const };
+              const validationResult =
+                trimmedUrl.length > 0
+                  ? validateURL(trimmedUrl)
+                  : { isValid: true as const };
 
               return (
                 <div key={link.id} className="entry-link-row">
                   <div className="entry-link-input-group">
                     <input
                       type="url"
-                      className={`form-input ${!validationResult.isValid ? 'invalid' : ''}`}
+                      className={`form-input ${!validationResult.isValid ? "invalid" : ""}`}
                       value={link.url}
-                      onChange={(e) => handleChangeLink(link.id, e.target.value)}
+                      onChange={(e) =>
+                        handleChangeLink(link.id, e.target.value)
+                      }
                       placeholder="https://example.com/source"
                       aria-label="Attached URL"
                     />
-                    <span className="entry-link-date">Added {formatLinkAddedAt(link.addedAt)}</span>
+                    <span className="entry-link-date">
+                      Added {formatLinkAddedAt(link.addedAt)}
+                    </span>
                     {!validationResult.isValid && (
-                      <span className="error-message">{validationResult.error}</span>
+                      <span className="error-message">
+                        {validationResult.error}
+                      </span>
                     )}
                   </div>
                   <button
@@ -357,7 +435,7 @@ export function EntryForm({ onSave, onCancel, initialEntry, onLocationEdit }: En
           className="btn btn-primary"
           disabled={!isValid || hasInvalidLinks || saving}
         >
-          {saving ? 'Saving...' : isEditing ? 'Update Quote' : 'Save Quote'}
+          {saving ? "Saving..." : isEditing ? "Update Quote" : "Save Quote"}
         </button>
       </div>
     </form>

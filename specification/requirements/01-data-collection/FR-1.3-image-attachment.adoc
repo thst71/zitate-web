@@ -1,0 +1,16 @@
+[[FR-1.3]]
+=== FR-1.3 Image attachment
+
+The system shall allow users to attach up to 10 images per entry from device camera (if available) or file system, and remove individual images.
+
+.Acceptance criteria
+. User can capture photo using device camera (via file input or MediaDevices API)
+. User can select images from file system via file input
+. Images converted to Base64 or stored as Blobs in IndexedDB
+. Images compressed to max 2MB each (client-side compression)
+. Images stored in browser IndexedDB
+. User can remove individual images via delete button on image thumbnail
+. Fallback to file selection if camera not available
+
+Stakeholder need:: SPEC.md §1.3 +
+Effort:: not estimated (migrated from the monolithic specification)

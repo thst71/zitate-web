@@ -1,0 +1,24 @@
+[[US-7.3]]
+=== US-7.3 Data Import
+
+Effort:: 5 h +
+Traces to:: <<TS-3.5>>, <<NFR-5>>
+
+As a user, I want to import data, so that I can restore from backup.
+
+.Acceptance criteria
+. Import button accepts JSON file
+. Validates structure
+. Offers merge or replace
+. Restores all data including media
+
+.Technical tasks
+. Add file input for import
+. Validate JSON structure
+. Convert Base64 back to Blobs
+. Restore to IndexedDB
+. Handle merge vs replace logic
+. Show progress indicator
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

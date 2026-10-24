@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
-import './InstallPrompt.css';
+import { useState, useEffect } from "react";
+import "./InstallPrompt.css";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
 export const InstallPrompt = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
@@ -17,9 +18,9 @@ export const InstallPrompt = () => {
       setShowInstallPrompt(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener("beforeinstallprompt", handler);
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   const handleInstallClick = async () => {
@@ -27,8 +28,8 @@ export const InstallPrompt = () => {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
+
+    if (outcome === "accepted") {
       setDeferredPrompt(null);
       setShowInstallPrompt(false);
     }
@@ -37,11 +38,11 @@ export const InstallPrompt = () => {
   const handleDismiss = () => {
     setShowInstallPrompt(false);
     // Remember dismissal for session
-    sessionStorage.setItem('installPromptDismissed', 'true');
+    sessionStorage.setItem("installPromptDismissed", "true");
   };
 
   // Don't show if already dismissed in this session
-  if (sessionStorage.getItem('installPromptDismissed') === 'true') {
+  if (sessionStorage.getItem("installPromptDismissed") === "true") {
     return null;
   }
 
@@ -58,15 +59,15 @@ export const InstallPrompt = () => {
           <p>Install this app on your device for a better experience</p>
         </div>
         <div className="install-prompt-actions">
-          <button 
-            className="install-btn-primary" 
+          <button
+            className="install-btn-primary"
             onClick={handleInstallClick}
             aria-label="Install Zitate app"
           >
             Install
           </button>
-          <button 
-            className="install-btn-secondary" 
+          <button
+            className="install-btn-secondary"
             onClick={handleDismiss}
             aria-label="Dismiss install prompt"
           >

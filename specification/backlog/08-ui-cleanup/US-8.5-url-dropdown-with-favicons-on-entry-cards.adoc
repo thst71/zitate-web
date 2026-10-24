@@ -1,0 +1,26 @@
+[[US-8.5]]
+=== US-8.5 URL Dropdown with Favicons on Entry Cards
+
+Effort:: 5 h +
+Traces to:: <<TS-3.3>>, <<FR-5.6>>
+
+As a user, I want to access attached URLs from a compact icon on the entry card, so that I can open source links without cluttering the quote text.
+
+.Acceptance criteria
+. Entry cards with attached URLs show a dedicated link icon in the top-right area of the text block
+. Activating the icon opens a dropdown or popover with all attached URLs
+. Each URL row shows the resolved favicon when available
+. A default favicon is shown when favicon loading fails
+. Selecting a URL opens it in the browser
+. The dropdown or popover is accessible by mouse, keyboard, and touch
+
+.Technical tasks
+. Add link icon button to `EntryCard`
+. Create URL dropdown/popover component
+. Resolve favicon from URL origin (`/favicon.ico`)
+. Add fallback favicon asset and loading failure handling
+. Open selected URL with safe browser navigation (`noopener`, `noreferrer`)
+. Add accessibility semantics and tests
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

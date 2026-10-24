@@ -1,0 +1,9 @@
+== Epic 1: Core Data Layer and IndexedDB
+
+include::US-1.1-indexeddb-schema-setup.adoc[]
+
+include::US-1.2-typescript-interfaces.adoc[]
+
+include::US-1.3-indexeddb-crud-service.adoc[]
+
+include::US-1.4-data-validation-utilities.adoc[]

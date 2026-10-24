@@ -1,9 +1,13 @@
 /**
  * ImageUpload Component - File picker for uploading images
  */
-import { useState, useRef, ChangeEvent } from 'react';
-import { isValidImageType, isValidImageSize, readFileAsDataURL } from '../../services/image.service';
-import './ImageUpload.css';
+import { useState, useRef, ChangeEvent } from "react";
+import {
+  isValidImageType,
+  isValidImageSize,
+  readFileAsDataURL,
+} from "../../services/image.service";
+import "./ImageUpload.css";
 
 export interface SelectedImage {
   file: File;
@@ -20,7 +24,7 @@ interface ImageUploadProps {
 export function ImageUpload({
   onImagesSelected,
   maxImages = 10,
-  currentImageCount = 0
+  currentImageCount = 0,
 }: ImageUploadProps) {
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -48,13 +52,17 @@ export function ImageUpload({
 
       // Validate type
       if (!isValidImageType(file)) {
-        errors.push(`${file.name}: Invalid file type. Only JPEG, PNG, HEIC, and WebP are supported.`);
+        errors.push(
+          `${file.name}: Invalid file type. Only JPEG, PNG, HEIC, and WebP are supported.`,
+        );
         continue;
       }
 
       // Validate size (before compression)
       if (!isValidImageSize(file, 10)) {
-        errors.push(`${file.name}: File too large (max 10MB before compression)`);
+        errors.push(
+          `${file.name}: File too large (max 10MB before compression)`,
+        );
         continue;
       }
 
@@ -72,7 +80,7 @@ export function ImageUpload({
     }
 
     if (errors.length > 0) {
-      setError(errors.join(' '));
+      setError(errors.join(" "));
     }
 
     if (newImages.length > 0) {
@@ -83,12 +91,12 @@ export function ImageUpload({
 
     // Reset file input
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const handleRemoveImage = (id: string) => {
-    const updatedImages = selectedImages.filter(img => img.id !== id);
+    const updatedImages = selectedImages.filter((img) => img.id !== id);
     setSelectedImages(updatedImages);
     onImagesSelected(updatedImages);
     setError(null);
@@ -172,7 +180,8 @@ export function ImageUpload({
       )}
 
       <p className="form-hint">
-        Supported formats: JPEG, PNG, HEIC, WebP. Max 10MB per file (will be compressed to 2MB).
+        Supported formats: JPEG, PNG, HEIC, WebP. Max 10MB per file (will be
+        compressed to 2MB).
       </p>
     </div>
   );

@@ -1,0 +1,31 @@
+[[TS-3.2]]
+=== TS-3.2 Media service
+
+Implements <<FR-1.3>> and <<FR-1.4>>.
+
+==== Images
+`services/image.service.ts` provides functions, no class:
+
+[source,typescript]
+----
+compressImage(file: File, options?: CompressionOptions): Promise<Blob>;
+  // browser-image-compression; defaults: maxSizeMB 2, maxWidthOrHeight 2048,
+  // quality 0.8, in a web worker
+isValidImageType(file: File): boolean;
+isValidImageSize(file: File, maxSizeMB = 10): boolean;   // size before compression
+createImageURL(blob: Blob): string;                      // object URL for display
+revokeImageURL(url: string): void;
+readFileAsDataURL(file: File): Promise<string>;
+----
+
+Images are chosen with a file input (`ImageUpload`); compressed blobs are stored in the `images` store (TS-2.5) and linked through `Entry.imageIds`.
+
+==== Not Implemented Yet
+- Camera capture through MediaDevices (<<FR-1.3>>); on mobile devices the file input offers the camera of the operating system.
+- Audio recording with MediaRecorder and playback (<<FR-1.4>>, <<US-4.3>>); planned API:
+
+[source,typescript]
+----
+startRecording(): Promise<MediaRecorder>;
+stopRecording(recorder: MediaRecorder): Promise<Blob>;
+----

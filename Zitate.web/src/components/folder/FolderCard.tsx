@@ -1,9 +1,9 @@
 /**
  * FolderCard Component - Display a smart folder
  */
-import React from 'react';
-import { SmartFolder } from '../../models';
-import './FolderCard.css';
+import React from "react";
+import { SmartFolder } from "../../models";
+import "./FolderCard.css";
 
 interface FolderCardProps {
   folder: SmartFolder;
@@ -44,7 +44,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
       <div className="folder-card-content">
         <h3 className="folder-name">{folder.name}</h3>
         <p className="folder-count">
-          {count} {count === 1 ? 'entry' : 'entries'}
+          {count} {count === 1 ? "entry" : "entries"}
         </p>
       </div>
       {onDelete && (

@@ -1,0 +1,24 @@
+[[TS-4.6]]
+=== TS-4.6 Browser compatibility
+
+Implements <<NFR-3>>.
+
+==== Target Browsers
+- Chrome 90+ (2021-04)
+- Firefox 88+ (2021-04)
+- Safari 14+ (2020-09)
+- Edge 90+ (2021-04)
+
+==== Required Features
+- ES6+ (classes, async/await, modules)
+- IndexedDB
+- Service Worker
+- CSS Grid / Flexbox
+- CSS Custom Properties
+- Geolocation API (optional)
+- MediaRecorder API (optional)
+- MediaDevices API (optional)
+
+==== Polyfills
+- None required for target browsers
+- Graceful degradation for optional features

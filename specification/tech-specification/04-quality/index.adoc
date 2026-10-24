@@ -1,0 +1,17 @@
+== Quality Attributes
+
+include::TS-4.1-performance-optimization.adoc[]
+
+include::TS-4.2-security-and-privacy.adoc[]
+
+include::TS-4.3-offline-capability.adoc[]
+
+include::TS-4.4-responsive-design.adoc[]
+
+include::TS-4.5-accessibility.adoc[]
+
+include::TS-4.6-browser-compatibility.adoc[]
+
+include::TS-4.7-performance-targets.adoc[]
+
+include::TS-4.8-technical-risks-and-mitigations.adoc[]

@@ -1,0 +1,11 @@
+== Browser API Services
+
+include::TS-3.1-geolocation-service.adoc[]
+
+include::TS-3.2-media-service.adoc[]
+
+include::TS-3.3-url-attachment-and-favicon-handling.adoc[]
+
+include::TS-3.4-image-editing-in-entry-edit-mode.adoc[]
+
+include::TS-3.5-export-and-import-service.adoc[]

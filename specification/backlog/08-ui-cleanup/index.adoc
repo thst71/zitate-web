@@ -1,0 +1,13 @@
+== Epic 8: UI Cleanup
+
+include::US-8.1-location-text-with-reverse-geocoding.adoc[]
+
+include::US-8.2-minimap-as-hover-popup.adoc[]
+
+include::US-8.3-click-location-to-open-map-viewer.adoc[]
+
+include::US-8.4-keyboard-mouse-and-touch-selection-for-autocomplete-lists.adoc[]
+
+include::US-8.5-url-dropdown-with-favicons-on-entry-cards.adoc[]
+
+include::US-8.6-citation-date-display-in-entry-lists-and-cards.adoc[]

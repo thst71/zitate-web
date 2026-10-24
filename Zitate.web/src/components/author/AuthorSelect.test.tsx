@@ -1,16 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { AuthorSelect } from './AuthorSelect';
-import { dbService } from '../../services/db.service';
-import { STORES } from '../../db/schema';
-import type { Author } from '../../models';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { AuthorSelect } from "./AuthorSelect";
+import { dbService } from "../../services/db.service";
+import { STORES } from "../../db/schema";
+import type { Author } from "../../models";
 
 const seedAuthors: Author[] = [
-  { id: 'a1', name: 'Albert Einstein' },
-  { id: 'a2', name: 'Alan Turing' },
-  { id: 'a3', name: 'Ada Lovelace' },
-  { id: 'a4', name: 'Bertrand Russell' },
+  { id: "a1", name: "Albert Einstein" },
+  { id: "a2", name: "Alan Turing" },
+  { id: "a3", name: "Ada Lovelace" },
+  { id: "a4", name: "Bertrand Russell" },
 ];
 
 async function clearAndSeed() {
@@ -23,92 +23,96 @@ async function clearAndSeed() {
   }
 }
 
-describe('AuthorSelect', () => {
+describe("AuthorSelect", () => {
   beforeEach(async () => {
     await clearAndSeed();
   });
 
   // ---------- Rendering ----------
 
-  it('should render the input with placeholder', async () => {
+  it("should render the input with placeholder", async () => {
     render(<AuthorSelect onSelect={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/type to search or create author/i)).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(/type to search or create author/i),
+      ).toBeInTheDocument();
     });
   });
 
-  it('should show suggestions when input is focused', async () => {
+  it("should show suggestions when input is focused", async () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/type to search or create author/i)).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(/type to search or create author/i),
+      ).toBeInTheDocument();
     });
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await user.click(input);
 
     await waitFor(() => {
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
   });
 
-  it('should filter suggestions when typing', async () => {
+  it("should filter suggestions when typing", async () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'Al');
+    await user.type(input, "Al");
 
     await waitFor(() => {
-      expect(screen.getByText('Albert Einstein')).toBeInTheDocument();
-      expect(screen.getByText('Alan Turing')).toBeInTheDocument();
+      expect(screen.getByText("Albert Einstein")).toBeInTheDocument();
+      expect(screen.getByText("Alan Turing")).toBeInTheDocument();
     });
 
     // Non-matching items should not appear
-    expect(screen.queryByText('Ada Lovelace')).not.toBeInTheDocument();
-    expect(screen.queryByText('Bertrand Russell')).not.toBeInTheDocument();
+    expect(screen.queryByText("Ada Lovelace")).not.toBeInTheDocument();
+    expect(screen.queryByText("Bertrand Russell")).not.toBeInTheDocument();
   });
 
   // ---------- Mouse interaction ----------
 
-  it('should select an author on mouse click', async () => {
+  it("should select an author on mouse click", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<AuthorSelect onSelect={onSelect} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'Al');
+    await user.type(input, "Al");
 
     await waitFor(() => {
-      expect(screen.getByText('Albert Einstein')).toBeInTheDocument();
+      expect(screen.getByText("Albert Einstein")).toBeInTheDocument();
     });
 
     // mouseDown is used (not click) to prevent blur before selection
-    await user.click(screen.getByText('Albert Einstein'));
+    await user.click(screen.getByText("Albert Einstein"));
 
-    expect(onSelect).toHaveBeenCalledWith('a1');
+    expect(onSelect).toHaveBeenCalledWith("a1");
   });
 
   it('should show "Create" option when no exact match exists', async () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'Nikola');
+    await user.type(input, "Nikola");
 
     await waitFor(() => {
       expect(screen.getByText(/Create "Nikola"/)).toBeInTheDocument();
@@ -117,145 +121,151 @@ describe('AuthorSelect', () => {
 
   // ---------- Keyboard interaction ----------
 
-  it('should highlight suggestions with ArrowDown and ArrowUp', async () => {
+  it("should highlight suggestions with ArrowDown and ArrowUp", async () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'A');
+    await user.type(input, "A");
 
     // Wait for suggestions to appear
     await waitFor(() => {
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
     // Press ArrowDown to highlight first item
-    await user.keyboard('{ArrowDown}');
+    await user.keyboard("{ArrowDown}");
 
-    const firstOption = screen.getByText('Ada Lovelace').closest('[role="option"]');
-    expect(firstOption).toHaveAttribute('aria-selected', 'true');
-    expect(firstOption).toHaveClass('highlighted');
+    const firstOption = screen
+      .getByText("Ada Lovelace")
+      .closest('[role="option"]');
+    expect(firstOption).toHaveAttribute("aria-selected", "true");
+    expect(firstOption).toHaveClass("highlighted");
 
     // Press ArrowDown again to highlight second item
-    await user.keyboard('{ArrowDown}');
+    await user.keyboard("{ArrowDown}");
 
-    const secondOption = screen.getByText('Alan Turing').closest('[role="option"]');
-    expect(secondOption).toHaveAttribute('aria-selected', 'true');
-    expect(secondOption).toHaveClass('highlighted');
+    const secondOption = screen
+      .getByText("Alan Turing")
+      .closest('[role="option"]');
+    expect(secondOption).toHaveAttribute("aria-selected", "true");
+    expect(secondOption).toHaveClass("highlighted");
 
     // First should no longer be highlighted
-    expect(firstOption).toHaveAttribute('aria-selected', 'false');
+    expect(firstOption).toHaveAttribute("aria-selected", "false");
 
     // Press ArrowUp to go back to first
-    await user.keyboard('{ArrowUp}');
+    await user.keyboard("{ArrowUp}");
 
-    expect(firstOption).toHaveAttribute('aria-selected', 'true');
+    expect(firstOption).toHaveAttribute("aria-selected", "true");
   });
 
-  it('should select highlighted suggestion with Enter', async () => {
+  it("should select highlighted suggestion with Enter", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<AuthorSelect onSelect={onSelect} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'Al');
+    await user.type(input, "Al");
 
     await waitFor(() => {
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
     // ArrowDown to first, then Enter
-    await user.keyboard('{ArrowDown}{Enter}');
+    await user.keyboard("{ArrowDown}{Enter}");
 
-    expect(onSelect).toHaveBeenCalledWith('a2'); // Alan Turing (alphabetically first match for "Al")
+    expect(onSelect).toHaveBeenCalledWith("a2"); // Alan Turing (alphabetically first match for "Al")
   });
 
-  it('should select highlighted suggestion with Tab', async () => {
+  it("should select highlighted suggestion with Tab", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<AuthorSelect onSelect={onSelect} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'Al');
+    await user.type(input, "Al");
 
     await waitFor(() => {
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
     // ArrowDown to first, then Tab
-    await user.keyboard('{ArrowDown}{Tab}');
+    await user.keyboard("{ArrowDown}{Tab}");
 
-    expect(onSelect).toHaveBeenCalledWith('a2');
+    expect(onSelect).toHaveBeenCalledWith("a2");
   });
 
-  it('should close suggestions with Escape', async () => {
+  it("should close suggestions with Escape", async () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'Al');
+    await user.type(input, "Al");
 
     await waitFor(() => {
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
-    await user.keyboard('{Escape}');
+    await user.keyboard("{Escape}");
 
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
-  it('should wrap around when pressing ArrowDown past the last item', async () => {
+  it("should wrap around when pressing ArrowDown past the last item", async () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'Bert');
+    await user.type(input, "Bert");
 
     await waitFor(() => {
-      expect(screen.getByText('Bertrand Russell')).toBeInTheDocument();
+      expect(screen.getByText("Bertrand Russell")).toBeInTheDocument();
     });
 
     // There should be 1 suggestion + 1 create option = 2 items total
     // Press ArrowDown 3 times to wrap around
-    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
 
-    const option = screen.getByText('Bertrand Russell').closest('[role="option"]');
-    expect(option).toHaveAttribute('aria-selected', 'true');
+    const option = screen
+      .getByText("Bertrand Russell")
+      .closest('[role="option"]');
+    expect(option).toHaveAttribute("aria-selected", "true");
   });
 
   // ---------- Clear button ----------
 
-  it('should show clear button when author is selected and clear on click', async () => {
+  it("should show clear button when author is selected and clear on click", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<AuthorSelect selectedAuthorId="a1" onSelect={onSelect} />);
 
     await waitFor(() => {
-      const input = screen.getByRole('combobox') as HTMLInputElement;
-      expect(input.value).toBe('Albert Einstein');
+      const input = screen.getByRole("combobox") as HTMLInputElement;
+      expect(input.value).toBe("Albert Einstein");
     });
 
-    const clearButton = screen.getByLabelText('Clear author');
+    const clearButton = screen.getByLabelText("Clear author");
     expect(clearButton).toBeInTheDocument();
 
     await user.click(clearButton);
@@ -265,62 +275,62 @@ describe('AuthorSelect', () => {
 
   // ---------- ARIA attributes ----------
 
-  it('should have correct ARIA attributes', async () => {
+  it("should have correct ARIA attributes", async () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    expect(input).toHaveAttribute('aria-expanded', 'false');
-    expect(input).toHaveAttribute('aria-autocomplete', 'list');
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(input).toHaveAttribute("aria-autocomplete", "list");
 
     await user.click(input);
 
     await waitFor(() => {
-      expect(input).toHaveAttribute('aria-expanded', 'true');
+      expect(input).toHaveAttribute("aria-expanded", "true");
     });
   });
 
-  it('should set aria-activedescendant when navigating', async () => {
+  it("should set aria-activedescendant when navigating", async () => {
     const user = userEvent.setup();
     render(<AuthorSelect onSelect={vi.fn()} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'A');
+    await user.type(input, "A");
 
     await waitFor(() => {
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
     // Initially no active descendant
-    expect(input).not.toHaveAttribute('aria-activedescendant');
+    expect(input).not.toHaveAttribute("aria-activedescendant");
 
-    await user.keyboard('{ArrowDown}');
+    await user.keyboard("{ArrowDown}");
 
-    expect(input).toHaveAttribute('aria-activedescendant', 'author-option-0');
+    expect(input).toHaveAttribute("aria-activedescendant", "author-option-0");
   });
 
   // ---------- Create new author via Enter ----------
 
-  it('should create a new author when pressing Enter with non-matching text', async () => {
+  it("should create a new author when pressing Enter with non-matching text", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<AuthorSelect onSelect={onSelect} />);
 
-    const input = screen.getByRole('combobox');
+    const input = screen.getByRole("combobox");
     await waitFor(() => {
       expect(input).not.toBeDisabled();
     });
 
-    await user.type(input, 'Nikola Tesla');
-    await user.keyboard('{Enter}');
+    await user.type(input, "Nikola Tesla");
+    await user.keyboard("{Enter}");
 
     // Should have called onSelect with the new author's id
     await waitFor(() => {
@@ -329,8 +339,7 @@ describe('AuthorSelect', () => {
 
     // The argument should be a string (the new author's UUID)
     const callArg = onSelect.mock.calls[onSelect.mock.calls.length - 1][0];
-    expect(typeof callArg).toBe('string');
+    expect(typeof callArg).toBe("string");
     expect(callArg).not.toBe(undefined);
   });
 });
-

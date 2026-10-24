@@ -50,7 +50,8 @@
 /* Firefox scrollbar */
 .virtual-scroll-container {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border, #e5e7eb) var(--color-bg-secondary, #f9fafb);
+  scrollbar-color: var(--color-border, #e5e7eb)
+    var(--color-bg-secondary, #f9fafb);
 }
 
 /* Focus styles for keyboard navigation */
@@ -74,7 +75,8 @@
   }
 
   .virtual-scroll-container {
-    scrollbar-color: var(--color-border, #4b5563) var(--color-bg-secondary, #374151);
+    scrollbar-color: var(--color-border, #4b5563)
+      var(--color-bg-secondary, #374151);
   }
 }
 

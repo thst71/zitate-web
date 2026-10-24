@@ -1,0 +1,23 @@
+[[US-8.3]]
+=== US-8.3 Click Location to Open Map Viewer
+
+Effort:: 2 h +
+Traces to:: <<TS-3.1>>, <<FR-1.2>>
+
+As a user, I want to click the location text to open the full map view, so that I can explore the location in detail.
+
+.Acceptance criteria
+. Clicking the location text opens the LocationViewer modal
+. Same behavior as the current MiniMap click
+. Cursor changes to pointer on the location text
+. Visual affordance (hover underline) indicating clickability
+. Keyboard accessible (Enter/Space)
+
+.Technical tasks
+. Make location text element clickable with button semantics
+. Wire onClick to existing onLocationClick prop
+. Add CSS for clickable appearance
+. Ensure keyboard accessibility
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

@@ -1,0 +1,16 @@
+[[NFR-4]]
+=== NFR-4 Privacy
+
+The system shall request explicit user permission for browser APIs and handle denials gracefully.
+
+.Acceptance criteria
+. Geolocation permission requested with clear context
+. Camera/microphone permissions requested on first use with explanation
+. App functions with all permissions denied (features disabled gracefully)
+. Privacy policy accessible from settings/footer
+. All data stored locally (no server communication)
+. No cookies, tracking, or analytics
+. Data export allows user to control their data
+
+Stakeholder need:: SPEC.md §6.4 +
+Effort:: not estimated (migrated from the monolithic specification)

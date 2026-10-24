@@ -1,0 +1,17 @@
+== Release v1.10.0 (unreleased)
+
+Built with agent-skills v0.5.0.
+
+=== Fixes
+
+* Dependencies with known vulnerabilities are updated (vite 7.3.7, ws, uuid 14 and others);
+  `npm audit` reports none.
+* The tests of the entry card dates pass on machines with any locale and time zone.
+* The test of an entry update no longer fails when adding and updating fall into the same
+  millisecond.
+
+=== Documentation
+
+* The specification follows the modular layout of agent-skills: one file per requirement,
+  technical specification and user story, with anchors and checked traceability; the
+  stakeholder input is `SPEC.md`.

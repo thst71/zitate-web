@@ -1,0 +1,15 @@
+[[FR-5.5]]
+=== FR-5.5 Empty state handling
+
+The system shall provide helpful empty state messages and calls-to-action when no data exists.
+
+.Acceptance criteria
+. Home screen with 0 entries shows welcome message and prominent "+" button
+. Featured quote section hidden when no entries exist
+. Smart folders section shows "No folders yet" with hint to create first folder
+. Empty folder displays "No matching entries" message
+. Empty search results show "No matches found" with search term
+. Empty author list shows "No authors yet" message
+
+Stakeholder need:: SPEC.md §5.5 +
+Effort:: not estimated (migrated from the monolithic specification)

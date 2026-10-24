@@ -1,0 +1,17 @@
+[[FR-5.1]]
+=== FR-5.1 Web design standards compliance
+
+The system shall implement UI following modern web design standards with responsive layout and accessibility.
+
+.Acceptance criteria
+. Uses semantic HTML5 elements
+. Responsive design adapts to mobile (320px+), tablet (768px+), desktop (1024px+)
+. Supports light/dark mode via CSS custom properties and prefers-color-scheme
+. Implements standard web interactions (click, hover, keyboard navigation)
+. Passes WCAG 2.1 AA accessibility standards
+. Keyboard navigable (tab order, enter/space activation, escape to close modals)
+. Screen reader compatible (ARIA labels and roles)
+. Touch-friendly on mobile (minimum 44px touch targets)
+
+Stakeholder need:: SPEC.md §5.1 +
+Effort:: not estimated (migrated from the monolithic specification)

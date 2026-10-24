@@ -1,0 +1,17 @@
+== Data Model and Persistence
+
+include::TS-2.1-database-configuration.adoc[]
+
+include::TS-2.2-object-store-entries.adoc[]
+
+include::TS-2.3-object-store-authors.adoc[]
+
+include::TS-2.4-object-store-labels.adoc[]
+
+include::TS-2.5-object-store-images.adoc[]
+
+include::TS-2.6-object-store-audio.adoc[]
+
+include::TS-2.7-object-store-folders.adoc[]
+
+include::TS-2.8-indexeddb-wrapper.adoc[]

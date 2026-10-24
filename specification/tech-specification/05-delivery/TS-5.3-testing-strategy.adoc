@@ -1,0 +1,23 @@
+[[TS-5.3]]
+=== TS-5.3 Testing strategy
+
+Implements <<NFR-1>> and <<FR-5.1>>.
+
+==== Unit and Integration Tests (Vitest)
+- Services (`db.service`, `location.service`), validators and hooks (`renderHook`)
+- IndexedDB operations against `fake-indexeddb`, installed in `src/test/setup.ts`
+- The setup also mocks the Geolocation API and `scrollIntoView` (missing in jsdom)
+- Locale and time zone are pinned (`LC_ALL=en_US.UTF-8`, `TZ=UTC`) in `vitest.config.ts`; tests that depend on the clock mock `Date.now`
+
+==== Component Tests (React Testing Library)
+- Component rendering in `jsdom`
+- User interactions (keyboard, mouse, touch) with `@testing-library/user-event`
+- ARIA accessibility attributes
+- Async state updates
+
+==== Coverage
+- Every test run measures coverage (V8); `coverage.thresholds` in `vitest.config.ts` fail the run below the recorded values
+
+==== Blackbox and Performance Tests
+- No automated blackbox tests yet; critical user journeys are checked by hand in the browser
+- Lighthouse (target score >90), bundle size and IndexedDB query performance are checked by hand

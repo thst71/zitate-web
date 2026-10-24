@@ -1,9 +1,9 @@
 /**
  * ImageGrid Component - Grid display for multiple image thumbnails
  */
-import { ImageThumbnail } from './ImageThumbnail';
-import type { ImageAttachment } from '../../models';
-import './ImageGrid.css';
+import { ImageThumbnail } from "./ImageThumbnail";
+import type { ImageAttachment } from "../../models";
+import "./ImageGrid.css";
 
 interface ImageGridProps {
   images: ImageAttachment[];
@@ -43,7 +43,7 @@ export function ImageGrid({
 
       {showMoreIndicator && remainingCount > 0 && (
         <div className="image-more-indicator">
-          +{remainingCount} more {remainingCount === 1 ? 'image' : 'images'}
+          +{remainingCount} more {remainingCount === 1 ? "image" : "images"}
         </div>
       )}
     </div>

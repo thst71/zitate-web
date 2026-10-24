@@ -1,0 +1,13 @@
+[[FR-3.1]]
+=== FR-3.1 Label assignment
+
+The system shall allow users to assign multiple labels (tags) to each entry, with case-insensitive storage and display.
+
+.Acceptance criteria
+. User can assign 0 to 50 labels per entry
+. Labels stored in lowercase internally
+. Labels displayed with first letter capitalized
+. No duplicate labels on single entry
+
+Stakeholder need:: SPEC.md §3.1 +
+Effort:: not estimated (migrated from the monolithic specification)

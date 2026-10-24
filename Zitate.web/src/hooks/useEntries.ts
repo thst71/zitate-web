@@ -1,27 +1,27 @@
 /**
  * useEntries hook - Manages entry CRUD operations and image attachments
  */
-import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { dbService, STORES } from '../services/db.service';
-import { onStoreChange, emitStoreChange } from '../services/storeSync';
-import { compressImage } from '../services/image.service';
-import { locationService } from '../services/location.service';
-import type { Entry, EntryLink, ImageAttachment } from '../models';
-import type { SelectedImage } from '../components/image/ImageUpload';
+import { useState, useEffect, useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { dbService, STORES } from "../services/db.service";
+import { onStoreChange, emitStoreChange } from "../services/storeSync";
+import { compressImage } from "../services/image.service";
+import { locationService } from "../services/location.service";
+import type { Entry, EntryLink, ImageAttachment } from "../models";
+import type { SelectedImage } from "../components/image/ImageUpload";
 
 const ENTRY_STORE = STORES.ENTRIES;
 
 export function useEntries() {
-      const normalizeEntry = useCallback(
-        (entry: Entry): Entry => ({
-          ...entry,
-          labelIds: entry.labelIds ?? [],
-          links: entry.links ?? [],
-          imageIds: entry.imageIds ?? [],
-        }),
-        []
-      );
+  const normalizeEntry = useCallback(
+    (entry: Entry): Entry => ({
+      ...entry,
+      labelIds: entry.labelIds ?? [],
+      links: entry.links ?? [],
+      imageIds: entry.imageIds ?? [],
+    }),
+    [],
+  );
 
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +38,7 @@ export function useEntries() {
       const allEntries = await dbService.getAllEntriesSorted<Entry>();
       setEntries(allEntries.map(normalizeEntry));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load entries');
+      setError(err instanceof Error ? err.message : "Failed to load entries");
     } finally {
       setLoading(false);
     }
@@ -48,7 +48,10 @@ export function useEntries() {
    * Save images to IndexedDB
    */
   const saveImages = useCallback(
-    async (entryId: string, selectedImages: SelectedImage[]): Promise<string[]> => {
+    async (
+      entryId: string,
+      selectedImages: SelectedImage[],
+    ): Promise<string[]> => {
       const imageIds: string[] = [];
 
       for (let i = 0; i < selectedImages.length; i++) {
@@ -73,13 +76,16 @@ export function useEntries() {
           await dbService.add(STORES.IMAGES, imageAttachment);
           imageIds.push(imageAttachment.id);
         } catch (err) {
-          console.error(`Failed to save image ${selectedImage.file.name}:`, err);
+          console.error(
+            `Failed to save image ${selectedImage.file.name}:`,
+            err,
+          );
         }
       }
 
       return imageIds;
     },
-    []
+    [],
   );
 
   /**
@@ -90,34 +96,31 @@ export function useEntries() {
       try {
         const images = await dbService.query<ImageAttachment>(
           STORES.IMAGES,
-          'entryId',
-          entryId
+          "entryId",
+          entryId,
         );
         // Sort by order
         return images.sort((a, b) => a.order - b.order);
       } catch (err) {
-        console.error('Failed to load images:', err);
+        console.error("Failed to load images:", err);
         return [];
       }
     },
-    []
+    [],
   );
 
   /**
    * Delete an image
    */
-  const deleteImage = useCallback(
-    async (imageId: string): Promise<void> => {
-      try {
-        await dbService.delete(STORES.IMAGES, imageId);
-      } catch (err) {
-        throw new Error(
-          err instanceof Error ? err.message : 'Failed to delete image'
-        );
-      }
-    },
-    []
-  );
+  const deleteImage = useCallback(async (imageId: string): Promise<void> => {
+    try {
+      await dbService.delete(STORES.IMAGES, imageId);
+    } catch (err) {
+      throw new Error(
+        err instanceof Error ? err.message : "Failed to delete image",
+      );
+    }
+  }, []);
 
   /**
    * Reverse-geocode coordinates and persist address fields on the entry.
@@ -127,7 +130,10 @@ export function useEntries() {
     async (entry: Entry) => {
       if (entry.latitude == null || entry.longitude == null) return;
       try {
-        const result = await locationService.reverseGeocode(entry.latitude, entry.longitude);
+        const result = await locationService.reverseGeocode(
+          entry.latitude,
+          entry.longitude,
+        );
         if (result) {
           const updated: Entry = {
             ...entry,
@@ -136,15 +142,15 @@ export function useEntries() {
           };
           await dbService.update(STORES.ENTRIES, updated);
           setEntries((prev) =>
-            prev.map((e) => (e.id === updated.id ? updated : e))
+            prev.map((e) => (e.id === updated.id ? updated : e)),
           );
           emitStoreChange(ENTRY_STORE, loadEntries);
         }
       } catch (err) {
-        console.warn('Background geocoding failed:', err);
+        console.warn("Background geocoding failed:", err);
       }
     },
-    [loadEntries]
+    [loadEntries],
   );
 
   /**
@@ -161,7 +167,7 @@ export function useEntries() {
       selectedImages: SelectedImage[] = [],
       addressShort?: string,
       addressFull?: string,
-      links: EntryLink[] = []
+      links: EntryLink[] = [],
     ): Promise<Entry> => {
       const now = Date.now();
       const entryId = uuidv4();
@@ -198,11 +204,11 @@ export function useEntries() {
         return entry;
       } catch (err) {
         throw new Error(
-          err instanceof Error ? err.message : 'Failed to save entry'
+          err instanceof Error ? err.message : "Failed to save entry",
         );
       }
     },
-    [saveImages, loadEntries, geocodeAndPersist, normalizeEntry]
+    [saveImages, loadEntries, geocodeAndPersist, normalizeEntry],
   );
 
   /**
@@ -223,12 +229,12 @@ export function useEntries() {
       imageReplacements: Map<string, SelectedImage> = new Map(),
       addressShort?: string,
       addressFull?: string,
-      links?: EntryLink[]
+      links?: EntryLink[],
     ): Promise<Entry> => {
       // Find the existing entry
       const existingEntry = entries.find((e) => e.id === id);
       if (!existingEntry) {
-        throw new Error('Entry not found');
+        throw new Error("Entry not found");
       }
 
       // Detect if location changed
@@ -268,7 +274,7 @@ export function useEntries() {
         }
       }
       updatedImageIds = updatedImageIds.filter(
-        (imgId) => !imagesToDelete.includes(imgId)
+        (imgId) => !imagesToDelete.includes(imgId),
       );
 
       // 3. Handle additions
@@ -280,12 +286,18 @@ export function useEntries() {
       // 4. Update order field on all remaining images
       for (let i = 0; i < updatedImageIds.length; i++) {
         try {
-          const img = await dbService.get<ImageAttachment>(STORES.IMAGES, updatedImageIds[i]);
+          const img = await dbService.get<ImageAttachment>(
+            STORES.IMAGES,
+            updatedImageIds[i],
+          );
           if (img && img.order !== i) {
             await dbService.update(STORES.IMAGES, { ...img, order: i });
           }
         } catch (err) {
-          console.error(`Failed to update image order for ${updatedImageIds[i]}:`, err);
+          console.error(
+            `Failed to update image order for ${updatedImageIds[i]}:`,
+            err,
+          );
         }
       }
 
@@ -301,8 +313,12 @@ export function useEntries() {
         // If address explicitly provided (e.g. from LocationPicker), use it.
         // If location changed but no address given, clear old address (will be geocoded).
         // If location unchanged, keep existing address.
-        addressShort: addressShort ?? (locationChanged ? undefined : existingEntry.addressShort),
-        addressFull: addressFull ?? (locationChanged ? undefined : existingEntry.addressFull),
+        addressShort:
+          addressShort ??
+          (locationChanged ? undefined : existingEntry.addressShort),
+        addressFull:
+          addressFull ??
+          (locationChanged ? undefined : existingEntry.addressFull),
         imageIds: updatedImageIds,
         updatedAt: Date.now(),
       };
@@ -310,54 +326,64 @@ export function useEntries() {
       try {
         await dbService.update(STORES.ENTRIES, updatedEntry);
         setEntries((prev) =>
-          prev.map((entry) => (entry.id === id ? normalizeEntry(updatedEntry) : entry))
+          prev.map((entry) =>
+            entry.id === id ? normalizeEntry(updatedEntry) : entry,
+          ),
         );
         emitStoreChange(ENTRY_STORE, loadEntries);
 
         // Background geocoding if location changed and no address provided
-        if (locationChanged && latitude != null && longitude != null && !addressShort) {
+        if (
+          locationChanged &&
+          latitude != null &&
+          longitude != null &&
+          !addressShort
+        ) {
           geocodeAndPersist(updatedEntry);
         }
 
         return updatedEntry;
       } catch (err) {
         throw new Error(
-          err instanceof Error ? err.message : 'Failed to update entry'
+          err instanceof Error ? err.message : "Failed to update entry",
         );
       }
     },
-    [entries, saveImages, loadEntries, geocodeAndPersist, normalizeEntry]
+    [entries, saveImages, loadEntries, geocodeAndPersist, normalizeEntry],
   );
 
   /**
    * Delete an entry and its associated images
    */
-  const deleteEntry = useCallback(async (id: string): Promise<void> => {
-    try {
-      // Get entry to find associated images
-      const entry = entries.find((e) => e.id === id);
+  const deleteEntry = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        // Get entry to find associated images
+        const entry = entries.find((e) => e.id === id);
 
-      // Delete associated images
-      if (entry && entry.imageIds.length > 0) {
-        for (const imageId of entry.imageIds) {
-          try {
-            await dbService.delete(STORES.IMAGES, imageId);
-          } catch (err) {
-            console.error(`Failed to delete image ${imageId}:`, err);
+        // Delete associated images
+        if (entry && entry.imageIds.length > 0) {
+          for (const imageId of entry.imageIds) {
+            try {
+              await dbService.delete(STORES.IMAGES, imageId);
+            } catch (err) {
+              console.error(`Failed to delete image ${imageId}:`, err);
+            }
           }
         }
-      }
 
-      // Delete entry
-      await dbService.delete(STORES.ENTRIES, id);
-      setEntries((prev) => prev.filter((entry) => entry.id !== id));
-      emitStoreChange(ENTRY_STORE, loadEntries);
-    } catch (err) {
-      throw new Error(
-        err instanceof Error ? err.message : 'Failed to delete entry'
-      );
-    }
-  }, [entries, loadEntries]);
+        // Delete entry
+        await dbService.delete(STORES.ENTRIES, id);
+        setEntries((prev) => prev.filter((entry) => entry.id !== id));
+        emitStoreChange(ENTRY_STORE, loadEntries);
+      } catch (err) {
+        throw new Error(
+          err instanceof Error ? err.message : "Failed to delete entry",
+        );
+      }
+    },
+    [entries, loadEntries],
+  );
 
   // Load entries on mount and subscribe to changes from other hook instances
   useEffect(() => {

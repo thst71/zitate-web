@@ -1,9 +1,9 @@
 /**
  * SearchBar Component - Search input with debouncing
  */
-import React, { useState } from 'react';
-import { useDebounce } from '../../hooks/useDebounce';
-import './SearchBar.css';
+import React, { useState } from "react";
+import { useDebounce } from "../../hooks/useDebounce";
+import "./SearchBar.css";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -12,9 +12,9 @@ interface SearchBarProps {
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   onSearch,
-  placeholder = 'Search quotes, authors, labels...',
+  placeholder = "Search quotes, authors, labels...",
 }) => {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [hasInteracted, setHasInteracted] = useState(false);
   const debouncedValue = useDebounce(inputValue, 300);
 
@@ -34,7 +34,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const handleClear = () => {
-    setInputValue('');
+    setInputValue("");
     // Keep hasInteracted true so the empty search is triggered
   };
 

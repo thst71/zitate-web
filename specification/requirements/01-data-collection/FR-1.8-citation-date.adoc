@@ -1,0 +1,15 @@
+[[FR-1.8]]
+=== FR-1.8 Citation date
+
+The system shall allow users to set the date of the quote/citation independently from the creation timestamp of the entry.
+
+.Acceptance criteria
+. Each entry stores a citation date independently from `createdAt` and `updatedAt`
+. Citation date defaults to the entry creation date when a new entry is created
+. User can change the citation date during entry creation
+. User can edit the citation date later without changing the entry creation timestamp
+. If no explicit citation date is set by the user, the stored citation date remains equal to the creation date
+. The citation date is used for display where the quote/citation date is shown in the UI
+
+Stakeholder need:: SPEC.md §1.8 +
+Effort:: not estimated (migrated from the monolithic specification)

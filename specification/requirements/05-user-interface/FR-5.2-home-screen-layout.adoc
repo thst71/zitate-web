@@ -1,0 +1,20 @@
+[[FR-5.2]]
+=== FR-5.2 Home screen layout
+
+The system shall display a home screen showing the nearest quote based on current location (or latest quote if no location available), a search text field, intelligent folders as a list of cards, and access to author list editor.
+
+.Acceptance criteria
+. Plus button for entry creation visible in header or as floating action button
+. Featured quote card displays nearest entry within 10km radius (if geolocation available)
+. If no location or entries within 10km, displays most recently created entry
+. Search text field prominently positioned below featured quote
+. Intelligent folders displayed as scrollable list of cards below search field
+. Each folder card shows folder name and entry count
+. Author list editor accessible via button/icon in header
+. Featured quote shows: full text, author, distance/recency indicator, thumbnail
+. Clicking featured quote opens detail view
+. Clicking folder card opens folder contents view
+. Location refreshed on page load (not continuous tracking)
+
+Stakeholder need:: SPEC.md §5.2 +
+Effort:: not estimated (migrated from the monolithic specification)

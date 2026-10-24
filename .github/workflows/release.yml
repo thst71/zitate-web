@@ -1,0 +1,186 @@
+# Release workflow of the agent-skills release skill (template .agents/skills/release/release.yml).
+# Project additions: the build steps of Zitate.web, the image jobs and the image as a
+# precondition of publish.
+name: release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    environment: release
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+      prerelease: ${{ steps.tag.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        uses: thst71/release-actions/verify-release-tag@7e4daefa8a915c28fd06bcd6f6a5bc77b1f27217 # v0.2.0
+        with:
+          allowed-signers: ${{ secrets.RELEASE_ALLOWED_SIGNERS }}
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Release Build steps of the node-npm profile for Zitate.web. No version task (the version
+      # is the tag, injected as APP_VERSION) and no dist task (the deliverable is the image).
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: Zitate.web/package-lock.json
+      - run: npm ci
+        working-directory: Zitate.web
+      - run: npm run check
+        working-directory: Zitate.web
+      - run: npm audit --audit-level moderate
+        working-directory: Zitate.web
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: ignore
+
+  docs:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: thst71/release-actions/render-docs@7e4daefa8a915c28fd06bcd6f6a5bc77b1f27217 # v0.2.0
+        with:
+          version: ${{ needs.verify.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs
+          path: |
+            dist-docs/html/
+            dist-docs/*.zip
+
+  image-metadata:
+    needs: [verify, build]
+    runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+      labels: ${{ steps.meta.outputs.labels }}
+      json: ${{ steps.meta.outputs.json }}
+    steps:
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=v${{ needs.verify.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ needs.verify.outputs.version }}
+            type=semver,pattern={{major}},value=v${{ needs.verify.outputs.version }}
+            type=raw,value=latest,enable=${{ needs.verify.outputs.prerelease != 'true' }}
+
+  image:
+    needs: [verify, image-metadata]
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            platform: linux/amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Zitate.web
+          file: ./Zitate.web/Dockerfile
+          platforms: ${{ matrix.platform }}
+          labels: ${{ needs.image-metadata.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ needs.verify.outputs.version }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,scope=${{ matrix.platform }},mode=max
+      - run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.runner }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  image-manifest:
+    needs: [verify, image-metadata, image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create multi-platform manifest and push
+        working-directory: /tmp/digests
+        env:
+          DOCKER_METADATA_OUTPUT_JSON: ${{ needs.image-metadata.outputs.json }}
+        run: |
+          # shellcheck disable=SC2046 # the tag and digest lists are meant to be split
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+      - run: docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.verify.outputs.version }}
+      - uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.verify.outputs.version }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  publish:
+    needs: [verify, build, docs, image-manifest]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - uses: thst71/release-actions/publish-release@7e4daefa8a915c28fd06bcd6f6a5bc77b1f27217 # v0.2.0
+        with:
+          version: ${{ needs.verify.outputs.version }}
+          prerelease: ${{ needs.verify.outputs.prerelease }}
+          assets: |
+            artifacts/docs/html/*.html
+            artifacts/docs/*.zip

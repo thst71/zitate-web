@@ -1,0 +1,25 @@
+[[US-6.2]]
+=== US-6.2 Smart Folder Creation
+
+Effort:: 10 h +
+Traces to:: <<TS-2.7>>, <<FR-4.2>>, <<FR-4.3>>
+
+As a user, I want to create smart folders, so that I can organize my quotes dynamically.
+
+.Acceptance criteria
+. Folder form with name and criteria builder
+. Criteria: labels, author, date range, location, text
+. Save to IndexedDB
+. Folders displayed on home screen
+
+.Technical tasks
+. Create components/folder/FolderForm.tsx
+. Create components/folder/CriteriaBuilder.tsx
+. Implement criteria state management
+. Save folder to IndexedDB
+. Create hooks/useFolders.ts
+. Query entries matching criteria
+. Display folder cards on home screen
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

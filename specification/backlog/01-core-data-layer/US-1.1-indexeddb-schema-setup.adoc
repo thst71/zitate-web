@@ -1,0 +1,25 @@
+[[US-1.1]]
+=== US-1.1 IndexedDB Schema Setup
+
+Effort:: 6 h +
+Traces to:: <<TS-2.1>>, <<FR-1.1>>, <<FR-1.2>>, <<NFR-2>>
+
+As a developer, I want to create the IndexedDB schema with all required object stores, so that data can be stored and retrieved from the browser.
+
+.Acceptance criteria
+. Database "zitate-db" initialized on first app load
+. Object stores: entries, authors, labels, images, audio, folders
+. Indexes created for frequently queried fields
+. Schema version 1 defined
+. Migration system in place for future versions
+
+.Technical tasks
+. Create db/schema.ts with object store definitions
+. Implement database initialization in db.service.ts
+. Add indexes (createdAt, name, entryId, etc.)
+. Create migration system (version-based upgrades)
+. Add error handling for quota exceeded
+. Write unit tests with fake-indexeddb
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

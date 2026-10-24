@@ -23,7 +23,6 @@ export function onStoreChange(store: string, listener: Listener): () => void {
   };
 }
 
-
 /**
  * Notify all listeners (except the emitting one) that a store has changed.
  * Pass the caller's own reload function to exclude it.
@@ -35,4 +34,3 @@ export function emitStoreChange(store: string, self?: Listener): void {
     }
   });
 }
-

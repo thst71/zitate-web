@@ -1,0 +1,17 @@
+== Data Collection and Storage
+
+include::FR-1.1-text-entry.adoc[]
+
+include::FR-1.2-location-association-and-modification.adoc[]
+
+include::FR-1.3-image-attachment.adoc[]
+
+include::FR-1.4-audio-recording.adoc[]
+
+include::FR-1.5-entry-creation-workflow.adoc[]
+
+include::FR-1.6-entry-deletion.adoc[]
+
+include::FR-1.7-url-attachment.adoc[]
+
+include::FR-1.8-citation-date.adoc[]

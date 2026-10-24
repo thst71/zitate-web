@@ -1,0 +1,17 @@
+[[NFR-2]]
+=== NFR-2 Data persistence
+
+The system shall store all data locally using browser IndexedDB with data export/import functionality.
+
+.Acceptance criteria
+. Data persists across browser sessions using IndexedDB
+. Export functionality to download all data as JSON file
+. Import functionality to restore data from JSON file
+. No data loss on page refresh or browser crash
+. Schema versioning for IndexedDB migrations
+. Periodic automatic export to Downloads (optional, user configurable)
+. Clear data option in settings with confirmation
+. Storage quota management (warn user if approaching browser limits)
+
+Stakeholder need:: SPEC.md §6.2 +
+Effort:: not estimated (migrated from the monolithic specification)

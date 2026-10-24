@@ -1,0 +1,5 @@
+== Epic 6: Search and Folders
+
+include::US-6.1-text-search.adoc[]
+
+include::US-6.2-smart-folder-creation.adoc[]

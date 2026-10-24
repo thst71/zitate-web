@@ -1,0 +1,23 @@
+[[US-8.1]]
+=== US-8.1 Location Text with Reverse Geocoding
+
+Effort:: 3 h +
+Traces to:: <<TS-3.1>>, <<FR-1.2>>
+
+As a user, I want to see a human-readable place name for each entry's location, so that I can understand where a quote was captured without reading raw coordinates.
+
+.Acceptance criteria
+. Location displayed as: `<place name> (lat, lng)` in the entry card
+. Place name resolved via Nominatim reverse geocoding
+. Cached per entry to avoid repeated API calls
+. Graceful fallback to coordinates-only if geocoding fails
+. Location icon (📍) shown before the text
+
+.Technical tasks
+. Add reverse geocoding call in EntryCard for entries with location
+. Cache resolved addresses in component state
+. Display template: `<address> (<coords>)` or just `<coords>` on failure
+. Show a loading placeholder while geocoding
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

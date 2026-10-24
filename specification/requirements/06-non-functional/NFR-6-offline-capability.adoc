@@ -1,0 +1,15 @@
+[[NFR-6]]
+=== NFR-6 Offline capability
+
+The system shall function fully offline after initial load as a Progressive Web App.
+
+.Acceptance criteria
+. Service Worker caches app shell and assets
+. All features work without network connection
+. App installable to home screen (PWA manifest)
+. Offline indicator shown when network unavailable
+. Data operations work offline via IndexedDB
+. Updates check for new version when online
+
+Stakeholder need:: SPEC.md §6.6 +
+Effort:: not estimated (migrated from the monolithic specification)

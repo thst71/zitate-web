@@ -1,0 +1,28 @@
+[[US-4.3]]
+=== US-4.3 Audio Recording
+
+Effort:: 8 h +
+Traces to:: <<TS-2.6>>, <<TS-3.2>>, <<FR-1.4>>
+
+As a user, I want to record audio for my entry, so that I can capture the spoken quote.
+
+.Acceptance criteria
+. Record button starts MediaRecorder
+. Timer shows recording duration
+. Stop button saves recording
+. Max 5 minutes duration
+. Audio stored as Blob in IndexedDB
+. Playback available after recording
+
+.Technical tasks
+. Create hooks/useMediaRecorder.ts
+. Implement startRecording with MediaRecorder API
+. Implement stopRecording
+. Add timer display
+. Enforce 5 minute limit
+. Save audio blob to IndexedDB
+. Add audio player for playback
+. Handle browser compatibility (feature detection)
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

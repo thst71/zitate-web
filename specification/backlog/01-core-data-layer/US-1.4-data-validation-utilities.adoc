@@ -1,0 +1,26 @@
+[[US-1.4]]
+=== US-1.4 Data Validation Utilities
+
+Effort:: 3 h +
+Traces to:: <<TS-2.2>>, <<TS-4.2>>, <<FR-1.1>>, <<FR-2.2>>, <<FR-3.3>>
+
+As a developer, I want to create validation functions for all data types, so that invalid data is prevented from being stored.
+
+.Acceptance criteria
+. validateEntryText (1-10,000 chars)
+. validateAuthorName (max 200 chars)
+. validateLabelName (max 50 chars, no comma/semicolon)
+. validateURL format
+. validateFolderName (max 100 chars)
+. ValidationResult type for consistent error reporting
+
+.Technical tasks
+. Create utils/validators.ts
+. Implement text validation
+. Implement name validations
+. Implement URL validation
+. Create ValidationResult type
+. Write unit tests for all validators
+
+.Test criteria
+* Not recorded before the migration; the tests named in the technical tasks apply.

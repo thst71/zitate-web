@@ -26,9 +26,10 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | `npm run dev` | Start development server with hot reload |
 | `npm run build` | Type-check and build for production |
 | `npm run preview` | Preview production build locally |
-| `npm run test` | Run tests in watch mode |
-| `npm run test -- --coverage` | Run tests with coverage report |
-| `npm run lint` | Run ESLint |
+| `npm run check` | Quality gate: lint, format check, type check, tests, specification validation |
+| `npm run test` | Run the tests once with coverage; fails below the coverage thresholds (`npm run test:watch` for watch mode) |
+| `npm run lint` | Run ESLint (no warnings allowed) |
+| `npm run format` | Format the sources with Prettier |
 
 ### Docker
 
@@ -56,7 +57,7 @@ docker pull ghcr.io/thst71/zitate:latest
 docker run -p 8080:8080 ghcr.io/thst71/zitate:latest
 ```
 
-Available tags: `latest`, `1`, `1.0`, `1.0.0` (semver).
+Available tags: `latest`, `<major>`, `<major>.<minor>`, `<major>.<minor>.<patch>` (semver).
 
 ### Architecture
 
@@ -95,17 +96,21 @@ Zitate.web/src/
 
 The project uses GitHub Actions for continuous integration:
 
-- **Pull Requests**: lint, test, security audit, Docker build (without push)
-- **Tag Push** (`v*.*.*`): parallel native Docker builds (amd64 + arm64), multi-arch manifest push to GHCR, Trivy vulnerability scan
+- **Pull Requests** (`docker-publish.yml`): quality gate (`npm run check`, tests with coverage thresholds), security audit, Docker build (without push)
+- **Release** (`release.yml`): a signed tag `v<semver>` pushed by the maintainer is verified, then the quality gate runs, the specification is rendered to HTML, native Docker builds (amd64 + arm64) are merged into a multi-arch manifest on GHCR and scanned with Trivy, and the GitHub release is published with the release notes
 
 ## Documentation
 
 | File | Description |
 |---|---|
-| `specification-web.adoc` | Functional requirements |
+| `SPEC.md` | Stakeholder needs, constraints and deferred enhancements |
+| `specification-web.adoc` | Functional and non-functional requirements |
 | `tech-specification-web.adoc` | Technical architecture |
 | `backlog-web.adoc` | User stories and implementation backlog |
+| `release-notes.adoc` | Release notes |
 | `DOCKER.md` | Docker deployment guide |
+
+The specification is modular: each master includes one file per item from `specification/`. Development with coding agents follows [AGENTS.md](AGENTS.md) and the vendored [agent-skills](https://github.com/thst71/agent-skills) library in `.agents/skills/`.
 
 ## License
 

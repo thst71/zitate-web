@@ -1,0 +1,68 @@
+[[TS-1.2]]
+=== TS-1.2 Component architecture and project structure
+
+Implements <<NFR-2>>.
+
+==== Component-Based Architecture
+- *Components:* React function components, grouped by feature
+- *Hooks:* custom React hooks hold the state of each store and the operations on it
+- *Services:* singleton modules for persistence, location, images and export/import
+- *Models:* TypeScript interfaces for all records (TS-2.2 to TS-2.7)
+
+==== State Management
+- *Local State:* component state (`useState`)
+- *Persistent State:* IndexedDB through the hooks `useEntries`, `useAuthors`, `useLabels`, `useFolders`
+- *Cross-instance sync:* `services/storeSync.ts`; a hook that changes a store emits `emitStoreChange(store)`, and every other instance subscribed with `onStoreChange(store, reload)` reloads from IndexedDB
+- *Derived State:* `useSearch` filters entries in memory; `useMemo` and `useCallback` for computed values
+
+==== Data Flow
+
+[source]
+----
+User Interaction → Component → Hook → Service → IndexedDB
+                    ↑                              ↓
+                    └────── State Update ←─────────┘
+----
+
+There is no router: `App.tsx` switches between the home screen, search results and folder contents and opens forms and viewers in modals.
+
+==== Directory Layout
+
+[source]
+----
+Zitate.web/
+├── public/                        # favicon and PWA icons (SVG)
+├── src/
+│   ├── main.tsx                   # entry point, global styles
+│   ├── App.tsx                    # root component, views and modals
+│   ├── db/schema.ts               # object stores, indexes, upgrades
+│   ├── models/                    # Entry, Author, Label, ImageAttachment,
+│   │                              # AudioAttachment, SmartFolder
+│   ├── hooks/                     # useEntries, useAuthors, useLabels,
+│   │                              # useFolders, useLocation, useSearch,
+│   │                              # useDebounce, useExportImport
+│   ├── services/                  # db.service, location.service,
+│   │                              # image.service, export.service, storeSync
+│   ├── components/
+│   │   ├── common/                # Modal, ConfirmDialog, DataManagement,
+│   │   │                          # ErrorBoundary, InstallPrompt,
+│   │   │                          # OfflineIndicator, VirtualScrollList
+│   │   ├── entry/                 # EntryCard, EntryForm, EntryList
+│   │   ├── author/                # AuthorSelect
+│   │   ├── label/                 # LabelInput
+│   │   ├── folder/                # FolderCard, FolderForm, FolderList
+│   │   ├── image/                 # ImageEditor, ImageGrid, ImageThumbnail,
+│   │   │                          # ImageUpload, ImageViewer
+│   │   ├── map/                   # LocationPicker, LocationViewer,
+│   │   │                          # LocationPopover, MiniMap
+│   │   ├── search/                # SearchBar
+│   │   └── layout/                # Header, Layout
+│   ├── utils/validators.ts        # input validation
+│   ├── styles/                    # variables.css (design tokens, themes)
+│   └── test/setup.ts              # test environment
+├── Dockerfile, nginx.conf         # image build and web server
+├── vite.config.ts, vitest.config.ts
+└── package.json
+----
+
+Tests sit next to the code they test as `*.test.ts(x)`.

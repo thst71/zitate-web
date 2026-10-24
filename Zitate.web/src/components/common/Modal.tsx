@@ -1,8 +1,8 @@
 /**
  * Modal Component - Reusable modal dialog
  */
-import { ReactNode, useEffect } from 'react';
-import './Modal.css';
+import { ReactNode, useEffect } from "react";
+import "./Modal.css";
 
 interface ModalProps {
   isOpen: boolean;
@@ -12,29 +12,35 @@ interface ModalProps {
   className?: string;
 }
 
-export function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  className,
+}: ModalProps) {
   // Handle Escape key to close modal
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -43,7 +49,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className={`modal-content ${className || ''}`}
+        className={`modal-content ${className || ""}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

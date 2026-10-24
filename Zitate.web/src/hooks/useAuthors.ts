@@ -1,12 +1,12 @@
 /**
  * useAuthors hook - Manages author CRUD operations
  */
-import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { dbService, STORES } from '../services/db.service';
-import { onStoreChange, emitStoreChange } from '../services/storeSync';
-import type { Author } from '../models';
-import { validateAuthorName } from '../utils/validators';
+import { useState, useEffect, useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { dbService, STORES } from "../services/db.service";
+import { onStoreChange, emitStoreChange } from "../services/storeSync";
+import type { Author } from "../models";
+import { validateAuthorName } from "../utils/validators";
 
 const AUTHOR_STORE = STORES.AUTHORS;
 
@@ -28,7 +28,7 @@ export function useAuthors() {
       allAuthors.sort((a, b) => a.name.localeCompare(b.name));
       setAuthors(allAuthors);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load authors');
+      setError(err instanceof Error ? err.message : "Failed to load authors");
     } finally {
       setLoading(false);
     }
@@ -48,11 +48,11 @@ export function useAuthors() {
       // Check for duplicates (case-insensitive)
       const normalizedName = name.trim();
       const duplicate = authors.find(
-        (a) => a.name.toLowerCase() === normalizedName.toLowerCase()
+        (a) => a.name.toLowerCase() === normalizedName.toLowerCase(),
       );
 
       if (duplicate) {
-        throw new Error('An author with this name already exists');
+        throw new Error("An author with this name already exists");
       }
 
       const author: Author = {
@@ -62,16 +62,18 @@ export function useAuthors() {
 
       try {
         await dbService.add(STORES.AUTHORS, author);
-        setAuthors((prev) => [...prev, author].sort((a, b) => a.name.localeCompare(b.name)));
+        setAuthors((prev) =>
+          [...prev, author].sort((a, b) => a.name.localeCompare(b.name)),
+        );
         emitStoreChange(AUTHOR_STORE, loadAuthors);
         return author;
       } catch (err) {
         throw new Error(
-          err instanceof Error ? err.message : 'Failed to save author'
+          err instanceof Error ? err.message : "Failed to save author",
         );
       }
     },
-    [authors, loadAuthors]
+    [authors, loadAuthors],
   );
 
   /**
@@ -88,16 +90,17 @@ export function useAuthors() {
       // Check for duplicates (case-insensitive), excluding current author
       const normalizedName = name.trim();
       const duplicate = authors.find(
-        (a) => a.id !== id && a.name.toLowerCase() === normalizedName.toLowerCase()
+        (a) =>
+          a.id !== id && a.name.toLowerCase() === normalizedName.toLowerCase(),
       );
 
       if (duplicate) {
-        throw new Error('An author with this name already exists');
+        throw new Error("An author with this name already exists");
       }
 
       const author = authors.find((a) => a.id === id);
       if (!author) {
-        throw new Error('Author not found');
+        throw new Error("Author not found");
       }
 
       const updated: Author = {
@@ -108,32 +111,37 @@ export function useAuthors() {
       try {
         await dbService.update(STORES.AUTHORS, updated);
         setAuthors((prev) =>
-          prev.map((a) => (a.id === id ? updated : a)).sort((a, b) => a.name.localeCompare(b.name))
+          prev
+            .map((a) => (a.id === id ? updated : a))
+            .sort((a, b) => a.name.localeCompare(b.name)),
         );
         emitStoreChange(AUTHOR_STORE, loadAuthors);
       } catch (err) {
         throw new Error(
-          err instanceof Error ? err.message : 'Failed to update author'
+          err instanceof Error ? err.message : "Failed to update author",
         );
       }
     },
-    [authors, loadAuthors]
+    [authors, loadAuthors],
   );
 
   /**
    * Delete an author
    */
-  const deleteAuthor = useCallback(async (id: string): Promise<void> => {
-    try {
-      await dbService.delete(STORES.AUTHORS, id);
-      setAuthors((prev) => prev.filter((author) => author.id !== id));
-      emitStoreChange(AUTHOR_STORE, loadAuthors);
-    } catch (err) {
-      throw new Error(
-        err instanceof Error ? err.message : 'Failed to delete author'
-      );
-    }
-  }, [loadAuthors]);
+  const deleteAuthor = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        await dbService.delete(STORES.AUTHORS, id);
+        setAuthors((prev) => prev.filter((author) => author.id !== id));
+        emitStoreChange(AUTHOR_STORE, loadAuthors);
+      } catch (err) {
+        throw new Error(
+          err instanceof Error ? err.message : "Failed to delete author",
+        );
+      }
+    },
+    [loadAuthors],
+  );
 
   /**
    * Get author by ID
@@ -142,7 +150,7 @@ export function useAuthors() {
     (id: string): Author | undefined => {
       return authors.find((a) => a.id === id);
     },
-    [authors]
+    [authors],
   );
 
   /**
@@ -159,7 +167,7 @@ export function useAuthors() {
         .filter((a) => a.name.toLowerCase().startsWith(normalizedQuery))
         .slice(0, 10); // Return top 10 matches
     },
-    [authors]
+    [authors],
   );
 
   // Load authors on mount and subscribe to changes from other hook instances

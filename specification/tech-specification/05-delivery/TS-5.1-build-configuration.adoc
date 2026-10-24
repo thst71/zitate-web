@@ -1,0 +1,34 @@
+[[TS-5.1]]
+=== TS-5.1 Build configuration
+
+Implements <<NFR-1>> and <<NFR-6>>.
+
+`vite.config.ts` (abridged; the PWA options are in TS-4.3):
+
+[source,typescript]
+----
+export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.APP_VERSION || 'dev'),
+  },
+  plugins: [react(), VitePWA({ registerType: 'autoUpdate', workbox: {...}, manifest: {...} })],
+  build: {
+    target: 'es2020',
+    outDir: 'dist',
+    minify: 'terser',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          maps: ['leaflet'],
+        },
+      },
+    },
+  },
+});
+----
+
+- `npm run build` runs `tsc` and then `vite build`.
+- The version shown in the UI is `__APP_VERSION__`: the release tag in the image build (`APP_VERSION` build argument, `SNAPSHOT` by default in the `Dockerfile`), `dev` otherwise.
+- `Dockerfile`: stage 1 builds on `node:24-alpine` (`npm ci`, `npm run build`); stage 2 serves `dist/` with `nginx:alpine` and `nginx.conf` on port 8080.

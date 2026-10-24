@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import './VirtualScrollList.css';
+import { useState, useEffect, useRef, useMemo } from "react";
+import "./VirtualScrollList.css";
 
 interface VirtualScrollListProps<T> {
   items: T[];
@@ -17,8 +17,8 @@ export function VirtualScrollList<T>({
   containerHeight,
   renderItem,
   overscan = 5,
-  className = '',
-  getItemKey
+  className = "",
+  getItemKey,
 }: VirtualScrollListProps<T>) {
   const [scrollTop, setScrollTop] = useState(0);
   const scrollElementRef = useRef<HTMLDivElement>(null);
@@ -26,15 +26,15 @@ export function VirtualScrollList<T>({
   const { startIndex, endIndex, offsetY } = useMemo(() => {
     const itemCount = items.length;
     const visibleItemCount = Math.ceil(containerHeight / itemHeight);
-    
+
     const start = Math.floor(scrollTop / itemHeight);
     const end = Math.min(itemCount - 1, start + visibleItemCount + overscan);
     const startWithOverscan = Math.max(0, start - overscan);
-    
+
     return {
       startIndex: startWithOverscan,
       endIndex: end,
-      offsetY: startWithOverscan * itemHeight
+      offsetY: startWithOverscan * itemHeight,
     };
   }, [scrollTop, items.length, itemHeight, containerHeight, overscan]);
 
@@ -57,38 +57,37 @@ export function VirtualScrollList<T>({
   }, [totalHeight, scrollTop]);
 
   return (
-    <div 
+    <div
       ref={scrollElementRef}
       className={`virtual-scroll-container ${className}`}
       style={{ height: containerHeight }}
       onScroll={handleScroll}
     >
-      <div 
-        className="virtual-scroll-spacer"
-        style={{ height: totalHeight }}
-      >
-        <div 
+      <div className="virtual-scroll-spacer" style={{ height: totalHeight }}>
+        <div
           className="virtual-scroll-content"
-          style={{ 
+          style={{
             transform: `translateY(${offsetY}px)`,
-            height: (endIndex - startIndex + 1) * itemHeight
+            height: (endIndex - startIndex + 1) * itemHeight,
           }}
         >
           {visibleItems.map((item, index) => {
             const actualIndex = startIndex + index;
-            const key = getItemKey ? getItemKey(item, actualIndex) : actualIndex;
-            
+            const key = getItemKey
+              ? getItemKey(item, actualIndex)
+              : actualIndex;
+
             return (
               <div
                 key={key}
                 className="virtual-scroll-item"
-                style={{ 
+                style={{
                   height: itemHeight,
                   transform: `translateY(${index * itemHeight}px)`,
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
                   left: 0,
-                  right: 0
+                  right: 0,
                 }}
               >
                 {renderItem(item, actualIndex)}

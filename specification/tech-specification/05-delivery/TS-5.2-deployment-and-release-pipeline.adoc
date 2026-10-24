@@ -1,0 +1,20 @@
+[[TS-5.2]]
+=== TS-5.2 Deployment and release pipeline
+
+Implements <<NFR-6>>.
+
+==== Deployment Options
+- Docker container (multi-stage build: Node.js build + nginx serve)
+- Multi-arch images (linux/amd64, linux/arm64) published to GitHub Container Registry (GHCR)
+- docker-compose for local/self-hosted deployment
+- HTTPS required for Service Worker and Geolocation
+
+==== CI/CD (GitHub Actions)
+- Pull requests (`docker-publish.yml`): the quality gate `npm run check` (tests with coverage thresholds), security audit (`npm audit --audit-level moderate`), Docker build without push; no other workflow publishes images
+- Release (`release.yml`), started by a signed tag `v<semver>` that the user pushes:
+  * `verify`: the tag signature is checked against the environment secret `RELEASE_ALLOWED_SIGNERS`
+  * `build`: `npm ci` and `npm run check`
+  * `docs`: every specification master rendered as one HTML file
+  * `image`: native Docker builds per architecture with `APP_VERSION` from the tag, multi-arch manifest pushed to GHCR (`<version>`, `<major>.<minor>`, `<major>`, `latest`), Trivy vulnerability scan with SARIF upload to the GitHub Security tab
+  * `publish`: the GitHub release with the dated release notes and the rendered documentation
+- The application version is the tag; `package.json` keeps a placeholder version

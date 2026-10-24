@@ -1,13 +1,13 @@
 /**
  * useSearch hook - Manages search functionality for entries
  */
-import { useState, useCallback, useMemo } from 'react';
-import type { Entry } from '../models';
-import { useAuthors } from './useAuthors';
-import { useLabels } from './useLabels';
+import { useState, useCallback, useMemo } from "react";
+import type { Entry } from "../models";
+import { useAuthors } from "./useAuthors";
+import { useLabels } from "./useLabels";
 
 export function useSearch(entries: Entry[]) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const { getAuthorById } = useAuthors();
   const { getLabelsByIds } = useLabels();
 
@@ -53,7 +53,7 @@ export function useSearch(entries: Entry[]) {
   }, []);
 
   const clearSearch = useCallback(() => {
-    setSearchQuery('');
+    setSearchQuery("");
   }, []);
 
   return {

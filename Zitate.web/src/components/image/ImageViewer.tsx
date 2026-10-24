@@ -1,11 +1,11 @@
 /**
  * ImageViewer Component - Full-size image viewer modal with navigation
  */
-import { useState, useEffect, useCallback } from 'react';
-import { Modal } from '../common/Modal';
-import { createImageURL, revokeImageURL } from '../../services/image.service';
-import type { ImageAttachment } from '../../models';
-import './ImageViewer.css';
+import { useState, useEffect, useCallback } from "react";
+import { Modal } from "../common/Modal";
+import { createImageURL, revokeImageURL } from "../../services/image.service";
+import type { ImageAttachment } from "../../models";
+import "./ImageViewer.css";
 
 interface ImageViewerProps {
   images: ImageAttachment[];
@@ -14,9 +14,14 @@ interface ImageViewerProps {
   onClose: () => void;
 }
 
-export function ImageViewer({ images, initialIndex, isOpen, onClose }: ImageViewerProps) {
+export function ImageViewer({
+  images,
+  initialIndex,
+  isOpen,
+  onClose,
+}: ImageViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [imageUrl, setImageUrl] = useState<string>('');
+  const [imageUrl, setImageUrl] = useState<string>("");
 
   useEffect(() => {
     if (isOpen && images[currentIndex]) {
@@ -45,17 +50,17 @@ export function ImageViewer({ images, initialIndex, isOpen, onClose }: ImageView
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
+      if (e.key === "ArrowLeft") {
         handlePrevious();
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === "ArrowRight") {
         handleNext();
-      } else if (e.key === 'Escape') {
+      } else if (e.key === "Escape") {
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, handleNext, handlePrevious, onClose]);
 
   if (!isOpen || images.length === 0) {

@@ -1,0 +1,5 @@
+== Architecture
+
+include::TS-1.1-technology-stack.adoc[]
+
+include::TS-1.2-component-architecture-and-project-structure.adoc[]

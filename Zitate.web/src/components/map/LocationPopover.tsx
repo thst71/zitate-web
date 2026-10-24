@@ -2,9 +2,9 @@
  * LocationPopover – Shows a MiniMap popup on hover over location text.
  * Click passes through to parent's onClick handler.
  */
-import { useState, useRef, useCallback, type ReactNode } from 'react';
-import { MiniMap } from './MiniMap';
-import './LocationPopover.css';
+import { useState, useRef, useCallback, type ReactNode } from "react";
+import { MiniMap } from "./MiniMap";
+import "./LocationPopover.css";
 
 interface LocationPopoverProps {
   latitude: number;
@@ -13,7 +13,12 @@ interface LocationPopoverProps {
   onClick?: () => void;
 }
 
-export function LocationPopover({ latitude, longitude, children, onClick }: LocationPopoverProps) {
+export function LocationPopover({
+  latitude,
+  longitude,
+  children,
+  onClick,
+}: LocationPopoverProps) {
   const [visible, setVisible] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,7 +41,7 @@ export function LocationPopover({ latitude, longitude, children, onClick }: Loca
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+    if ((e.key === "Enter" || e.key === " ") && onClick) {
       e.preventDefault();
       onClick();
     }
@@ -50,12 +55,12 @@ export function LocationPopover({ latitude, longitude, children, onClick }: Loca
       onMouseLeave={hidePopover}
     >
       <span
-        className={`location-popover-trigger ${onClick ? 'clickable' : ''}`}
-        role={onClick ? 'button' : undefined}
+        className={`location-popover-trigger ${onClick ? "clickable" : ""}`}
+        role={onClick ? "button" : undefined}
         tabIndex={onClick ? 0 : undefined}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        aria-label={onClick ? 'Open location on map' : undefined}
+        aria-label={onClick ? "Open location on map" : undefined}
       >
         {children}
       </span>
@@ -66,14 +71,9 @@ export function LocationPopover({ latitude, longitude, children, onClick }: Loca
           onMouseEnter={showPopover}
           onMouseLeave={hidePopover}
         >
-          <MiniMap
-            latitude={latitude}
-            longitude={longitude}
-            size="medium"
-          />
+          <MiniMap latitude={latitude} longitude={longitude} size="medium" />
         </div>
       )}
     </div>
   );
 }
-

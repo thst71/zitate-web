@@ -1,0 +1,6 @@
+= Zitate Web – Release Notes
+:toc: left
+
+Releases up to v1.9.0 predate these notes; their changes are in the git history.
+
+include::specification/release-notes/1.10.0.adoc[]

@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { useLocation } from './useLocation';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { useLocation } from "./useLocation";
 
-describe('useLocation', () => {
+describe("useLocation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should initialize with null coords and not loading', () => {
+  it("should initialize with null coords and not loading", () => {
     const { result } = renderHook(() => useLocation());
 
     expect(result.current.coords).toBeNull();
@@ -15,7 +15,7 @@ describe('useLocation', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should auto-fetch location when autoFetch is true', async () => {
+  it("should auto-fetch location when autoFetch is true", async () => {
     const mockPosition = {
       coords: {
         latitude: 52.52,
@@ -24,10 +24,10 @@ describe('useLocation', () => {
       },
     };
 
-    vi.spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation(
+    vi.spyOn(navigator.geolocation, "getCurrentPosition").mockImplementation(
       (success) => {
         success(mockPosition as GeolocationPosition);
-      }
+      },
     );
 
     const { result } = renderHook(() => useLocation({ autoFetch: true }));
@@ -46,14 +46,14 @@ describe('useLocation', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('should not auto-fetch when autoFetch is false', () => {
+  it("should not auto-fetch when autoFetch is false", () => {
     const { result } = renderHook(() => useLocation({ autoFetch: false }));
 
     expect(result.current.loading).toBe(false);
     expect(result.current.coords).toBeNull();
   });
 
-  it('should manually fetch location', async () => {
+  it("should manually fetch location", async () => {
     const mockPosition = {
       coords: {
         latitude: 48.8566,
@@ -62,10 +62,10 @@ describe('useLocation', () => {
       },
     };
 
-    vi.spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation(
+    vi.spyOn(navigator.geolocation, "getCurrentPosition").mockImplementation(
       (success) => {
         success(mockPosition as GeolocationPosition);
-      }
+      },
     );
 
     const { result } = renderHook(() => useLocation({ autoFetch: false }));
@@ -81,19 +81,19 @@ describe('useLocation', () => {
     });
   });
 
-  it('should handle location errors', async () => {
+  it("should handle location errors", async () => {
     const mockError = {
       code: 1,
-      message: 'Permission denied',
+      message: "Permission denied",
       PERMISSION_DENIED: 1,
       POSITION_UNAVAILABLE: 2,
       TIMEOUT: 3,
     };
 
-    vi.spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation(
+    vi.spyOn(navigator.geolocation, "getCurrentPosition").mockImplementation(
       (_, error) => {
         error!(mockError as GeolocationPositionError);
-      }
+      },
     );
 
     const { result } = renderHook(() => useLocation({ autoFetch: true }));
@@ -102,11 +102,11 @@ describe('useLocation', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.error).toBe('Location permission denied');
+    expect(result.current.error).toBe("Location permission denied");
     expect(result.current.coords).toBeNull();
   });
 
-  it('should format coordinates', () => {
+  it("should format coordinates", () => {
     const mockPosition = {
       coords: {
         latitude: 52.520008,
@@ -115,29 +115,29 @@ describe('useLocation', () => {
       },
     };
 
-    vi.spyOn(navigator.geolocation, 'getCurrentPosition').mockImplementation(
+    vi.spyOn(navigator.geolocation, "getCurrentPosition").mockImplementation(
       (success) => {
         success(mockPosition as GeolocationPosition);
-      }
+      },
     );
 
     const { result } = renderHook(() => useLocation({ autoFetch: true }));
 
     waitFor(() => {
-      expect(result.current.formatCoords()).toBe('52.520008, 13.404954');
+      expect(result.current.formatCoords()).toBe("52.520008, 13.404954");
     });
   });
 
-  it('should return empty string when formatting null coords', () => {
+  it("should return empty string when formatting null coords", () => {
     const { result } = renderHook(() => useLocation({ autoFetch: false }));
 
-    expect(result.current.formatCoords()).toBe('');
+    expect(result.current.formatCoords()).toBe("");
   });
 
-  it('should clear error on successful fetch after error', async () => {
+  it("should clear error on successful fetch after error", async () => {
     const mockError = {
       code: 1,
-      message: 'Permission denied',
+      message: "Permission denied",
       PERMISSION_DENIED: 1,
       POSITION_UNAVAILABLE: 2,
       TIMEOUT: 3,
@@ -151,8 +151,7 @@ describe('useLocation', () => {
       },
     };
 
-    vi
-      .spyOn(navigator.geolocation, 'getCurrentPosition')
+    vi.spyOn(navigator.geolocation, "getCurrentPosition")
       .mockImplementationOnce((_, error) => {
         error!(mockError as GeolocationPositionError);
       })
@@ -163,7 +162,7 @@ describe('useLocation', () => {
     const { result } = renderHook(() => useLocation({ autoFetch: true }));
 
     await waitFor(() => {
-      expect(result.current.error).toBe('Location permission denied');
+      expect(result.current.error).toBe("Location permission denied");
     });
 
     await act(async () => {

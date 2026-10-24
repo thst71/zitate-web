@@ -1,9 +1,9 @@
 /**
  * ConfirmDialog Component - Reusable confirmation dialog
  */
-import React from 'react';
-import { Modal } from './Modal';
-import './ConfirmDialog.css';
+import React from "react";
+import { Modal } from "./Modal";
+import "./ConfirmDialog.css";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -20,8 +20,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   isOpen,
   title,
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText = "Confirm",
+  cancelText = "Cancel",
   onConfirm,
   onCancel,
   destructive = false,
@@ -40,7 +40,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </button>
           <button
             type="button"
-            className={`btn ${destructive ? 'btn-destructive' : 'btn-primary'}`}
+            className={`btn ${destructive ? "btn-destructive" : "btn-primary"}`}
             onClick={onConfirm}
           >
             {confirmText}

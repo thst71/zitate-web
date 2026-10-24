@@ -1,0 +1,17 @@
+[[FR-5.4]]
+=== FR-5.4 Folder contents view
+
+The system shall display entries matching folder criteria in a dedicated view with the same card-based layout as search results.
+
+.Acceptance criteria
+. Folder name displayed at top of view
+. Folder criteria summary shown below name
+. Entry count displayed
+. Entries shown as scrollable cards (same format as <<FR-5.3>>)
+. Each card shows: text preview, author, thumbnail, distance/date
+. Clicking entry card opens detail view
+. Delete button visible on entry card
+. Empty folder shows "No matching entries" message
+
+Stakeholder need:: SPEC.md §5.4 +
+Effort:: not estimated (migrated from the monolithic specification)
