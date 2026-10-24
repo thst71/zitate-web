@@ -14,5 +14,5 @@ interface Author {
   wikipediaURL?: string;         // URL string
 }
 
-// Indexes: name (unique)
+// Key: id. Indexes: name (unique)
 ----

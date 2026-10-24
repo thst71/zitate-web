@@ -4,16 +4,16 @@
 Implements <<NFR-2>>.
 
 ==== Component-Based Architecture
-- *Components:* Reusable React UI components
-- *Hooks:* Custom React hooks for shared logic and state management
-- *Services:* Singleton business logic services (db.service, location.service)
-- *Models:* TypeScript interfaces for type safety
+- *Components:* React function components, grouped by feature
+- *Hooks:* custom React hooks hold the state of each store and the operations on it
+- *Services:* singleton modules for persistence, location, images and export/import
+- *Models:* TypeScript interfaces for all records (TS-2.2 to TS-2.7)
 
 ==== State Management
-- *Local State:* Component state (useState)
-- *Persistent State:* IndexedDB via custom hooks (useEntries, useAuthors, useLabels, useFolders)
-- *Cross-instance sync:* Custom event emitter (storeSync) to keep multiple hook instances in sync
-- *Derived State:* Computed values from IndexedDB queries (useCallback, useMemo)
+- *Local State:* component state (`useState`)
+- *Persistent State:* IndexedDB through the hooks `useEntries`, `useAuthors`, `useLabels`, `useFolders`
+- *Cross-instance sync:* `services/storeSync.ts`; a hook that changes a store emits `emitStoreChange(store)`, and every other instance subscribed with `onStoreChange(store, reload)` reloads from IndexedDB
+- *Derived State:* `useSearch` filters entries in memory; `useMemo` and `useCallback` for computed values
 
 ==== Data Flow
 
@@ -24,77 +24,45 @@ User Interaction → Component → Hook → Service → IndexedDB
                     └────── State Update ←─────────┘
 ----
 
-==== Directory Layout (React/TypeScript Example)
+There is no router: `App.tsx` switches between the home screen, search results and folder contents and opens forms and viewers in modals.
+
+==== Directory Layout
 
 [source]
 ----
-zitate-web/
-├── public/
-│   ├── index.html
-│   ├── manifest.json              # PWA manifest
-│   └── service-worker.js          # Service worker
+Zitate.web/
+├── public/                        # favicon and PWA icons (SVG)
 ├── src/
-│   ├── main.tsx                   # App entry point
-│   ├── App.tsx                    # Root component
-│   ├── db/                        # IndexedDB layer
-│   │   ├── schema.ts              # DB schema definition
-│   │   ├── migrations.ts          # Schema migrations
-│   │   └── queries.ts             # DB query functions
-│   ├── models/                    # TypeScript interfaces
-│   │   ├── Entry.ts
-│   │   ├── Author.ts
-│   │   ├── Label.ts
-│   │   └── SmartFolder.ts
-│   ├── hooks/                     # React hooks (or composables for Vue)
-│   │   ├── useEntries.ts
-│   │   ├── useAuthors.ts
-│   │   ├── useLocation.ts
-│   │   ├── useMediaRecorder.ts
-│   │   └── useIndexedDB.ts
-│   ├── components/                # UI components
-│   │   ├── common/
-│   │   │   ├── Button.tsx
-│   │   │   ├── Card.tsx
-│   │   │   ├── Modal.tsx
-│   │   │   └── Input.tsx
-│   │   ├── entry/
-│   │   │   ├── EntryCard.tsx
-│   │   │   ├── EntryForm.tsx
-│   │   │   ├── EntryDetail.tsx
-│   │   │   └── EntryList.tsx
-│   │   ├── author/
-│   │   │   ├── AuthorList.tsx
-│   │   │   └── AuthorForm.tsx
-│   │   ├── folder/
-│   │   │   ├── FolderList.tsx
-│   │   │   ├── FolderForm.tsx
-│   │   │   └── CriteriaBuilder.tsx
-│   │   ├── search/
-│   │   │   └── SearchResults.tsx
-│   │   └── layout/
-│   │       ├── Header.tsx
-│   │       ├── Footer.tsx
-│   │       └── HomeScreen.tsx
-│   ├── services/                  # Business logic
-│   │   ├── db.service.ts          # IndexedDB wrapper
-│   │   ├── location.service.ts    # Geolocation
-│   │   ├── media.service.ts       # Camera/Audio
-│   │   ├── search.service.ts      # Search/filter logic
-│   │   ├── export.service.ts      # Data export/import
-│   │   └── storage.service.ts     # Storage quota management
-│   ├── utils/                     # Utility functions
-│   │   ├── validators.ts
-│   │   ├── formatters.ts
-│   │   ├── constants.ts
-│   │   └── compression.ts
-│   ├── styles/                    # CSS/SCSS
-│   │   ├── global.css
-│   │   ├── variables.css          # CSS custom properties
-│   │   └── themes.css             # Light/dark themes
-│   └── types/                     # TypeScript type definitions
-│       └── index.d.ts
-├── package.json
-├── tsconfig.json                  # TypeScript config
-├── vite.config.ts                 # Vite config
-└── README.md
+│   ├── main.tsx                   # entry point, global styles
+│   ├── App.tsx                    # root component, views and modals
+│   ├── db/schema.ts               # object stores, indexes, upgrades
+│   ├── models/                    # Entry, Author, Label, ImageAttachment,
+│   │                              # AudioAttachment, SmartFolder
+│   ├── hooks/                     # useEntries, useAuthors, useLabels,
+│   │                              # useFolders, useLocation, useSearch,
+│   │                              # useDebounce, useExportImport
+│   ├── services/                  # db.service, location.service,
+│   │                              # image.service, export.service, storeSync
+│   ├── components/
+│   │   ├── common/                # Modal, ConfirmDialog, DataManagement,
+│   │   │                          # ErrorBoundary, InstallPrompt,
+│   │   │                          # OfflineIndicator, VirtualScrollList
+│   │   ├── entry/                 # EntryCard, EntryForm, EntryList
+│   │   ├── author/                # AuthorSelect
+│   │   ├── label/                 # LabelInput
+│   │   ├── folder/                # FolderCard, FolderForm, FolderList
+│   │   ├── image/                 # ImageEditor, ImageGrid, ImageThumbnail,
+│   │   │                          # ImageUpload, ImageViewer
+│   │   ├── map/                   # LocationPicker, LocationViewer,
+│   │   │                          # LocationPopover, MiniMap
+│   │   ├── search/                # SearchBar
+│   │   └── layout/                # Header, Layout
+│   ├── utils/validators.ts        # input validation
+│   ├── styles/                    # variables.css (design tokens, themes)
+│   └── test/setup.ts              # test environment
+├── Dockerfile, nginx.conf         # image build and web server
+├── vite.config.ts, vitest.config.ts
+└── package.json
 ----
+
+Tests sit next to the code they test as `*.test.ts(x)`.

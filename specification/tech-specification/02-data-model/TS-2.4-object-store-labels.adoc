@@ -10,5 +10,5 @@ interface Label {
   name: string;                  // Required, unique, lowercase, max 50 chars
 }
 
-// Indexes: name (unique)
+// Key: id. Indexes: name (unique)
 ----

@@ -4,17 +4,19 @@
 Implements <<FR-5.1>> and <<NFR-3>>.
 
 ==== Breakpoints
-- Mobile: 320px - 767px
-- Tablet: 768px - 1023px
-- Desktop: 1024px+
+- Small phones: up to 480px
+- Phones and small tablets: up to 768px
+- Desktop: above 1024px
+- The styles are written for the desktop and adapted with `max-width` media queries; a few components add `min-width` queries
 
 ==== Layout Strategy
 - CSS Grid for main layouts
 - Flexbox for component layouts
-- Mobile-first approach
 - Touch targets min 44px on mobile
+- Each component has its own stylesheet next to it (`EntryCard.css` beside `EntryCard.tsx`)
 
 ==== CSS Architecture
+Design tokens are CSS custom properties in `src/styles/variables.css` (colors, spacing, typography, radii), with dark values under `prefers-color-scheme: dark`. Excerpt:
 
 [source,css]
 ----

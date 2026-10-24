@@ -8,25 +8,27 @@ Implements <<FR-1.1>>, <<FR-1.2>>, <<FR-1.7>>, <<FR-1.8>>, <<FR-2.1>> and <<FR-3
 interface EntryLink {
   id: string;                    // UUID v4
   url: string;                   // Absolute URL
-  addedAt: number;               // Unix timestamp when the URL was attached
+  addedAt: number;               // Unix timestamp (ms) when the URL was attached
 }
 
 interface Entry {
   id: string;                    // UUID v4
   text: string;                  // 1-10,000 chars
+  citationDate?: number;         // Quote/citation date (ms); defaults to creation time
   latitude?: number;             // WGS84
   longitude?: number;            // WGS84
+  addressShort?: string;         // Reverse-geocoded short name, e.g. "Alexanderplatz, Berlin"
+  addressFull?: string;          // Reverse-geocoded full address
   authorId?: string;             // FK to authors
   labelIds: string[];            // FK array to labels
-  imageIds: string[];            // FK array to images
+  links?: EntryLink[];           // Attached URLs with per-link metadata
+  imageIds: string[];            // FK array to images, in display order
   audioId?: string;              // FK to audio
-  citationDate: number;          // Quote/citation date
-  links: EntryLink[];            // Attached URLs with per-link metadata
-  addressShort?: string;         // Reverse-geocoded short address (city)
-  addressFull?: string;          // Reverse-geocoded full address
-  createdAt: number;             // Unix timestamp
-  updatedAt: number;             // Unix timestamp
+  createdAt: number;             // Unix timestamp (ms)
+  updatedAt: number;             // Unix timestamp (ms)
 }
 
-// Indexes: createdAt, updatedAt, latitude, longitude, text (fulltext)
+// Key: id. Indexes: createdAt, updatedAt, latitude, longitude
 ----
+
+`createEntry` in `models/Entry.ts` sets the defaults of a new entry (`citationDate` now, empty `labelIds`, `links` and `imageIds`). Text search does not use an index; it filters the loaded entries (TS-4.1).

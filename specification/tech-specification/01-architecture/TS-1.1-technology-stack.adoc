@@ -4,16 +4,27 @@
 Implements <<NFR-3>> and <<NFR-6>>.
 
 ==== Primary Technologies
-- *Platform:* Web (Desktop and Mobile Browsers)
-- *Language:* TypeScript ES2020+
+- *Platform:* Web (desktop and mobile browsers), delivered as a static build served by nginx in a Docker image
+- *Language:* TypeScript, compiled for ES2020
 - *UI Framework:* React 18
-- *Build Tool:* Vite 7
-- *Package Manager:* npm
+- *Build Tool:* Vite 7 with `@vitejs/plugin-react-swc`
+- *Package Manager:* npm; the versions are those in `Zitate.web/package.json`
+
+==== Libraries
+- `idb`: promise-based IndexedDB wrapper (TS-2.8)
+- `vite-plugin-pwa` (Workbox): service worker and web app manifest (TS-4.3)
+- `leaflet`: interactive maps for picking and viewing a location (TS-3.1)
+- `browser-image-compression`: client-side image compression (TS-3.2)
+- `uuid`: v4 identifiers for all records
+- `date-fns`: date handling
 
 ==== Core Browser APIs
-- *IndexedDB:* Local database and persistence
-- *Service Worker:* Offline capability and PWA
-- *Geolocation API:* GPS coordinates
-- *MediaRecorder API:* Audio recording
-- *MediaDevices API:* Camera access
-- *File API:* Image upload
+- *IndexedDB:* local database and persistence
+- *Service Worker:* offline capability and PWA
+- *Geolocation API:* coordinates of a new entry
+- *File API:* image selection
+- *MediaRecorder / MediaDevices API:* planned for audio recording and camera capture (<<FR-1.4>>, <<FR-1.3>>); not used yet
+
+==== External Services
+- OpenStreetMap Nominatim: reverse geocoding and address search (TS-3.1)
+- OpenStreetMap tile servers: map tiles (TS-3.1, cached by TS-4.3)

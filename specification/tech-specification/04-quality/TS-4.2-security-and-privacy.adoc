@@ -4,18 +4,16 @@
 Implements <<NFR-4>>.
 
 ==== Data Protection
-- All data stored locally in browser (IndexedDB)
-- No server communication (no API calls)
-- No cookies or tracking
-- Content Security Policy (CSP) headers
+- All user data stays in the browser (IndexedDB); there is no backend, no cookies and no tracking
+- External requests: coordinates go to OpenStreetMap Nominatim for reverse geocoding and the address search, map tiles come from the OpenStreetMap tile servers, and the favicons of attached URLs are loaded from their sites (TS-3.3). Nothing else leaves the device. <<NFR-4>> asks for no server communication at all; these requests are the known exceptions.
+- `nginx.conf` sends a Content Security Policy that allows only these hosts: `connect-src 'self' https://nominatim.openstreetmap.org https://tile.openstreetmap.org`, `img-src 'self' data: https:`, `worker-src 'self' blob:`; plus `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`
 
 ==== Input Validation
-- Client-side validation for all user inputs
-- XSS prevention (sanitize HTML, use framework escaping)
-- SQL injection N/A (no SQL database)
+- `utils/validators.ts` validates entry text, author and label names, URLs and folder names before saving
+- XSS prevention through React's escaping; no `dangerouslySetInnerHTML`
+- URLs open with `noopener` and `noreferrer`
 
 ==== Permissions
-- Geolocation: Requested with user-friendly prompt
-- Camera: Requested on first image capture
-- Microphone: Requested on first audio recording
-- Storage: Automatic with quota management
+- Geolocation: requested by the browser when a new entry asks for the location; denial leaves the location empty
+- Camera and microphone: not requested, as camera capture and audio recording are not implemented (TS-3.2)
+- Storage: automatic; quota monitoring is not implemented (TS-4.8)

@@ -11,8 +11,10 @@ interface AudioAttachment {
   blob: Blob;                    // Audio data
   mimeType: string;              // audio/webm, audio/ogg, etc.
   duration: number;              // Seconds (max 300)
-  createdAt: number;             // Unix timestamp
+  createdAt: number;             // Unix timestamp (ms)
 }
 
-// Indexes: entryId
+// Key: id. Indexes: entryId
 ----
+
+The store, the model and the export/import of audio exist; recording and playback (<<US-4.3>>) are not implemented yet.

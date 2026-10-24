@@ -3,26 +3,40 @@
 
 Implements <<NFR-5>>, <<FR-1.7>> and <<FR-1.8>>.
 
+`services/export.service.ts`, singleton `exportService`; `useExportImport` and `DataManagement` give it a UI.
+
 [source,typescript]
 ----
 interface ExportData {
-  version: number;
+  version: number;               // format version, currently 1
   exportedAt: number;
   entries: Entry[];
   authors: Author[];
   labels: Label[];
   folders: SmartFolder[];
   media: {
-    images: { id: string; data: string }[];  // Base64
-    audio: { id: string; data: string }[];   // Base64
+    images: { id: string; entryId: string; data: string;   // Base64
+              mimeType: string; order: number; createdAt: number }[];
+    audio:  { id: string; entryId: string; data: string;   // Base64
+              mimeType: string; duration: number; createdAt: number }[];
   };
 }
 
+interface ImportOptions { strategy: 'merge' | 'replace'; includeMedia: boolean; }
+interface ImportResult  { success: boolean; message: string;
+                          stats?: { entries: number; authors: number; labels: number;
+                                    folders: number; images: number; audio: number } }
+
 class ExportService {
-  async exportData(): Promise<Blob>;        // JSON blob
-  async importData(file: File): Promise<void>;
-  async validateImport(data: any): boolean;
+  exportAllData(): Promise<Blob>;                              // JSON blob
+  importData(file: File, options: ImportOptions): Promise<ImportResult>;
+  downloadFile(blob: Blob, filename: string): void;
 }
 ----
 
-Because URLs and citation dates are stored directly on `Entry`, export/import preserves them automatically as part of the serialized `entries` array. Derived favicon URLs are not exported.
+- Validation before import: an object with a numeric `version` not newer than the current one, the arrays `entries`, `authors`, `labels`, `folders`, and well-formed `links` (`id`, `url`, `addedAt`) on every entry.
+- `replace` clears all stores first and adds every record as exported.
+- `merge` skips authors, labels and folders whose name exists, adds every entry under a new id, and adds media with their exported ids.
+- Known defects of `merge`: the `folders` store has no `name` index, so the lookup fails as soon as the file contains a folder; media whose id exists make `add` fail; a skipped author keeps the exported id in the merged entries' `authorId`; merged images keep the old `entryId`.
+- Because URLs and citation dates are stored directly on `Entry`, export/import preserves them automatically as part of the serialized `entries` array. Derived favicon URLs are not exported.
+- Export and import run on the main thread; a Web Worker for large data sets (<<NFR-5>>) is not implemented.

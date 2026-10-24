@@ -11,9 +11,9 @@ interface ImageAttachment {
   blob: Blob;                    // Image data
   mimeType: string;              // image/jpeg, image/png, etc.
   size: number;                  // Bytes (max 2MB)
-  order: number;                 // Display order
+  order: number;                 // Display order (0-9)
   createdAt: number;             // Unix timestamp
 }
 
-// Indexes: entryId
+// Key: id. Indexes: entryId, order
 ----

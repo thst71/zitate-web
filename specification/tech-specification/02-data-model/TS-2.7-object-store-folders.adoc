@@ -28,8 +28,9 @@ interface FolderCriteria {
     longitude: number;
     radiusKm: number;
   };
+  hasLocation?: boolean;         // only entries with (true) or without (false) location
   textMatch?: string;
 }
 
-// Indexes: order
+// Key: id. Indexes: order
 ----

@@ -32,20 +32,23 @@ When editing an existing entry, the user must be able to manage attached images 
 
 [source,typescript]
 ----
-// Extended updateEntry signature
-async updateEntry(
+// useEntries().updateEntry
+updateEntry(
   id: string,
   text: string,
   citationDate: number,
   authorId?: string,
-  labelIds?: string[],
+  labelIds: string[] = [],
   latitude?: number,
   longitude?: number,
-  links?: EntryLink[],
-  imagesToAdd?: SelectedImage[],
-  imagesToDelete?: string[],
-  imageIdsOrder?: string[]
+  imagesToAdd: SelectedImage[] = [],
+  imagesToDelete: string[] = [],
+  imageIdsOrder?: string[],
+  imageReplacements: Map<string, SelectedImage> = new Map(),  // old image id -> new image
+  addressShort?: string,
+  addressFull?: string,
+  links?: EntryLink[]
 ): Promise<Entry>;
 ----
 
-The EntryForm component shows an `ImageEditor` section when `initialEntry` has images or when the user adds new images during editing. The `ImageEditor` combines the existing `ImageGrid` (for display) with edit controls (delete, reorder, replace, add).
+In edit mode `EntryForm` shows `ImageEditor` instead of `ImageUpload`. `ImageEditor` lists the existing images with delete, move-up/move-down and replace controls plus an upload for new ones, and reports the pending changes (`imagesToAdd`, `imagesToDelete`, `imageIdsOrder`, `imageReplacements`) to the form; they are applied on save.

@@ -3,19 +3,23 @@
 
 Implements <<NFR-2>>.
 
+`services/db.service.ts` wraps the `idb` library; `dbService` is the singleton.
+
 [source,typescript]
 ----
 class DBService {
-  private db: IDBDatabase;
-
-  async init(): Promise<void>;
-  async get<T>(store: string, id: string): Promise<T>;
-  async getAll<T>(store: string): Promise<T[]>;
-  async add<T>(store: string, data: T): Promise<string>;
-  async update<T>(store: string, data: T): Promise<void>;
-  async delete(store: string, id: string): Promise<void>;
-  async query<T>(store: string, index: string, value: any): Promise<T[]>;
+  init(): Promise<IDBPDatabase>;            // opens zitate-db once, runs handleUpgrade
+  get<T>(storeName: string, id: string): Promise<T | undefined>;
+  getAll<T>(storeName: string): Promise<T[]>;
+  add<T>(storeName: string, data: T): Promise<IDBValidKey>;
+  update<T>(storeName: string, data: T): Promise<IDBValidKey>;   // put
+  delete(storeName: string, id: string): Promise<void>;
+  query<T>(storeName: string, indexName: string,
+           value: IDBValidKey | IDBKeyRange): Promise<T[]>;
+  count(storeName: string): Promise<number>;
+  clear(storeName: string): Promise<void>;
+  getAllEntriesSorted<T>(): Promise<T[]>;   // entries by createdAt, newest first (cursor)
 }
 ----
 
-The `entries` object store keeps URLs and citation dates embedded on the `Entry` record. No dedicated object store is required for URLs because they are always owned by a single entry and are loaded together with the entry payload.
+Store names are the constants `STORES` of `db/schema.ts`. The `entries` object store keeps URLs and citation dates embedded on the `Entry` record. No dedicated object store is required for URLs because they are always owned by a single entry and are loaded together with the entry payload.
