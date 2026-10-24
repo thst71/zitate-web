@@ -1,0 +1,27 @@
+[[US-7.8]]
+=== US-7.8 Import all or nothing
+
+Effort:: 3 h +
+Traces to:: <<TS-3.5>>, <<TS-2.8>>, <<NFR-5>>, <<NFR-2>>
+
+As a user, I want a failed import to leave my collection exactly as it was, so that a broken backup can neither half-import nor, with "replace", wipe my data.
+
+Today every record is written in its own transaction: when one write fails, the records written before it stay, and `replace` has already cleared all stores.
+
+.Acceptance criteria
+. If any write of an import fails, the database contains exactly the records it had before the import, for `merge` and `replace`.
+. A failed `replace` keeps all existing records.
+. The result reports `success: false` with the reason, as today.
+. A successful import stores the same records as before this change.
+
+.Technical tasks
+. Decode all media (`base64ToBlob`) and prepare all records, with the remapping of <<US-7.6>> and <<US-7.7>>, before opening a transaction.
+. Write the import, including the clearing of `replace`, in one `readwrite` transaction over all six stores; await only IndexedDB requests inside it, so that it does not commit early.
+. Add a transaction method to `DBService` (e.g. `transaction(storeNames, mode)` returning the `idb` transaction) and use it in `ExportService`.
+. Add the tests below.
+
+.Test criteria
+* Unit test: none; the behaviour lives in the transaction, covered by integration tests.
+* Component test: none; no UI change.
+* Integration test (Vitest + `fake-indexeddb`): a `replace` whose file holds one entry id twice (the second `add` fails) returns `success: false` and keeps all existing records of all stores; a `merge` whose last write is made to fail (`vi.spyOn` on the object store's `add` or `put`, rejecting on the last call) returns `success: false` and leaves the record counts of all stores unchanged; a valid import stores all records.
+* Blackbox test: manual: import a deliberately broken backup with "replace"; the collection is unchanged.

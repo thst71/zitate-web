@@ -1,0 +1,30 @@
+[[US-7.7]]
+=== US-7.7 Merge import of images and audio
+
+Effort:: 4 h +
+Traces to:: <<TS-3.5>>, <<TS-2.5>>, <<TS-2.6>>, <<NFR-5>>, <<FR-1.3>>, <<FR-1.4>>
+
+As a user, I want images and audio of merged entries to be imported with them, so that merging a backup, even the same one twice, keeps the media attached to their quotes.
+
+Today a merge adds every entry under a new id but stores media with their exported ids and `entryId`: merging a backup whose media exist fails with `ConstraintError`, and the `entryId` of merged media points to the entry's old id.
+
+.Acceptance criteria
+. A merge adds every image and audio record under a new id.
+. `entryId` of each merged media record is the new id of its merged entry.
+. `imageIds` (in the exported order) and `audioId` of each merged entry refer to the new media ids.
+. Merging the same backup twice succeeds; each merge adds its entries with their own media.
+. Media of the backup whose entry is not in the backup are not imported, and the result message says how many were left out.
+. `replace` keeps the exported ids, as before.
+
+.Technical tasks
+. Import entries before media in the merge, keeping a map from exported entry id to new entry id.
+. Give each merged image and audio record a new id, set its `entryId` through the entry map, and keep a map from exported media id to new media id.
+. Rewrite `imageIds` and `audioId` of the merged entries through the media map; write each entry once with all its references (together with <<US-7.6>>).
+. Count media without an entry and report them in `ImportResult.message`.
+. Add the tests below.
+
+.Test criteria
+* Unit test: the remapping function of <<US-7.6>> also maps `imageIds` and `audioId`; tested there with media maps.
+* Component test: none; no UI change.
+* Integration test (Vitest + `fake-indexeddb`): importing a backup with one entry and one image by `replace` and then merging the same file returns `success: true`, stores 2 entries and 2 images, and each image's `entryId` and each entry's `imageIds` refer to each other; the same for an audio record and `audioId`; an image whose `entryId` is not in the file is not stored and is counted in the message.
+* Blackbox test: manual: merge a backup with pictures twice; every merged quote shows its pictures.
