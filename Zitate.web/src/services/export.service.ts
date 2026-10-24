@@ -220,16 +220,15 @@ class ExportService {
         stats.entries++;
       }
 
-      // Import folders
+      // Import folders; the folders store has no name index
+      const folderNames = new Set(
+        (await dbService.getAll<SmartFolder>("folders")).map((f) => f.name),
+      );
       for (const folder of importData.folders) {
         if (options.strategy === "merge") {
-          const existing = await dbService.query(
-            "folders",
-            "name",
-            folder.name,
-          );
-          if (existing.length === 0) {
+          if (!folderNames.has(folder.name)) {
             await dbService.add("folders", folder);
+            folderNames.add(folder.name);
             stats.folders++;
           }
         } else {

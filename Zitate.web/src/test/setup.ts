@@ -25,3 +25,17 @@ Object.defineProperty(globalThis.navigator, "geolocation", {
 
 // jsdom does not implement scrollIntoView
 Element.prototype.scrollIntoView = vi.fn();
+
+// jsdom's File has no text(); the import reads backups with it
+if (!("text" in File.prototype)) {
+  Object.defineProperty(File.prototype, "text", {
+    value(this: Blob): Promise<string> {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(this);
+      });
+    },
+  });
+}

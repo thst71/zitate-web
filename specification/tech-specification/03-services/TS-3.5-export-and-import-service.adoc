@@ -36,9 +36,8 @@ class ExportService {
 
 - Validation before import: an object with a numeric `version` not newer than the current one, the arrays `entries`, `authors`, `labels`, `folders`, and well-formed `links` (`id`, `url`, `addedAt`) on every entry.
 - `replace` clears all stores first and adds every record as exported.
-- `merge` skips authors, labels and folders whose name exists, adds every entry under a new id, and adds media with their exported ids.
+- `merge` skips authors, labels and folders whose name exists (folders are compared with the names loaded once per import, as their store has no `name` index), adds every entry under a new id, and adds media with their exported ids.
 - Known defects, each with a story:
-  * `merge`: the `folders` store has no `name` index, so the lookup fails as soon as the file contains a folder (<<US-7.5>>)
   * `merge`: a skipped author or label keeps the exported id in `authorId`, `labelIds` and folder criteria (<<US-7.6>>)
   * `merge`: media keep their exported id and `entryId`, so existing ids make `add` fail and merged media point to the entry's old id (<<US-7.7>>)
   * each record is written in its own transaction: a failed import keeps what it wrote so far, and a failed `replace` has already cleared all stores (<<US-7.8>>)

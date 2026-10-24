@@ -4,6 +4,8 @@ Built with agent-skills v0.5.0.
 
 === Fixes
 
+* Merging a backup that contains smart folders no longer fails; folders whose name exists
+  are skipped (<<US-7.5>>, <<NFR-5>>).
 * Dependencies with known vulnerabilities are updated (vite 7.3.7, ws, uuid 14 and others);
   `npm audit` reports none.
 * The tests of the entry card dates pass on machines with any locale and time zone.
