@@ -55,6 +55,7 @@ The contract tasks are npm scripts in `Zitate.web/package.json`; run them from `
 
 - Unit, component and integration tests run in Vitest with `jsdom`; `src/test/setup.ts` installs `fake-indexeddb` and mocks geolocation and `scrollIntoView`. Test files sit next to the code as `*.test.ts(x)`.
 - The Vitest configuration pins `LC_ALL=en_US.UTF-8` and `TZ=UTC`; tests that depend on the clock mock `Date.now`.
+- `test` always measures coverage; `coverage.thresholds` in `vitest.config.ts` fail the gate below the recorded values. Raise them when coverage grows, never lower them to make a change pass.
 - Blackbox: Playwright is not installed yet. Critical user journeys (entry creation, search, export/import) are checked by hand in the browser; name the manual check in the story's test criteria until a story adds Playwright.
 - Performance (Lighthouse, bundle size) and screen reader checks are manual.
 

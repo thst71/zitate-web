@@ -27,8 +27,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | `npm run build` | Type-check and build for production |
 | `npm run preview` | Preview production build locally |
 | `npm run check` | Quality gate: lint, format check, type check, tests, specification validation |
-| `npm run test` | Run the tests once (`npm run test:watch` for watch mode) |
-| `npm run test:coverage` | Run tests with coverage report |
+| `npm run test` | Run the tests once with coverage; fails below the coverage thresholds (`npm run test:watch` for watch mode) |
 | `npm run lint` | Run ESLint (no warnings allowed) |
 | `npm run format` | Format the sources with Prettier |
 

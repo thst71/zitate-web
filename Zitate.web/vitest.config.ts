@@ -18,6 +18,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      // The gate fails below these values: the coverage at the time they were set, rounded
+      // down. Raise them when coverage grows; never lower them to make a change pass.
+      thresholds: {
+        statements: 73,
+        branches: 62,
+        functions: 72,
+        lines: 73,
+      },
       exclude: [
         'node_modules/',
         'src/test/',
