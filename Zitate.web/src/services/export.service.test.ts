@@ -193,6 +193,89 @@ describe("ExportService.importData", () => {
     }
   });
 
+  describe("author and label references", () => {
+    beforeEach(async () => {
+      await dbService.add("authors", { id: "a-local", name: "Goethe" });
+      await dbService.add("labels", { id: "l-local", name: "love" });
+    });
+
+    const file = () =>
+      backup({
+        entries: [entry("e1", { authorId: "a-file", labelIds: ["l-file"] })],
+        authors: [{ id: "a-file", name: "Goethe" }],
+        labels: [{ id: "l-file", name: "love" }],
+        folders: [
+          folder("f1", "Goethe on love", {
+            criteria: {
+              authorId: "a-file",
+              labels: { values: ["l-file"], operator: "OR" },
+            },
+          }),
+        ],
+      });
+
+    it("points merged entries to the existing author and label", async () => {
+      const result = await exportService.importData(file(), merge);
+
+      expect(result.stats).toMatchObject({ authors: 0, labels: 0 });
+      const [stored] = await dbService.getAll<Entry>("entries");
+      expect(stored.authorId).toBe("a-local");
+      expect(stored.labelIds).toEqual(["l-local"]);
+      expect(await dbService.getAll("authors")).toHaveLength(1);
+      expect(await dbService.getAll("labels")).toHaveLength(1);
+    });
+
+    it("points merged folder criteria to the existing author and label", async () => {
+      await exportService.importData(file(), merge);
+
+      const stored = await dbService.get<SmartFolder>("folders", "f1");
+      expect(stored?.criteria.authorId).toBe("a-local");
+      expect(stored?.criteria.labels?.values).toEqual(["l-local"]);
+    });
+
+    it("adds a new author and label under their exported ids", async () => {
+      await exportService.importData(
+        backup({
+          entries: [entry("e1", { authorId: "a-new", labelIds: ["l-new"] })],
+          authors: [{ id: "a-new", name: "Schiller" }],
+          labels: [{ id: "l-new", name: "freedom" }],
+        }),
+        merge,
+      );
+
+      const [stored] = await dbService.getAll<Entry>("entries");
+      expect(stored.authorId).toBe("a-new");
+      expect(stored.labelIds).toEqual(["l-new"]);
+      expect(await dbService.get("authors", "a-new")).toEqual({
+        id: "a-new",
+        name: "Schiller",
+      });
+    });
+
+    it("leaves no reference to a missing author or label", async () => {
+      await exportService.importData(file(), merge);
+
+      const authorIds = new Set(
+        (await dbService.getAll<{ id: string }>("authors")).map((a) => a.id),
+      );
+      const labelIds = new Set(
+        (await dbService.getAll<{ id: string }>("labels")).map((l) => l.id),
+      );
+      for (const e of await dbService.getAll<Entry>("entries")) {
+        if (e.authorId) expect(authorIds).toContain(e.authorId);
+        for (const id of e.labelIds) expect(labelIds).toContain(id);
+      }
+    });
+
+    it("keeps the exported references on replace", async () => {
+      await exportService.importData(file(), replace);
+
+      const stored = await dbService.get<Entry>("entries", "e1");
+      expect(stored?.authorId).toBe("a-file");
+      expect(stored?.labelIds).toEqual(["l-file"]);
+    });
+  });
+
   describe("smart folders", () => {
     it("merges a folder into an empty database", async () => {
       const result = await exportService.importData(

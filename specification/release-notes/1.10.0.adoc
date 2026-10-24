@@ -6,6 +6,8 @@ Built with agent-skills v0.5.0.
 
 * Merging a backup that contains smart folders no longer fails; folders whose name exists
   are skipped (<<US-7.5>>, <<NFR-5>>).
+* Entries and folders merged from a backup keep their author and labels when these exist
+  already under the same name (<<US-7.6>>, <<FR-2.1>>, <<FR-3.1>>).
 * Dependencies with known vulnerabilities are updated (vite 7.3.7, ws, uuid 14 and others);
   `npm audit` reports none.
 * The tests of the entry card dates pass on machines with any locale and time zone.

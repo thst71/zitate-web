@@ -6,6 +6,7 @@ import type {
   ImageAttachment,
   AudioAttachment,
 } from "../models";
+import { remapEntry, remapFolder, type IdMaps } from "./importRemap";
 
 export interface ExportData {
   version: number;
@@ -145,11 +146,14 @@ class ExportService {
         audio: 0,
       };
 
+      // Exported id -> local id; a skipped author or label maps to the existing one
+      const maps: IdMaps = { authors: new Map(), labels: new Map() };
+
       // Import authors first (entries reference them)
       for (const author of importData.authors) {
         if (options.strategy === "merge") {
           // Check if author exists
-          const existing = await dbService.query(
+          const existing = await dbService.query<Author>(
             "authors",
             "name",
             author.name,
@@ -157,6 +161,8 @@ class ExportService {
           if (existing.length === 0) {
             await dbService.add("authors", author);
             stats.authors++;
+          } else {
+            maps.authors.set(author.id, existing[0].id);
           }
         } else {
           await dbService.add("authors", author);
@@ -167,10 +173,16 @@ class ExportService {
       // Import labels
       for (const label of importData.labels) {
         if (options.strategy === "merge") {
-          const existing = await dbService.query("labels", "name", label.name);
+          const existing = await dbService.query<Label>(
+            "labels",
+            "name",
+            label.name,
+          );
           if (existing.length === 0) {
             await dbService.add("labels", label);
             stats.labels++;
+          } else {
+            maps.labels.set(label.id, existing[0].id);
           }
         } else {
           await dbService.add("labels", label);
@@ -213,7 +225,10 @@ class ExportService {
       for (const entry of importData.entries) {
         if (options.strategy === "merge") {
           // For merge, we add all entries (user can delete duplicates manually)
-          await dbService.add("entries", { ...entry, id: this.generateId() });
+          await dbService.add("entries", {
+            ...remapEntry(entry, maps),
+            id: this.generateId(),
+          });
         } else {
           await dbService.add("entries", entry);
         }
@@ -227,7 +242,7 @@ class ExportService {
       for (const folder of importData.folders) {
         if (options.strategy === "merge") {
           if (!folderNames.has(folder.name)) {
-            await dbService.add("folders", folder);
+            await dbService.add("folders", remapFolder(folder, maps));
             folderNames.add(folder.name);
             stats.folders++;
           }
