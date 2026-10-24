@@ -11,6 +11,8 @@ Built with agent-skills v0.5.0.
 * Merging a backup imports its pictures and audio with the merged entries, also when the
   same backup is merged twice; media without their entry are left out and counted
   (<<US-7.7>>, <<FR-1.3>>, <<FR-1.4>>).
+* An import writes all or nothing: when it fails, the collection stays as it was, also with
+  "replace" (<<US-7.8>>, <<NFR-2>>, <<NFR-5>>).
 * Dependencies with known vulnerabilities are updated (vite 7.3.7, ws, uuid 14 and others);
   `npm audit` reports none.
 * The tests of the entry card dates pass on machines with any locale and time zone.

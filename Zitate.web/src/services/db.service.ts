@@ -1,7 +1,7 @@
 /**
  * IndexedDB Service - Wrapper for database operations
  */
-import { openDB, type IDBPDatabase } from "idb";
+import { openDB, type IDBPDatabase, type IDBPTransaction } from "idb";
 import { DB_NAME, DB_VERSION, STORES, handleUpgrade } from "../db/schema";
 
 class DBService {
@@ -87,6 +87,17 @@ class DBService {
     const tx = db.transaction(storeName, "readonly");
     const index = tx.objectStore(storeName).index(indexName);
     return index.getAll(value);
+  }
+
+  /**
+   * Open a transaction over several stores, for writes that succeed or fail together
+   */
+  async transaction<Mode extends IDBTransactionMode>(
+    storeNames: string[],
+    mode: Mode,
+  ): Promise<IDBPTransaction<unknown, string[], Mode>> {
+    const db = await this.init();
+    return db.transaction(storeNames, mode);
   }
 
   /**

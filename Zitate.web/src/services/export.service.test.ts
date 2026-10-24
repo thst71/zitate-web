@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { exportService, type ExportData } from "./export.service";
 import { dbService } from "./db.service";
 import { STORES } from "../db/schema";
@@ -355,6 +355,90 @@ describe("ExportService.importData", () => {
       });
       expect(await dbService.get("audio", "s1")).toMatchObject({
         entryId: "e1",
+      });
+    });
+  });
+
+  describe("all or nothing", () => {
+    async function counts() {
+      const result: Record<string, number> = {};
+      for (const store of Object.values(STORES)) {
+        result[store] = (await dbService.getAll(store)).length;
+      }
+      return result;
+    }
+
+    beforeEach(async () => {
+      await dbService.add("entries", entry("e-local"));
+      await dbService.add("authors", { id: "a-local", name: "Goethe" });
+      await dbService.add("labels", { id: "l-local", name: "love" });
+      await dbService.add("folders", folder("f-local", "Love"));
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("keeps all records when a replace fails", async () => {
+      const before = await counts();
+
+      const result = await exportService.importData(
+        backup({
+          entries: [entry("e1"), entry("e1")],
+          authors: [{ id: "a1", name: "Schiller" }],
+        }),
+        replace,
+      );
+
+      expect(result.success).toBe(false);
+      expect(await counts()).toEqual(before);
+      expect(await dbService.get("entries", "e-local")).toBeDefined();
+    });
+
+    it("writes nothing when the last write of a merge fails", async () => {
+      const before = await counts();
+      const add = IDBObjectStore.prototype.add;
+      vi.spyOn(IDBObjectStore.prototype, "add").mockImplementation(function (
+        this: IDBObjectStore,
+        ...args
+      ) {
+        if (this.name === "folders") {
+          throw new DOMException("disk full", "QuotaExceededError");
+        }
+        return add.apply(this, args);
+      });
+
+      const result = await exportService.importData(
+        backup({
+          entries: [entry("e1")],
+          authors: [{ id: "a1", name: "Schiller" }],
+          labels: [{ id: "l1", name: "freedom" }],
+          folders: [folder("f1", "Freedom")],
+        }),
+        merge,
+      );
+
+      expect(result.success).toBe(false);
+      expect(await counts()).toEqual(before);
+    });
+
+    it("stores every record of a valid import", async () => {
+      const result = await exportService.importData(
+        backup({
+          entries: [entry("e1")],
+          authors: [{ id: "a1", name: "Schiller" }],
+          labels: [{ id: "l1", name: "freedom" }],
+          folders: [folder("f1", "Freedom")],
+        }),
+        merge,
+      );
+
+      expect(result.success).toBe(true);
+      expect(await counts()).toMatchObject({
+        entries: 2,
+        authors: 2,
+        labels: 2,
+        folders: 2,
       });
     });
   });

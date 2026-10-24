@@ -29,15 +29,14 @@ interface ImportResult  { success: boolean; message: string;
 
 class ExportService {
   exportAllData(): Promise<Blob>;                              // JSON blob
-  importData(file: File, options: ImportOptions): Promise<ImportResult>;
+  importData(file: File, options: ImportOptions): Promise<ImportResult>;  // one transaction
   downloadFile(blob: Blob, filename: string): void;
 }
 ----
 
 - Validation before import: an object with a numeric `version` not newer than the current one, the arrays `entries`, `authors`, `labels`, `folders`, and well-formed `links` (`id`, `url`, `addedAt`) on every entry.
-- `replace` clears all stores first and adds every record as exported.
+- `replace` clears all stores and adds every record as exported.
 - `merge` skips authors, labels and folders whose name exists (folders are compared with the names loaded once per import, as their store has no `name` index). A skipped author or label maps its exported id to the existing record's id; `remapEntry` and `remapFolder` (`services/importRemap.ts`) rewrite `authorId`, `labelIds` and the folder criteria through these maps. `merge` then adds every entry and every image and audio record under a new id: `entryId` of the media and `imageIds` and `audioId` of the entries are mapped to the new ids; media whose entry is not in the backup are left out and counted in the message.
-- Known defects, each with a story:
-  * each record is written in its own transaction: a failed import keeps what it wrote so far, and a failed `replace` has already cleared all stores (<<US-7.8>>)
+- All or nothing (<<US-7.8>>): `planImport` prepares every record first (lookups, new ids, mapped references, media decoded to Blobs); `importData` then writes them, after the clearing of a `replace`, in one `readwrite` transaction over all six stores. If any request fails, the transaction is aborted and the database stays as it was.
 - Because URLs and citation dates are stored directly on `Entry`, export/import preserves them automatically as part of the serialized `entries` array. Derived favicon URLs are not exported.
 - Export and import run on the main thread; a Web Worker for large data sets (<<NFR-5>>) is not implemented.
