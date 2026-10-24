@@ -5,6 +5,8 @@ import type { Entry, SmartFolder } from "../models";
 const maps: IdMaps = {
   authors: new Map([["a-file", "a-local"]]),
   labels: new Map([["l-file", "l-local"]]),
+  images: new Map([["i1", "i1-new"]]),
+  audio: new Map([["s1", "s1-new"]]),
 };
 
 const entry: Entry = {
@@ -31,6 +33,7 @@ describe("remapEntry", () => {
       ...entry,
       authorId: "a-new",
       labelIds: ["l-local", "l-new"],
+      imageIds: ["i1-new"],
     });
   });
 
@@ -43,6 +46,21 @@ describe("remapEntry", () => {
     remapEntry(entry, maps);
     expect(entry.authorId).toBe("a-file");
     expect(entry.labelIds).toEqual(["l-file", "l-new"]);
+  });
+});
+
+describe("remapEntry with media", () => {
+  it("replaces mapped image ids in order and the audio id", () => {
+    const result = remapEntry(
+      { ...entry, imageIds: ["i1", "i2"], audioId: "s1" },
+      maps,
+    );
+    expect(result.imageIds).toEqual(["i1-new", "i2"]);
+    expect(result.audioId).toBe("s1-new");
+  });
+
+  it("leaves an entry without audio without audio", () => {
+    expect(remapEntry(entry, maps).audioId).toBeUndefined();
   });
 });
 

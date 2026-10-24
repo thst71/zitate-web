@@ -8,13 +8,15 @@ import type { Entry, SmartFolder } from "../models";
 export interface IdMaps {
   authors: Map<string, string>;
   labels: Map<string, string>;
+  images: Map<string, string>;
+  audio: Map<string, string>;
 }
 
 const mapId = (map: Map<string, string>, id: string): string =>
   map.get(id) ?? id;
 
 /**
- * Entry with its author and labels mapped; unmapped ids stay as they are
+ * Entry with its author, labels, images and audio mapped; unmapped ids stay as they are
  */
 export function remapEntry(entry: Entry, maps: IdMaps): Entry {
   return {
@@ -23,6 +25,10 @@ export function remapEntry(entry: Entry, maps: IdMaps): Entry {
       authorId: mapId(maps.authors, entry.authorId),
     }),
     labelIds: entry.labelIds.map((id) => mapId(maps.labels, id)),
+    imageIds: entry.imageIds.map((id) => mapId(maps.images, id)),
+    ...(entry.audioId !== undefined && {
+      audioId: mapId(maps.audio, entry.audioId),
+    }),
   };
 }
 

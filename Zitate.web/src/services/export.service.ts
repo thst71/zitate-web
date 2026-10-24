@@ -147,7 +147,22 @@ class ExportService {
       };
 
       // Exported id -> local id; a skipped author or label maps to the existing one
-      const maps: IdMaps = { authors: new Map(), labels: new Map() };
+      const maps: IdMaps = {
+        authors: new Map(),
+        labels: new Map(),
+        images: new Map(),
+        audio: new Map(),
+      };
+
+      // A merge adds every entry and its media under new ids
+      const merging = options.strategy === "merge";
+      const entryIds = new Map(
+        importData.entries.map((entry) => [
+          entry.id,
+          merging ? this.generateId() : entry.id,
+        ]),
+      );
+      let mediaWithoutEntry = 0;
 
       // Import authors first (entries reference them)
       for (const author of importData.authors) {
@@ -193,10 +208,17 @@ class ExportService {
       // Import media if requested
       if (options.includeMedia) {
         for (const image of importData.media.images) {
+          const entryId = entryIds.get(image.entryId);
+          if (merging && entryId === undefined) {
+            mediaWithoutEntry++;
+            continue;
+          }
+          const id = merging ? this.generateId() : image.id;
+          maps.images.set(image.id, id);
           const blob = this.base64ToBlob(image.data, image.mimeType);
           const imageRecord = {
-            id: image.id,
-            entryId: image.entryId,
+            id,
+            entryId: entryId ?? image.entryId,
             blob,
             mimeType: image.mimeType,
             order: image.order,
@@ -207,10 +229,17 @@ class ExportService {
         }
 
         for (const audioItem of importData.media.audio) {
+          const entryId = entryIds.get(audioItem.entryId);
+          if (merging && entryId === undefined) {
+            mediaWithoutEntry++;
+            continue;
+          }
+          const id = merging ? this.generateId() : audioItem.id;
+          maps.audio.set(audioItem.id, id);
           const blob = this.base64ToBlob(audioItem.data, audioItem.mimeType);
           const audioRecord = {
-            id: audioItem.id,
-            entryId: audioItem.entryId,
+            id,
+            entryId: entryId ?? audioItem.entryId,
             blob,
             mimeType: audioItem.mimeType,
             duration: audioItem.duration,
@@ -227,7 +256,7 @@ class ExportService {
           // For merge, we add all entries (user can delete duplicates manually)
           await dbService.add("entries", {
             ...remapEntry(entry, maps),
-            id: this.generateId(),
+            id: entryIds.get(entry.id) ?? this.generateId(),
           });
         } else {
           await dbService.add("entries", entry);
@@ -254,7 +283,13 @@ class ExportService {
 
       return {
         success: true,
-        message: `Successfully imported ${stats.entries} entries, ${stats.authors} authors, ${stats.labels} labels, and ${stats.folders} folders.`,
+        message:
+          `Successfully imported ${stats.entries} entries, ${stats.authors} authors, ${stats.labels} labels, and ${stats.folders} folders.` +
+          (mediaWithoutEntry === 1
+            ? " 1 media item without its entry was left out."
+            : mediaWithoutEntry > 1
+              ? ` ${mediaWithoutEntry} media items without their entries were left out.`
+              : ""),
         stats,
       };
     } catch (error) {

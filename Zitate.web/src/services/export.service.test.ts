@@ -276,6 +276,89 @@ describe("ExportService.importData", () => {
     });
   });
 
+  describe("images and audio", () => {
+    const file = () =>
+      backup({
+        entries: [entry("e1", { imageIds: ["i1"], audioId: "s1" })],
+        media: { images: [image("i1", "e1")], audio: [audio("s1", "e1")] },
+      });
+
+    type Media = { id: string; entryId: string };
+
+    it("merges the same backup twice with its media", async () => {
+      await exportService.importData(file(), replace);
+
+      const result = await exportService.importData(file(), merge);
+
+      expect(result.success).toBe(true);
+      expect(await dbService.getAll("entries")).toHaveLength(2);
+      expect(await dbService.getAll("images")).toHaveLength(2);
+      expect(await dbService.getAll("audio")).toHaveLength(2);
+    });
+
+    it("links merged media and their entries both ways", async () => {
+      await exportService.importData(file(), replace);
+      await exportService.importData(file(), merge);
+
+      const images = await dbService.getAll<Media>("images");
+      const audio = await dbService.getAll<Media>("audio");
+      for (const e of await dbService.getAll<Entry>("entries")) {
+        const ownImages = images.filter((i) => i.entryId === e.id);
+        const ownAudio = audio.filter((a) => a.entryId === e.id);
+        expect(ownImages.map((i) => i.id)).toEqual(e.imageIds);
+        expect(ownAudio.map((a) => a.id)).toEqual([e.audioId]);
+      }
+    });
+
+    it("gives merged media new ids and keeps the image order", async () => {
+      await exportService.importData(
+        backup({
+          entries: [entry("e1", { imageIds: ["i2", "i1"] })],
+          media: {
+            images: [image("i1", "e1", 1), image("i2", "e1", 0)],
+            audio: [],
+          },
+        }),
+        merge,
+      );
+
+      const [stored] = await dbService.getAll<Entry>("entries");
+      expect(stored.imageIds).toHaveLength(2);
+      expect(stored.imageIds).not.toContain("i1");
+      expect(stored.imageIds).not.toContain("i2");
+      const first = await dbService.get<{ order: number }>(
+        "images",
+        stored.imageIds[0],
+      );
+      expect(first?.order).toBe(0);
+    });
+
+    it("leaves out media whose entry is not in the backup", async () => {
+      const result = await exportService.importData(
+        backup({
+          entries: [entry("e1")],
+          media: { images: [image("i9", "e-missing")], audio: [] },
+        }),
+        merge,
+      );
+
+      expect(result.success).toBe(true);
+      expect(await dbService.getAll("images")).toHaveLength(0);
+      expect(result.message).toContain("1 media item without its entry");
+    });
+
+    it("keeps the exported media ids on replace", async () => {
+      await exportService.importData(file(), replace);
+
+      expect(await dbService.get("images", "i1")).toMatchObject({
+        entryId: "e1",
+      });
+      expect(await dbService.get("audio", "s1")).toMatchObject({
+        entryId: "e1",
+      });
+    });
+  });
+
   describe("smart folders", () => {
     it("merges a folder into an empty database", async () => {
       const result = await exportService.importData(
