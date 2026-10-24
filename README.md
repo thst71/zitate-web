@@ -96,7 +96,7 @@ Zitate.web/src/
 
 The project uses GitHub Actions for continuous integration:
 
-- **Pull Requests** (`docker-publish.yml`): quality gate (`npm run check`), coverage, security audit, Docker build (without push)
+- **Pull Requests** (`docker-publish.yml`): quality gate (`npm run check`, tests with coverage thresholds), security audit, Docker build (without push)
 - **Release** (`release.yml`): a signed tag `v<semver>` pushed by the maintainer is verified, then the quality gate runs, the specification is rendered to HTML, native Docker builds (amd64 + arm64) are merged into a multi-arch manifest on GHCR and scanned with Trivy, and the GitHub release is published with the release notes
 
 ## Documentation

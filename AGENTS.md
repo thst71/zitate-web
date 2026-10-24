@@ -69,7 +69,7 @@ In addition to the [definition-of-done](.agents/skills/definition-of-done/SKILL.
 
 ### Releases
 
-Releases follow the [release](.agents/skills/release/SKILL.md) skill: a signed tag `v<semver>`, pushed by the user, runs `.github/workflows/release.yml`, which verifies the tag, runs the gate, renders the specification, builds and pushes the multi-arch image to GHCR (`<version>`, `<major>.<minor>`, `<major>`, `latest`), scans it with Trivy and publishes the GitHub release. `docker-publish.yml` only checks pull requests (and pushes a commit-tagged image when started by hand).
+Releases follow the [release](.agents/skills/release/SKILL.md) skill: a signed tag `v<semver>`, pushed by the user, runs `.github/workflows/release.yml`, which verifies the tag, runs the gate, renders the specification, builds and pushes the multi-arch image to GHCR (`<version>`, `<major>.<minor>`, `<major>`, `latest`), scans it with Trivy and publishes the GitHub release. `docker-publish.yml` only checks pull requests and builds the image without pushing it; nothing else publishes images.
 
 ### Commit Scopes
 
