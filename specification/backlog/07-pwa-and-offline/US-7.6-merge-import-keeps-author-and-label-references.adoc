@@ -1,0 +1,28 @@
+[[US-7.6]]
+=== US-7.6 Merge import keeps author and label references
+
+Effort:: 4 h +
+Traces to:: <<TS-3.5>>, <<TS-2.2>>, <<TS-2.7>>, <<NFR-5>>, <<FR-2.1>>, <<FR-3.1>>
+
+As a user, I want merged entries and folders to keep their author and labels, so that a merge does not leave quotes without attribution or tags.
+
+Today an author or label of the backup whose name exists locally is skipped, but the merged entries keep the exported ids in `authorId` and `labelIds`; these point to nothing. Folder criteria (`authorId`, `labels.values`) have the same problem.
+
+.Acceptance criteria
+. When an author of the backup is skipped because an author of the same name exists, every merged entry and folder criterion that referred to the backup's author id refers to the existing author's id.
+. The same holds for labels: skipped labels are replaced by the existing label's id in `labelIds` of merged entries and in `criteria.labels.values` of merged folders.
+. Authors and labels that are added keep their exported id, and references to them stay unchanged.
+. After a merge, every `authorId` and every label id in the database refers to an existing author or label.
+. The `replace` import is unchanged.
+
+.Technical tasks
+. During the author and label import, build maps from exported id to local id (the existing record's id when skipped, the exported id when added).
+. Rewrite `authorId` and `labelIds` of each entry and `criteria.authorId` and `criteria.labels.values` of each folder through these maps before writing them.
+. Keep the mapping in a pure function (e.g. `remapReferences(record, maps)`) so that it can be unit-tested.
+. Add the tests below.
+
+.Test criteria
+* Unit test (Vitest): the remapping function replaces mapped author and label ids in an entry and in folder criteria, keeps unmapped ids and leaves other fields unchanged.
+* Component test: none; no UI change.
+* Integration test (Vitest + `fake-indexeddb`): with a local author "Goethe" (`a-local`) and label "love" (`l-local`), merging a file whose entry refers to author `a-file` "Goethe" and label `l-file` "love" stores the entry with `authorId` `a-local` and `labelIds` [`l-local`] and adds no author or label; the same for a folder with these criteria; a new author from the file is added and referenced by its exported id.
+* Blackbox test: manual: merge a backup into a collection that shares an author; the merged quote shows the author.

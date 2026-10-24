@@ -1,0 +1,25 @@
+[[US-7.5]]
+=== US-7.5 Merge import of smart folders
+
+Effort:: 2 h +
+Traces to:: <<TS-3.5>>, <<TS-2.7>>, <<NFR-5>>, <<FR-4.2>>
+
+As a user, I want to merge a backup that contains smart folders into my collection, so that the import does not fail and my folders from the backup are added.
+
+Today the merge looks folders up through an index `name` that the `folders` store does not have; the lookup throws `NotFoundError` and the import reports a failure.
+
+.Acceptance criteria
+. A merge import of a file with folders succeeds and reports the number of added folders.
+. A folder whose name equals the name of an existing folder (exact match) is skipped; the existing folder stays unchanged.
+. A folder with a new name is added with its exported id and `order`.
+. The `replace` import of folders behaves as before.
+
+.Technical tasks
+. In `ExportService.importData`, look up existing folders by name from `dbService.getAll("folders")` (once per import) instead of `dbService.query("folders", "name", …)`.
+. Add the integration tests below; extend `src/test/setup.ts` with `File.prototype.text` if jsdom lacks it.
+
+.Test criteria
+* Unit test: none; the change is a lookup inside `importData`, covered by the integration tests.
+* Component test: none; `DataManagement` only shows the result message, which is unchanged.
+* Integration test (Vitest + `fake-indexeddb`, `export.service.test.ts`): merging a file with one folder into an empty database returns `success: true` and `stats.folders` 1 and stores the folder; merging a file whose folder name exists returns `stats.folders` 0 and leaves the existing folder unchanged; `replace` with folders still stores all of them.
+* Blackbox test: manual (no Playwright yet, see `AGENTS.md`): export a collection with a folder, merge the file into a second browser profile, the folder appears.
