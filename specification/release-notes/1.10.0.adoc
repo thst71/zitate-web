@@ -4,6 +4,15 @@ Built with agent-skills v0.5.0.
 
 === Fixes
 
+* Merging a backup that contains smart folders no longer fails; folders whose name exists
+  are skipped (<<US-7.5>>, <<NFR-5>>).
+* Entries and folders merged from a backup keep their author and labels when these exist
+  already under the same name (<<US-7.6>>, <<FR-2.1>>, <<FR-3.1>>).
+* Merging a backup imports its pictures and audio with the merged entries, also when the
+  same backup is merged twice; media without their entry are left out and counted
+  (<<US-7.7>>, <<FR-1.3>>, <<FR-1.4>>).
+* An import writes all or nothing: when it fails, the collection stays as it was, also with
+  "replace" (<<US-7.8>>, <<NFR-2>>, <<NFR-5>>).
 * Dependencies with known vulnerabilities are updated (vite 7.3.7, ws, uuid 14 and others);
   `npm audit` reports none.
 * The tests of the entry card dates pass on machines with any locale and time zone.

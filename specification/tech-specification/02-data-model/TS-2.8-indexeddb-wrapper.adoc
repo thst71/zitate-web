@@ -19,6 +19,8 @@ class DBService {
   count(storeName: string): Promise<number>;
   clear(storeName: string): Promise<void>;
   getAllEntriesSorted<T>(): Promise<T[]>;   // entries by createdAt, newest first (cursor)
+  transaction<Mode extends IDBTransactionMode>(storeNames: string[], mode: Mode)
+    : Promise<IDBPTransaction<unknown, string[], Mode>>;   // several stores at once
 }
 ----
 
