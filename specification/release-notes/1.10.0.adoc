@@ -1,6 +1,6 @@
 == Release v1.10.0 (unreleased)
 
-Built with agent-skills v0.3.0.
+Built with agent-skills v0.5.0.
 
 === Fixes
 

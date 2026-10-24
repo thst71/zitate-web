@@ -26,7 +26,7 @@ Zitate Web is an offline-first Progressive Web App for collecting quotes, citati
 2. The project skills in `.agents/skills/`.
 3. Personal instructions and skills of the user (e.g. `~/.claude/skills`, `~/.agents/`). They may only cover the machine environment and how to communicate; they never override a project rule or a project skill of the same purpose.
 
-`.agents/skills/` is the vendored agent-skills library (version in `.agents/skills/VERSION`); adapt it here, under "Project Facts", never by editing it. Update it with `.agents/skills/vendor.sh v<version>`, then commit `chore(agents): vendor agent-skills v<version>`.
+`.agents/skills/` is the vendored agent-skills library (version in `.agents/skills/VERSION`); adapt it here, under "Project Facts", never by editing it. Update it with `.agents/skills/vendor.sh v<version>`, then commit `chore(agents): vendor agent-skills v<version>`. The spec-validator release is pinned in `.agents/spec-validator.lock`; change it only with `.agents/skills/spec-system/bin/validate-specs --update [v<version>]`.
 
 ---
 
